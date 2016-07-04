@@ -1,0 +1,429 @@
+//
+//  PostSearchViewController.m
+//  APP
+//  圈贴搜索页
+//  获取热词搜索 QueryHotKeyWordInfo
+//  圈贴搜索结果 QueryPostListInfo
+//  Created by qw_imac on 16/6/20.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "PostSearchViewController.h"
+#import "Search.h"
+#import "SearchHistoryTableViewCell.h"
+#import "SVProgressHUD.h"
+#import "PostTableCell.h"
+#import "UITableView+FDTemplateLayoutCell.h"
+#import "PostDetailViewController.h"
+#import "ExpertPageViewController.h"
+#import "UserPageViewController.h"
+#define BtnH 28
+#define LeadingSpace 15
+#define BgViewH 32
+typedef NS_ENUM(NSInteger,SearchStatus) {
+    SearchStatusOnSearch,
+    SearchStatusShowResult,
+    SearchStatusNoResult,
+};
+@implementation PostSearchWord
+
+@end
+@interface PostSearchViewController ()<UITableViewDataSource,UITableViewDelegate,UISearchBarDelegate>
+@property (weak, nonatomic) IBOutlet UITableView *searchTableView;
+@property (weak, nonatomic) IBOutlet UITableView *resultTableView;
+@property (strong, nonatomic) IBOutlet UIView *sectionHeaderview;
+@property (nonatomic,assign) SearchStatus status;
+@property (nonatomic,strong) NSMutableArray *hotSearchWords;    //热门搜索
+@property (nonatomic,strong) NSMutableArray *postList;
+@property (nonatomic,strong) NSMutableArray *searchHistory;     //搜索历史
+@property (nonatomic,assign) NSInteger      currentPage;
+@end
+static NSInteger const maxSearchHis = 10;
+static NSString *const searchCell = @"SearchHistoryTableViewCell";
+static NSString *const resultCell = @"PostTableCell";
+@implementation PostSearchViewController{
+    UIView         *HotWordHeaderView;
+    NSString       *currentSearchWords;
+}
+@synthesize searchHistory = _searchHistory;
+#pragma mark ------
+#pragma mark LifeCircle
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    [self initailize];
+    //取搜索热词
+    [self getHotkeyWord];
+}
+
+-(void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self.navigationItem setHidesBackButton:YES];
+    [self getSearchHistory];
+}
+#pragma mark ------
+#pragma mark Delegate
+-(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    if (tableView == _searchTableView) {
+        return 1;
+    }else {
+        return _postList.count;
+    }
+}
+
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    if (tableView == _searchTableView) {
+        return _searchHistory.count;
+    }else {
+        return 1;
+    }
+}
+
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (tableView == _searchTableView) {
+        SearchHistoryTableViewCell *cell = (SearchHistoryTableViewCell *)[_searchTableView dequeueReusableCellWithIdentifier:searchCell forIndexPath:indexPath];
+        PostSearchWord *model = _searchHistory[indexPath.row];
+        cell.title.text = model.searchItem;
+        return cell;
+    }else {
+        PostTableCell *cell = (PostTableCell *)[_resultTableView dequeueReusableCellWithIdentifier:resultCell forIndexPath:indexPath];
+//        cell.userInfoBtn.tag = indexPath.section;
+//        [cell.userInfoBtn addTarget:self action:@selector(headerImgClick:) forControlEvents:UIControlEventTouchUpInside];
+        [self configure:cell indexPath:indexPath];
+        return cell;
+    }
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (tableView == _searchTableView) {
+        return 44.0;
+    }else {
+        return [tableView fd_heightForCellWithIdentifier:resultCell cacheByIndexPath:indexPath configuration:^(id cell) {
+            [self configure:cell indexPath:indexPath];
+        }];
+    }
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
+    if (tableView == _searchTableView) {
+        return 40.0;
+    }else {
+        return 0;
+    }
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section {
+    if (tableView == _searchTableView) {
+        return 0;
+    }else {
+        return 7.0;
+    }
+}
+
+-(UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
+    if (tableView == _searchTableView) {
+        return _sectionHeaderview;
+    }else {
+        return nil;
+    }
+}
+
+-(UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section {
+    if (tableView == _resultTableView) {
+        UIView *view = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, 7)];
+        view.backgroundColor = [UIColor clearColor];
+        return view;
+    }else {
+        return nil;
+    }
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    if (tableView == _searchTableView) {
+        [QWGLOBALMANAGER statisticsEventId:@"搜索_历史搜索词" withLable:nil withParams:nil];
+        PostSearchWord *model = _searchHistory[indexPath.row];
+        [self searchWithKeyword:model.searchItem];
+    }else {
+        PostDetailViewController* postDetailVC = (PostDetailViewController*)[[UIStoryboard storyboardWithName:@"Forum" bundle:nil] instantiateViewControllerWithIdentifier:@"PostDetailViewController"];
+        postDetailVC.hidesBottomBarWhenPushed = YES;
+        PostSearchVo* postModel = self.postList[indexPath.section];
+        postDetailVC.postId = postModel.postId;
+        [self.navigationController pushViewController:postDetailVC animated:YES];
+    }
+}
+
+- (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar {
+    NSString *searchword = [searchBar.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+    if (StrIsEmpty(searchword)) {
+        [SVProgressHUD showErrorWithStatus:@"搜索词不能为空" duration:0.8];
+        return;
+    }
+    [self searchWithKeyword:searchBar.text];
+}
+
+-(BOOL)textFieldShouldBeginEditing:(UITextField *)textField {
+    [QWGLOBALMANAGER statisticsEventId:@"搜索_搜索输入框" withLable:nil withParams:nil];
+    return YES;
+}
+#pragma mark ------
+#pragma mark Private Method
+-(void)initailize {
+    self.searchBarView.placeholder = @"搜索 帖子关键字或标题";
+    [self.cancelButton removeTarget:nil action:NULL forControlEvents:UIControlEventTouchUpInside];
+    [self.cancelButton addTarget:self action:@selector(cancelAction:) forControlEvents:UIControlEventTouchUpInside];
+    self.status = SearchStatusOnSearch;
+    _postList = @[].mutableCopy;
+    _currentPage = 1;
+    [_searchTableView registerNib:[UINib nibWithNibName:searchCell bundle:nil] forCellReuseIdentifier:searchCell];
+    [_resultTableView registerNib:[UINib nibWithNibName:resultCell bundle:nil] forCellReuseIdentifier:resultCell];
+    [_resultTableView addFooterWithTarget:self action:@selector(loadMore)];
+}
+
+-(void)loadMore {
+    self.currentPage ++;
+    [self searchPost:currentSearchWords];
+}
+
+- (void)setupHotWordHeaderView {
+    if (_hotSearchWords.count == 0) {
+        return;
+    }else {
+        [self _setupHotWordHeaderView:_hotSearchWords];
+    }
+}
+
+-(void)_setupHotWordHeaderView:(NSMutableArray *)array {
+    HotWordHeaderView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, 150)];
+    HotWordHeaderView.backgroundColor = RGBHex(qwColor4);
+    UIView *top = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, 39)];
+    top.backgroundColor = RGBHex(qwColor11);
+    UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(15.0f, 9, 100, 21)];
+    label.font = fontSystem(kFontS11);
+    label.text = @"热门搜索";
+    label.textColor = RGBHex(qwColor9);
+    [top addSubview:label];
+    [HotWordHeaderView addSubview:top];
+    
+    UIView *seperate = [[UIView alloc]initWithFrame:CGRectMake(0, 39, APP_W, 0.5)];
+    seperate.backgroundColor = RGBHex(qwColor10);
+    [HotWordHeaderView addSubview:seperate];
+    
+    NSInteger countIdx = array.count > 10?10:array.count;
+    float Kfont = kFontS4;
+    float currentY = 42;
+    float currentX = 0;
+    for (NSInteger idx = 0; idx < countIdx; idx ++) {
+        HotKeyVo *word = array[idx];
+        CGFloat currentBtnW = (Kfont * (word.key.length) + 1.5 * LeadingSpace);
+        if (APP_W - currentX < currentBtnW) {
+            currentY += BgViewH;
+            currentX = 0;
+        }
+        UIButton *btn = [[UIButton alloc]initWithFrame:CGRectMake(LeadingSpace, 2, Kfont * (word.key.length+1), BtnH)];
+        [btn setTitle:word.key forState:UIControlStateNormal];
+        [btn setTitleColor:RGBHex(qwColor7) forState:UIControlStateNormal];
+        btn.titleLabel.font = fontSystem(kFontS5);
+        [btn addTarget:self action:@selector(hotBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        btn.layer.borderColor = RGBHex(qwColor10).CGColor;
+        btn.layer.borderWidth = 0.5;
+        btn.layer.cornerRadius = 5.0;
+        btn.layer.masksToBounds = YES;
+        UIView *bgView = [[UIView alloc]initWithFrame:CGRectMake(currentX, currentY, currentBtnW, BgViewH)];
+        bgView.backgroundColor = [UIColor clearColor];
+        [bgView addSubview:btn];
+        [HotWordHeaderView addSubview:bgView];
+        currentX += currentBtnW;
+    }
+    
+    CGRect ret = HotWordHeaderView.frame;
+    ret.size.height = currentY + BgViewH + 17;
+    HotWordHeaderView.frame = ret;
+    
+    UIView *line = [[UIView alloc]initWithFrame:CGRectMake(0,HotWordHeaderView.frame.size.height - 7, APP_W, 7)];
+    line.backgroundColor = RGBHex(qwColor11);
+    [HotWordHeaderView addSubview:line];
+    _searchTableView.tableHeaderView = HotWordHeaderView;
+}
+
+- (void)configure:(id)cell indexPath:(NSIndexPath*)indexPath {
+    PostSearchVo *model = self.postList[indexPath.section];
+    QWPostModel* postModel = [self convertModel:model];
+    [cell setCell:postModel WithHighlightKeyWords:currentSearchWords];
+}
+
+//-(void)headerImgClick:(UIButton *)sender {
+//    PostSearchVo *model = self.postList[sender.tag];
+//    if ([model.posterId isEqualToString:QWGLOBALMANAGER.configure.passPort]) {
+//      return;
+//      }
+//    if (model.anonFlag) {
+//        return;
+//    }
+//    if (model.posterType.integerValue == 3 || model.posterType.integerValue == 4) {
+//        ExpertPageViewController *vc = [[UIStoryboard storyboardWithName:@"ExpertPage" bundle:nil] instantiateViewControllerWithIdentifier:@"ExpertPageViewController"];
+//        vc.hidesBottomBarWhenPushed = YES;
+//        vc.posterId = model.posterId;
+//        vc.expertType = model.posterType.intValue;
+//        vc.preVCNameStr = @"圈子详情";
+//        vc.nickName = model.nickname;
+//        [self.navigationController pushViewController:vc animated:YES];
+//    }else{
+//        UserPageViewController *vc = [[UIStoryboard storyboardWithName:@"UserPage" bundle:nil] instantiateViewControllerWithIdentifier:@"UserPageViewController"];
+//        vc.hidesBottomBarWhenPushed = YES;
+//        vc.mbrId = model.posterId;
+//        [self.navigationController pushViewController:vc animated:YES];
+//    }
+//}
+
+-(QWPostModel *)convertModel:(PostSearchVo *)model {
+    QWPostModel *newModel = [QWPostModel new];
+    newModel.postId = model.postId;
+    newModel.postTitle = model.postTitle;
+    newModel.postContent = model.postContent;
+    newModel.posterType = model.posterType.integerValue;
+    newModel.postStrDate = model.postStrDate;
+    newModel.headUrl = model.headUrl;
+    newModel.nickname = model.nickname;
+    newModel.mbrLvl = model.mbrLvl.integerValue;
+    newModel.brandName = model.brandName;
+    newModel.readCount = model.readCount.integerValue;
+    newModel.replyCount = model.replyCount.integerValue;
+    newModel.upVoteCount = model.upVoteCount.integerValue;
+    newModel.collectCount = model.collectCount.integerValue;
+    newModel.shareCount = model.shareCount.integerValue;
+    newModel.postImgList = model.imgUrls;
+    newModel.flagAnon = model.anonFlag;
+    return newModel;
+}
+//存搜索历史
+- (void)saveSearchHistory:(NSString *)searchStr {
+    if (_searchHistory.count == maxSearchHis ) {
+        [_searchHistory removeLastObject];
+    }
+    PostSearchWord *modelSearch = [PostSearchWord new];
+    modelSearch.searchItem = searchStr;
+    [_searchHistory insertObject:modelSearch atIndex:0];
+    [PostSearchWord deleteAllObjFromDB];
+    [PostSearchWord saveObjToDBWithArray:self.searchHistory];
+}
+//获取搜索历史
+- (void)getSearchHistory {
+    self.searchHistory = (NSMutableArray *)[PostSearchWord getArrayFromDBWithWhere:nil WithorderBy:@"rowid desc"];
+}
+//取消按钮逻辑
+-(void)cancelAction:(UIButton *)sender {
+    switch (_status) {
+        case SearchStatusOnSearch:
+            [self popAction:nil];
+            break;
+        case SearchStatusShowResult:
+            [_postList removeAllObjects];
+            self.status = SearchStatusOnSearch;
+            break;
+        case SearchStatusNoResult:
+            [self removeInfoView];
+            self.status = SearchStatusOnSearch;
+            break;
+    }
+}
+
+- (void)searchWithKeyword:(NSString *)keyword {
+    [self.searchView endEditing:YES];
+    [_postList removeAllObjects];
+    self->currentSearchWords = keyword;
+    [self searchPost:keyword];
+    [self saveSearchHistory:keyword];
+    self.status = SearchStatusShowResult;
+}
+//热搜词汇点击触发函数
+- (void)hotBtnClick:(UIButton *)btn{
+    [QWGLOBALMANAGER statisticsEventId:@"搜索_热门搜索词" withLable:nil withParams:nil];
+    self.searchBarView.text = btn.titleLabel.text;
+    [self searchWithKeyword:self.searchBarView.text];
+}
+//清除搜索历史
+- (IBAction)deleteSearchHistory:(UIButton *)sender {
+    [QWGLOBALMANAGER statisticsEventId:@"搜索_清除" withLable:nil withParams:nil];
+    self.searchHistory = @[].mutableCopy;
+    [PostSearchWord deleteAllObjFromDB];
+}
+//热词搜索
+-(void)getHotkeyWord {
+    QueryHotKeyR *modelR = [QueryHotKeyR new];
+    modelR.pos = 5;
+    MapInfoModel *mapInfoModel = [QWGLOBALMANAGER getMapInfoModel];
+    modelR.city = mapInfoModel.branchCityName;
+    [Search queryPostHotKeyWord:modelR success:^(HotkeyListVo *model) {
+        if (model.apiStatus.integerValue == 0) {
+            self.hotSearchWords = [model.keys mutableCopy];
+        }
+    } failure:^(HttpException *e) {
+        
+    }];
+}
+//圈贴搜索
+-(void)searchPost:(NSString *)key {
+    QueryTeamListR *modelR = [QueryTeamListR new];
+    modelR.key = key;
+    modelR.page = _currentPage;
+    modelR.pageSize = 10;
+    [Search queryTeamListInfo:modelR success:^(PostSearchListVo *model) {
+        [_resultTableView footerEndRefreshing];
+        if (model.apiStatus.integerValue == 0) {
+            if (model.posts.count == 0) {
+                if (_currentPage == 1) {
+                    self.status = SearchStatusNoResult;
+                }else {
+                    _resultTableView.footer.canLoadMore = NO;
+                    _currentPage --;
+                }
+            }else {
+                [self.postList addObjectsFromArray:model.posts];
+                [_resultTableView reloadData];
+            }
+        }
+    } failure:^(HttpException *e) {
+        self.status = SearchStatusNoResult;
+    }];
+}
+#pragma mark ------
+#pragma mark Setter And Getter
+-(void)setStatus:(SearchStatus)status {
+    _status = status;
+    switch (status) {
+        case SearchStatusOnSearch:
+            _searchTableView.hidden = NO;
+            _resultTableView.hidden = YES;
+            _resultTableView.footer.canLoadMore = YES;
+            break;
+        case SearchStatusShowResult:
+            _searchTableView.hidden = YES;
+            _resultTableView.hidden = NO;
+            break;
+        case SearchStatusNoResult:
+            _searchTableView.hidden = YES;
+            _resultTableView.hidden = YES;
+            [self showInfoView:@"搜索无结果" image:@"ic_search_noreslut"];
+            break;
+    }
+}
+
+-(void)setHotSearchWords:(NSMutableArray *)hotSearchWords {
+    _hotSearchWords = hotSearchWords;
+    [self setupHotWordHeaderView];
+}
+
+-(void)setSearchHistory:(NSMutableArray *)searchHistory {
+    _searchHistory = searchHistory;
+    [_searchTableView reloadData];
+}
+
+-(NSMutableArray *)searchHistory {
+    [_searchTableView reloadData];
+    return _searchHistory;
+}
+
+-(void)setCurrentPage:(NSInteger)currentPage {
+    _currentPage = currentPage;
+}
+@end

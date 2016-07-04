@@ -1,0 +1,63 @@
+//
+//  BarTwoViewController.m
+//  APP
+//
+//  Created by 李坚 on 16/1/21.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "BarTwoViewController.h"
+#import "newConsultPharmacyViewController.h"
+#import "ConsultPharmacyViewController.h"
+
+@interface BarTwoViewController ()
+
+@end
+
+@implementation BarTwoViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+}
+
+- (void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+
+    [self setupBranchListVC];
+}
+
+#pragma mark - push进去对应是否开通微商药房列表
+- (void)setupBranchListVC{
+    
+    if(TARGET_IPHONE_SIMULATOR){
+        
+        //3.0微商药房逻辑
+        ConsultPharmacyViewController *VC = [[ConsultPharmacyViewController alloc]init];
+        [self.navigationController pushViewController:VC animated:NO];
+        //2.2.4优惠药房逻辑
+        //        newConsultPharmacyViewController *VC = [[newConsultPharmacyViewController alloc]init];
+        //        VC.comeFromHomePage = NO;
+        //        [self.navigationController pushViewController:VC animated:NO];
+        
+    }else{
+        [QWGLOBALMANAGER readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) {
+            if(mapInfoModel.status == 2){
+                newConsultPharmacyViewController *VC = [[newConsultPharmacyViewController alloc]init];
+                VC.comeFromHomePage = NO;
+                [self.navigationController pushViewController:VC animated:NO];
+            }
+            if(mapInfoModel.status == 3 || mapInfoModel.status == 0){
+                ConsultPharmacyViewController *VC = [[ConsultPharmacyViewController alloc]init];
+                [self.navigationController pushViewController:VC animated:NO];
+            }
+        }];
+    }
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

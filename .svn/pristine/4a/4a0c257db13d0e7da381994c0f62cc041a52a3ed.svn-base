@@ -1,0 +1,194 @@
+//
+//  WebDirectMacro.h
+//  APP
+//
+//  Created by PerryChen on 9/8/15.
+//  Copyright (c) 2015 carret. All rights reserved.
+//
+
+#ifndef APP_WebDirectMacro_h
+#define APP_WebDirectMacro_h
+
+// 设置导航栏
+typedef NS_ENUM(NSInteger, WebTitleType) {
+    WebTitleTypeNone = 1,                       // 没有右侧按钮
+    WebTitleTypeBackToHomeWithMsg,          // 有消息盒子的右侧按钮
+    WebTitleTypeMsgAndShare,                // 有消息盒子和分享按钮
+    WebTitleTypeBackToHome,                 // 没有消息盒子的右侧按钮
+    WebTitleTypeSpecialZone,                // 首页专题专区
+    WebTitleTypeWithJumpAndMsg,             // 有跳过和消息盒子页面
+    WebTitleTypeWithJump,                   // 有跳过没有消息盒子页面
+    WebTitleTypeWithFontAndMsgWithoutShare, // 有字体选择没有分享
+    WebTitleTypeWithFontAndMsgWithShare,    // 有字体选择有分享
+    WebTitleTypeWithFontOnly,               //只有字体
+    WebTitleTypeOnlyShare,                  // 只有分享
+};
+
+typedef NS_ENUM(NSInteger, LocalShareType) {
+    LocalShareTypeNone,             // 没有分享
+    LocalShareTypeArea,             // 专区分享
+    LocalShareTypeTopic,            // 专题分享
+    LocalShareTypeMedicine,         // 药品分享
+    LocalShareTypeInfo,             // 资讯分享
+    LocalShareTypeOuterLink,        // 外链分享
+    LocalShareTypeDiseaseTypeBC,    // BC类疾病分享
+    LocalShareTypeCouponCondition,  // 优惠细则分享
+    LocalShareTypeHealthCheckList,  // 健康评测列表分享
+    LocalShareTypeRoller,           // 大转盘的分享
+};
+
+// 提示框类型
+typedef NS_ENUM(NSInteger, AlertViewType) {
+    AlertViewTypePhoneNum,       // 打电话
+    AlertViewTypePay,           // 支付
+};
+
+typedef NS_ENUM(NSInteger, WebDirType) {
+    WebDirTypeH5toLocal = 1,       // H5跳转本地
+    WebDirTypeH5toH5,              // H5跳H5
+};
+
+// 本地跳转H5的界面类型
+typedef NS_ENUM(NSInteger, WebLocalType) {
+    WebLocalTypeOther,                      // 未定
+    WebLocalTypeOuterLink,                  // 外链
+    WebLocalTypeJumpChronicGuidePage,       // 跳过慢病引导页
+    WebLocalTypeCouponProductManual,        // 优惠商品使用说明
+    WebLocalTypeCouponCondition,            // 跳转至优惠细则
+    WebLocalTypeCouponHelp,                 // 跳转优惠商品帮助
+    WebLocalTypeDiscountExplain,            // 跳转至使用说明
+    WebLocalTypeMedicineHelp,               // 跳转至用药帮助
+    WebLocalTypeAnalyzeMember,              // 跳转至用药分析
+    WebLocalTypeCouponTicketHelp,           // 跳转至优惠券帮助
+    WebLocalTypeMyTopics,                   // 跳转至我收藏的专题页面
+    WebLocalTypeMySpecialTopics,            // 跳转至我收藏的专刊页面
+    WebLocalTypeRoller,                     // 跳转到大转盘s
+    WebLocalTypeIMMerchant,                 // 跳转到我是商家页面
+    WebLocalTypeIntegralRull,               // 跳转积分规则
+    WebLocalTypeTopicList,                  // 专题列表
+    WebLocalTypeDivision,                   // 专区
+    WebLocalTypeHeight,                     // 宝宝身高预测
+    WebLocalTypeArea,                       // 宝宝体表面积预估
+    WebLocalTypeHbSix,                      // 乙肝六项检测
+    WebLocalTypeHbTwo,                      // 乙肝两对半
+    WebLocalTypeWeight,                     // 体重指数
+    WebLocalTypeTemperature,                // 体温
+    WebLocalTypeEdc,                        // 预产期
+    WebLocalTypeBp,                         // 血压
+    WebLocalTypeSelfCheck,                  // 健康指标 检测指标
+    WebLocalTypeToPurchaseDetail,           // 跳转抢购详情页
+    WebLocalTypeHealthCheckDetail,          // 健康自测详情页面
+    WebLocalTypeToCircleRules,              // 跳转圈子规则
+    WebLocalTypeToPayOrder,                 // 跳转支付界面
+    WebLocalTypeToDisease = 1001,
+};
+
+// H5跳转本地界面的界面类型
+typedef NS_ENUM(NSInteger, WebPageType) {
+    WebPageTypeDisease = 1001,                  // 疾病详情
+    WebPageTypeSympton = 1002,                  // 症状详情
+    WebPageTypeFamiliarQuestion = 1003,         // 大家都在问
+    WebPageTypeMedicineList = 1004,             // 药品列表
+    WebPageTypeChatView = 1005,                 // 聊天页面
+    WebPageTypeFamilyMedicine = 1006,           // 家庭用药
+    WebPageTypeCallbackSuccess = 1007,          // 调用成功
+    WebPageTypeDiseaseCoupon = 1008,            // 慢病订阅优惠券
+    WebPageTypeGetCoupon = 1009,                // 领取优惠券
+    WebPagePharGetMore = 1010,                  // 药房查看更多
+    WebPagePharDetail = 1011,                   // 药房详情
+    WebPageFamilyMedicine = 1012,               // 家人用药
+    WebPageMyCouponProductList = 1013,          // 我的优惠商品列表
+    WebPageTypeMedicinePharMore = 1014,         // 附近药房（普通药品详情）
+    WebPageTypeDiseaseToFamilyMedicine = 1015,  // 慢病跳转家人用药
+    WebPageTypeCouponDetailSuccess = 1016,      // 代金券使用成功
+    WebPageTypeAreaToCouponDrug = 1017,         // 专区跳优惠商品
+    WebPageTypeToActionWinning = 1018,          // 跳转原生中奖纪录
+
+    WebPageTypeToIntegralCenter = 1020,         // 跳转本地积分中心
+    WebPageTypeToPromotionActivityList = 1021,  // 跳转至活动列表
+//    WebPageTypeToReceiveAddress = 1022,       // 跳转原生收货地址
+    WebPageTypeToShoppingCar = 1022,            // 跳转原生购物车
+    WebPageTypePharComparePrice = 1023,         // 药品详情比价页面
+    WebPageTypeMicroDetail = 1024,              // 跳转微商商品详情
+    WebPageTypeToCircleDetail = 1025,           // 跳转圈子详情
+    WebPageTypeToColumnDetail = 1026,           // 跳转某一个药师专栏
+    WebPageTypeToPostDetail = 1027,             // 跳转帖子详情
+    WebPageTypeToPostTiezi = 1028,              // 跳转发帖
+    WebPageTypeToPickCouponTicket = 1029,       // 跳转到领取优惠券的详情
+    WebPageTypeToLinkPhonenum = 1030,           // 跳转到绑定手机号
+};
+
+// H5界面类型
+typedef NS_ENUM(NSInteger, WebH5PageType) {
+    WebPageToWebTypeSympton = 2001,                 // 症状详情
+    WebPageToWebTypeDisease = 2002,                 // 疾病详情
+    WebPageToWebTypeInfo = 2003,                    // 资讯详情
+    WebPageToWebTypeMedicine = 2004,                // 优惠商品
+    WebPageToWebTypeTopicDetail = 2005,             // 专题详情
+    WebPageToWebTypeSlowSubscribe = 2006,           // 慢病订阅列表
+    WebPageToWebTypeSlowDiseaseGuide = 2007,        // 慢病引导页
+    WebPageToWebTypeSlowDiseaseCouponList = 2008,   // 慢病优惠券列表
+    WebPageToWebTypeSlowDiseaseDetail = 2009,       // 慢病订阅详情
+    WebPageToWebTypeSlowProductList = 2010,         // 慢病商品列表
+    WebPageToWebTypeCouponDetail = 2011,            // 优惠细则
+    WebPageToWebTypeHealthCheckBegin = 2012,        // 开始健康自测
+    WebPageToWebTypeSpecialDetail = 2013,           // 专刊详情
+    WebPageToWebTypeProductInstrumets = 2014,       // 商品说明书
+    WebPageToWebTypeExchangeList = 2015,            // 积分首页跳兑换记录
+    WebPageToWebTypeProDetail = 2016,               // 积分商品详情
+    WebPageToWebTypeAddress = 2017,                 // 积分兑换填写地址
+    WebPageToWebTypeExchangeSuccess = 2018,         // 积分商城兑换成功
+    WebPageToWebTypeExchangeDetail = 2019,          // 兑换商品详情
+    WebPageToWebTypeSuccessToList = 2020,           // 兑换成功跳兑换列表
+    WebPageTypeIntegralIndex = 2021,                // 积分商城首页
+    WebPageTypeOuterLink = 2023,                    // H5跳转H5的外链类型
+    WebPageTypeInfoCommentList = 2024,                  // 资讯评论列表
+//    WebPageTypeInfoTopicContent = 2029,             // 专题详情 V3.0
+    WebLocalTypeSlowDiseaseArea = 2090,             // 慢病专区
+    WebLocalTypeMatchGame = 2100,                   //翻牌活动
+    WebPageTypeStaticPage = 2999,                  // 不需要显示loading框的页面类型
+    WebPageTypeHealthFirstAndSecondPage = 2025,     //三级页面
+    WebPageTypeHealthThirdPage = 2026,              //指标详情
+    WebPageTypeHealthSelfTest = 2027,               //健康自测
+    WebPageTypeSelfTestTool = 2028,                 //自测工具
+    WebPageTypeMedExa = 2029,                       //体检详情页
+};
+
+// h5分享参数返回类型
+typedef NS_ENUM(NSInteger, WebPageShareType) {
+    WebPageShareTypeOuterLink = -1,                 // 外链分享
+    WebPageShareTypeMedicine = 1,                   // 疾病分享
+    WebPageShareTypeDisease = 2,                    // 药品分享
+    WebPageShareTypeSympton = 3,                    // 症状分享
+    WebPageShareTypeTopic = 4,                      // 专题详情分享
+    WebPageShareTypeInfo = 5,                       // 资讯分享
+    WebPageShareTypeArea = 6,                       // 专区分享
+    WebPageShareTypeHealthCheckList = 7,            // 健康自测列表分享
+    WebPageShareTypeHealthCheckDetail = 8,          // 健康自测详情分享
+    WebPageShareTypeActivityList = 9,               // 活动列表分享
+    WebPageShareTypeRollCard = 10,                  // 翻牌子分享
+    WebPageShareTypeIntegralMallProDetail = 11,     // 积分商城商品详情
+};
+
+//原生通知
+typedef NS_ENUM(NSInteger, CallbackType) {
+    CallbackTypeAreaComment = 3001,                     // 评论返回刷新  专题
+    CallbackTypeSlowDiseaseBack = 3002,                 // 添加慢病专区返回数据
+    CallbackTypeMedicineShare = 3003,                   // 药品详情调用分享
+    CallbackTypeMedicineBack = 3004,                    // 药品详情返回按钮置灰
+    CallbackTypeDiseaseJump = 3005,                     // 慢病跳过
+    CallbackTypeSlowDiseaseTitle = 3006,                // 慢病订阅资讯返回刷新new字段
+    CallbackTypeScale = 3007,                           // 疾病详情文字放大防小
+    CallbackTypeShareTopic = 3008,                      // 专题分享
+    CallbackTypeShareArea = 3009,                       // 专区分享
+    CallbackTypeShareInfo = 3010,                       // 资讯分享
+    CallbackTypeShareDisease = 3011,                    // 可能疾病分享
+    CallbackTypeSlowDiseaseGuideRefresh = 3012,         // 慢病引导页更新
+    CallbackTypeMyCollectTopicRefresh = 3013,           // 专题专刊更新
+    CallbackTypexxx = 3014,                             // 备用
+    CallbackTypeHealthCheckList = 3016,                 // 健康自测列表分享
+    CallbackTypeHealthCheckDetail = 3017,               // 健康自测详情分享
+    CallbackTypeRoundPanel = 3018,                      // 大转盘分享成功
+    CallbackBindPhone = 2016,                           // 绑定手机号成功后回调
+};
+#endif

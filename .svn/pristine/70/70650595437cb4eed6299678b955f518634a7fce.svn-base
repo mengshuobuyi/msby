@@ -1,0 +1,26 @@
+//
+//  PharamySearchTableViewCell.m
+//  APP
+//
+//  Created by 李坚 on 15/9/16.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "PharamySearchTableViewCell.h"
+
+@implementation PharamySearchTableViewCell
+
+- (void)awakeFromNib {
+    // Initialization code
+    self.CouponTag.layer.masksToBounds = YES;
+    self.CouponTag.layer.cornerRadius = 2.5f;
+    
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+@end

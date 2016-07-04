@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="ComboProductCellIdentifier" rowHeight="405" id="qHp-6X-Dg9" customClass="ComboProductCell">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="407"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="qHp-6X-Dg9" id="7YK-h5-rPv">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="406.5"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Tdf-sQ-FKh" userLabel="BackgroundContainer">
+                        <rect key="frame" x="8" y="10" width="304" height="396.5"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="J5n-Ox-peR" userLabel="BlueIcon">
+                                <rect key="frame" x="10" y="13" width="7" height="12"/>
+                                <color key="backgroundColor" red="0.098039215690000001" green="0.45882352939999999" blue="0.81176470590000005" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="7" id="FW9-xP-F94"/>
+                                    <constraint firstAttribute="height" constant="12" id="OpR-rb-apH"/>
+                                </constraints>
+                            </view>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="oyp-vT-Yh0" customClass="QWButton">
+                                <rect key="frame" x="253" y="0.0" width="38" height="38"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="38" id="pRW-9W-x9i"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                                <state key="normal" title="更多 &gt;">
+                                    <color key="titleColor" red="0.59999999999999998" green="0.59999999999999998" blue="0.59999999999999998" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                            </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="优惠套餐" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="BfA-kE-tSo">
+                                <rect key="frame" x="22" y="0.0" width="60" height="38"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="38" id="Cqk-Vp-tYQ"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                                <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fCM-8t-XoU" userLabel="Separator">
+                                <rect key="frame" x="0.0" y="38" width="304" height="1"/>
+                                <color key="backgroundColor" red="0.87843137250000003" green="0.87843137250000003" blue="0.87843137250000003" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="0.5" id="PCj-es-XBY"/>
+                                </constraints>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstAttribute="trailing" secondItem="oyp-vT-Yh0" secondAttribute="trailing" constant="13" id="2Le-9x-rj9"/>
+                            <constraint firstItem="BfA-kE-tSo" firstAttribute="leading" secondItem="J5n-Ox-peR" secondAttribute="trailing" constant="5" id="3yr-WU-oU8"/>
+                            <constraint firstItem="fCM-8t-XoU" firstAttribute="leading" secondItem="Tdf-sQ-FKh" secondAttribute="leading" id="Epg-oc-Hle"/>
+                            <constraint firstItem="BfA-kE-tSo" firstAttribute="top" secondItem="Tdf-sQ-FKh" secondAttribute="top" id="JYy-5r-kdn"/>
+                            <constraint firstItem="fCM-8t-XoU" firstAttribute="top" secondItem="BfA-kE-tSo" secondAttribute="bottom" id="VJS-vw-LMv"/>
+                            <constraint firstAttribute="trailing" secondItem="fCM-8t-XoU" secondAttribute="trailing" id="Zx9-V9-jJt"/>
+                            <constraint firstItem="BfA-kE-tSo" firstAttribute="centerY" secondItem="J5n-Ox-peR" secondAttribute="centerY" id="ky4-Im-TNv"/>
+                            <constraint firstItem="J5n-Ox-peR" firstAttribute="leading" secondItem="Tdf-sQ-FKh" secondAttribute="leading" constant="10" id="rUs-f4-g41"/>
+                            <constraint firstItem="oyp-vT-Yh0" firstAttribute="top" secondItem="Tdf-sQ-FKh" secondAttribute="top" id="xdJ-aD-GLZ"/>
+                        </constraints>
+                    </view>
+                </subviews>
+                <color key="backgroundColor" red="0.94901960784313721" green="0.95686274509803915" blue="0.96862745098039216" alpha="1" colorSpace="calibratedRGB"/>
+                <constraints>
+                    <constraint firstAttribute="bottom" secondItem="Tdf-sQ-FKh" secondAttribute="bottom" id="8C8-ZY-2N2"/>
+                    <constraint firstItem="Tdf-sQ-FKh" firstAttribute="leading" secondItem="7YK-h5-rPv" secondAttribute="leading" constant="8" id="Ap5-zc-zYS"/>
+                    <constraint firstAttribute="trailing" secondItem="Tdf-sQ-FKh" secondAttribute="trailing" constant="8" id="E0D-WN-XJF"/>
+                    <constraint firstAttribute="trailing" secondItem="Tdf-sQ-FKh" secondAttribute="trailing" id="Ory-MG-9RZ"/>
+                    <constraint firstItem="Tdf-sQ-FKh" firstAttribute="top" secondItem="7YK-h5-rPv" secondAttribute="top" constant="10" id="Uq2-78-hQn"/>
+                    <constraint firstItem="Tdf-sQ-FKh" firstAttribute="top" secondItem="7YK-h5-rPv" secondAttribute="top" constant="405" id="uRj-ha-f61"/>
+                    <constraint firstItem="Tdf-sQ-FKh" firstAttribute="leading" secondItem="7YK-h5-rPv" secondAttribute="leading" id="znD-Gi-q0D"/>
+                </constraints>
+                <variation key="default">
+                    <mask key="constraints">
+                        <exclude reference="Ory-MG-9RZ"/>
+                        <exclude reference="uRj-ha-f61"/>
+                        <exclude reference="znD-Gi-q0D"/>
+                    </mask>
+                </variation>
+            </tableViewCellContentView>
+            <connections>
+                <outlet property="backgroundConatiner" destination="Tdf-sQ-FKh" id="uyn-P8-2J2"/>
+                <outlet property="couponTitleLabel" destination="BfA-kE-tSo" id="t6V-AF-AbQ"/>
+                <outlet property="moreButton" destination="oyp-vT-Yh0" id="JOC-vd-a6X"/>
+            </connections>
+            <point key="canvasLocation" x="262" y="282.5"/>
+        </tableViewCell>
+    </objects>
+</document>

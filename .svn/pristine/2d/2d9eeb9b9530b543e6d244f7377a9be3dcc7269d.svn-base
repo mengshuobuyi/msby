@@ -1,0 +1,378 @@
+//
+//  ConsultPharmacyTableViewCell.m
+//  wenyao
+//
+//  Created by xiezhenghong on 14-9-17.
+//  Copyright (c) 2014年 xiezhenghong. All rights reserved.
+//
+
+#import "ConsultPharmacyTableViewCell.h"
+#import "Constant.h"
+#import "QWGlobalManager.h"
+#import "UIImageView+WebCache.h"
+#import "LoginViewController.h"
+#import "SBJson.h"
+#import "XPChatViewController.h"
+#import "QZStoreCollectViewController.h"
+
+@implementation ConsultPharmacyTableViewCell
+
++ (CGFloat)getCellHeight:(id)data{
+
+    return 90;
+
+}
+
+- (void)awakeFromNib
+{
+    [super awakeFromNib];
+    [self.ratingView setImagesDeselected:@"star_none" partlySelected:@"star_half" fullSelected:@"star_full" andDelegate:nil];
+    self.ratingView.userInteractionEnabled = NO;
+    self.consultButton.layer.cornerRadius = 2.0f;
+    self.consultButton.layer.masksToBounds = YES;
+    
+    self.consultButton.layer.borderWidth = 1;
+    self.consultButton.layer.borderColor = RGBHex(0xff8a00).CGColor;
+    
+    self.drugAvatar.layer.masksToBounds = YES;
+    self.drugAvatar.layer.cornerRadius = 6.0f;
+
+    
+    [self.consultButton setTitle:@"即将开通" forState:UIControlStateNormal];
+    [self.consultButton setTitleColor:RGBHex(qwColor7) forState:UIControlStateNormal];
+    self.consultButton.layer.borderColor = RGBHex(qwColor7).CGColor;
+}
+
+-(void)UIGlobal{
+    [super UIGlobal];
+    
+    [self setSelectedBGColor:RGBHex(qwColor10)];
+    [self setSeparatorMargin:0 edge:EdgeRight];
+}
+
+- (void)setAttentionStoreModel:(MyFavStoreModel *)model
+{
+    self.myFavStoreModel = model;
+    
+    NSString *isStar = model.isStar;
+    if ([isStar isEqualToString:@"Y"]) {
+        self.verifyLogo.hidden = NO;
+    }else{
+        self.verifyLogo.hidden = YES;
+    }
+    NSString *imgUrl = model.imgUrl;
+    if(imgUrl && ![imgUrl isEqual:[NSNull null]]){
+        [self.drugAvatar setImageWithURL:[NSURL URLWithString:imgUrl] placeholderImage:[UIImage imageNamed:@"药店默认头像"]];
+    }else{
+        [self.drugAvatar setImage:[UIImage imageNamed:@"药店默认头像"]];
+    }
+    self.tag = self.indexPath.row;
+    
+    NSInteger promotionSign = [model.promotionSign integerValue];
+    if([model.active intValue] == 1){
+        if (promotionSign > 0) {
+            self.huiImageView.hidden = NO;
+        }else{
+            self.huiImageView.hidden = YES;
+        }
+    }else{
+        self.huiImageView.hidden = YES;
+    }
+    
+//    if([model.active intValue] == 1){
+//        
+//        NSInteger promotionSign = [model.promotionSign integerValue];
+//        
+//        UIImage *zengImage = [UIImage imageNamed:@"img_ic_present"];//赠
+//        UIImage *zheImage = [UIImage imageNamed:@"img_ic_discount"];//折
+//        UIImage *diImage = [UIImage imageNamed:@"img_ic_discharge"];//抵
+//        self.imgView_1.image = nil;
+//        self.imgView_2.image = nil;
+//        self.imgView_3.image = nil;
+//        
+//        if (promotionSign & 4){
+//            self.imgView_1.image = zengImage;
+//            if (promotionSign & 1) {
+//                self.imgView_2.image = zheImage;
+//                if (promotionSign & 2) {
+//                    self.imgView_3.image = diImage;
+//                }
+//            }else{
+//                if(promotionSign & 2){
+//                    self.imgView_2.image = diImage;
+//                }
+//            }
+//        }else if (promotionSign & 1) {
+//            self.imgView_1.image = zheImage;
+//            if(promotionSign & 2){
+//                self.imgView_2.image = diImage;
+//            }
+//        }else{
+//            if(promotionSign & 2){
+//                self.imgView_1.image = diImage;
+//            }
+//        }
+//    }
+    NSString *storeName = [QWGLOBALMANAGER checkStr:model.name];
+    NSString *shortName = [QWGLOBALMANAGER checkStr:model.shortName];
+    storeName = shortName.length > 0 ? shortName : storeName;
+    
+    CGSize nameSize = [[QWGlobalManager sharedInstance] getTextSizeWithContent:storeName WithUIFont:fontSystem(15) WithWidth:10000];
+    CGFloat nameWidth = nameSize.width;
+    if (nameWidth > APP_W - 3*12 ) {
+        nameWidth = APP_W - 3*12;
+    }
+    
+    self.drugStore.frame = CGRectMake(self.drugStore.frame.origin.x, self.drugStore.frame.origin.y, APP_W - 180, self.drugStore.frame.size.height);
+    self.drugStore.text = storeName;
+    
+    self.verifyLogo.frame = CGRectMake(self.drugStore.frame.origin.x + self.drugStore.frame.size.width + 5, self.verifyLogo.frame.origin.y, self.verifyLogo.frame.size.width, self.verifyLogo.frame.size.height);
+    self.locationDesc.text = model.addr;
+    float star = [model.star floatValue];
+    float avgStar = [model.avgStar floatValue];
+    star = MAX(star, avgStar);
+    [self.ratingView displayRating:star / 2];
+    NSUInteger consultCount = [model.consult intValue];
+    self.consultPerson.text = [NSString stringWithFormat:@"%d人已咨询",(int)consultCount];
+    self.consultButton.tag = self.indexPath.row;
+    [self.consultButton addTarget:self action:@selector(freeConsultTouched:) forControlEvents:UIControlEventTouchDown];
+    if ([model.active integerValue] == 1) {//已经开通
+        self.consultButton.hidden = YES;
+    }else{//未开通
+        self.consultButton.hidden = NO;
+        [self.consultButton setTitle:@"即将开通" forState:UIControlStateNormal];
+        [self.consultButton setTitleColor:RGBHex(qwColor7) forState:UIControlStateNormal];
+        self.consultButton.layer.borderColor = RGBHex(qwColor7).CGColor;
+//        [self.consultButton removeTarget:self action:@selector(freeConsultTouched:) forControlEvents:UIControlEventTouchDown];
+    }
+    self.distance.hidden = YES;
+    self.distanceIcon.hidden = YES;
+    [self.locationDesc setFrame:CGRectMake(82, self.locationDesc.frame.origin.y, 238, 21)];
+    NSArray *tags = model.tags;
+    
+    [self handleTags:tags withCell:self];
+    
+//    self.viewSeparator = [[UIView alloc]init];
+//    self.viewSeparator.frame = CGRectMake(0, self.frame.size.height - 0.5, self.frame.size.width, 0.5);
+//    self.viewSeparator.backgroundColor = RGBHex(qwColor10);
+//    [self addSubview:self.viewSeparator];
+}
+
+
+
+- (void)setNearbyStoreCell:(StoreNearByModel *)storeModel
+{
+    self.storeModel = storeModel;
+    NSString *isStar = storeModel.isStar;
+    if([isStar isEqualToString:@"Y"]) {//是明星药房
+        //显示
+        self.verifyLogo.hidden = NO;
+    }else{//不是明星药房
+        self.verifyLogo.hidden = YES;
+    }
+    NSString *imgUrl = storeModel.imgUrl;
+    if(imgUrl && ![imgUrl isEqual:[NSNull null]]){
+        [self.drugAvatar setImageWithURL:[NSURL URLWithString:imgUrl] placeholderImage:[UIImage imageNamed:@"药店默认头像"]];
+    }else{
+        [self.drugAvatar setImage:[UIImage imageNamed:@"药店默认头像"]];
+    }
+    self.tag = self.indexPath.row;
+    NSInteger promotionSign = [storeModel.promotionSign integerValue];
+    if([storeModel.active intValue] == 1){
+        if (promotionSign > 0) {
+            self.huiImageView.hidden = NO;
+        }else{
+            self.huiImageView.hidden = YES;
+        }
+    }else{
+        self.huiImageView.hidden = YES;
+    }
+    
+    NSString *storeName = [QWGLOBALMANAGER checkStr:storeModel.name];
+    NSString *shortName = [QWGLOBALMANAGER checkStr:storeModel.shortName];
+    storeName = shortName.length > 0 ? shortName : storeName;
+    
+    CGSize nameSize = [QWGLOBALMANAGER getTextSizeWithContent:storeName WithUIFont:[UIFont systemFontOfSize:15] WithWidth:10000];
+    CGFloat nameWidth = nameSize.width;
+    if (nameWidth > APP_W - 3*12 ) {
+        nameWidth = APP_W - 3*12;
+    }
+    
+    self.drugStore.frame = CGRectMake(self.drugStore.frame.origin.x, self.drugStore.frame.origin.y, APP_W - 180, self.drugStore.frame.size.height);
+    self.drugStore.text = storeName;
+    self.verifyLogo.frame = CGRectMake(self.drugStore.frame.origin.x + self.drugStore.frame.size.width + 5, self.verifyLogo.frame.origin.y, self.verifyLogo.frame.size.width, self.verifyLogo.frame.size.height);
+    self.locationDesc.text = storeModel.addr;
+    float star = [storeModel.star floatValue];
+    float avgStar = [storeModel.avgStar floatValue];
+    star = MAX(star, avgStar);
+    [self.ratingView displayRating:star / 2];
+    NSUInteger consultCount = [storeModel.consult intValue];
+    self.consultPerson.text = [NSString stringWithFormat:@"%lu人已咨询",(unsigned long)consultCount];
+    self.consultButton.tag = self.indexPath.row;
+    
+//    [self.consultButton setTitle:@"在线咨询" forState:UIControlStateNormal];
+//    [self.consultButton setTitleColor:RGBHex(qwColor2) forState:UIControlStateNormal];
+//    [self.consultButton addTarget:self action:@selector(freeConsultTouched:) forControlEvents:UIControlEventTouchDown];
+    
+    float distance = [storeModel.distance floatValue];
+    NSString *distanceStr = nil;
+    if (distance == -1.0f){
+        distanceStr = @"未知";
+    }else if (distance < 0) {
+        distanceStr = @"超出20KM";
+    }else if (distance > 20) {
+        distanceStr = @"超出20KM";
+    }else{
+        distanceStr = [NSString stringWithFormat:@"%.2fKM",distance];
+    }
+    CGSize distanceSize = [QWGLOBALMANAGER getTextSizeWithContent:distanceStr WithUIFont:[UIFont systemFontOfSize:12.0f] WithWidth:65];
+    self.distance.text = distanceStr;
+    [self.distance setFrame:CGRectMake(self.distance.frame.origin.x , self.distance.frame.origin.y, distanceSize.width, self.distance.frame.size.height)];
+    
+    [self.locationDesc setFrame:CGRectMake(self.distance.frame.origin.x + self.distance.frame.size.width + 12, self.locationDesc.frame.origin.y, APP_W - 20 - (self.distance.frame.origin.x + self.distance.frame.size.width + 12), self.locationDesc.frame.size.height)];
+    
+    
+    id tags = storeModel.tags;
+    if([tags isKindOfClass:[NSString class]]){
+        tags = [tags JSONValue];
+    }
+    
+    
+    
+    
+    if([storeModel.active intValue] == -1){
+
+        self.consultPerson.text = @"0人已咨询";
+        self.consultButton.hidden = NO;
+        [self.ratingView displayRating:0.0f];
+        self.key1Image.hidden = YES;
+        self.key2Image.hidden = YES;
+        self.key3Image.hidden = YES;
+        self.key4Image.hidden = YES;
+        self.key1Label.hidden = YES;
+        self.key2Label.hidden = YES;
+        self.key3Label.hidden = YES;
+        self.key4Label.hidden = YES;
+    }
+    if([storeModel.active intValue] == 1){
+        self.consultButton.hidden = YES;
+//        [self.consultButton setTitleColor:RGBHex(qwColor2) forState:UIControlStateNormal];
+//        self.consultButton.layer.borderColor = RGBHex(qwColor2).CGColor;
+        [self handleTags:tags withCell:self];
+    }
+    
+}
+
+
+
+
+- (void)freeConsultTouched:(UIButton *)sender
+{
+    
+    //此按钮是废弃的按钮，暂时注释--cj
+    
+//    if(!QWGLOBALMANAGER.loginStatus) {
+//        LoginViewController *loginViewController = [[LoginViewController alloc] initWithNibName:@"LoginViewController" bundle:nil];
+//        UINavigationController *navgationController = [[QWBaseNavigationController alloc] initWithRootViewController:loginViewController];
+//        loginViewController.isPresentType = YES;
+//        [self.delegate presentViewController:navgationController animated:YES completion:NULL];
+//        return;
+//    }
+//    NSDictionary *dict = nil;
+//    XPChatViewController *demoWeChatMessageTableViewController = [[XPChatViewController  alloc] init];
+//    UINavigationController *nav = nil;
+//    if ([self.delegate isKindOfClass:[ConsultPharmacyViewController class]])
+//    {
+//        dict = [StoreNearByModel dataTOdic:self.storeModel];
+//        ConsultPharmacyViewController *consultPharmacyVC = (ConsultPharmacyViewController *)self.delegate;
+//        nav = consultPharmacyVC.navigationController;
+//    }
+//    else if ([self.delegate isKindOfClass:[QZStoreCollectViewController class]])
+//    {
+//        dict = [MyFavStoreModel dataTOdic:self.myFavStoreModel];
+//        QZStoreCollectViewController *attentionVC = (QZStoreCollectViewController *)self.delegate;
+//        nav = attentionVC.navigationController;
+//    }
+//    
+//    demoWeChatMessageTableViewController.infoDict = dict;
+//    demoWeChatMessageTableViewController.title = dict[@"name"];
+//    if (nav) {
+//        [nav pushViewController:demoWeChatMessageTableViewController animated:YES];
+//    }
+}
+
+- (void)handleTags:(NSArray *)tagArray withCell:(ConsultPharmacyTableViewCell *)cell
+{
+    cell.key1Image.hidden = YES;
+    cell.key1Label.hidden = YES;
+    cell.key2Image.hidden = YES;
+    cell.key2Label.hidden = YES;
+    cell.key3Image.hidden = YES;
+    cell.key3Label.hidden = YES;
+    cell.key4Image.hidden = NO;
+    cell.key4Label.hidden = NO;
+    
+    for(StoreNearByTagModel *tagModel in tagArray)
+    {
+        if([tagModel.tag isEqualToString:@"24H"]) {
+            //24H营业
+            cell.key2Image.hidden = NO;
+            cell.key2Label.hidden = NO;
+        }
+        if([tagModel.tag isEqualToString:@"医保定点"]) {
+            //医保定点
+            cell.key3Image.hidden = NO;
+            cell.key3Label.hidden = NO;
+        }
+        if([tagModel.tag isEqualToString:@"免费送药"]) {
+            //免费送药
+            cell.key1Image.hidden = NO;
+            cell.key1Label.hidden = NO;
+        }
+    }
+//    if([tagArray count] >= 3){
+//        cell.key4Image.hidden = YES;
+//        cell.key4Label.hidden = YES;
+//    }else if([tagArray count] <= 2 && (cell.key2Label.hidden == NO)) {
+//        cell.key4Image.hidden = NO;
+//        cell.key4Label.hidden = NO;
+//    }else if ([tagArray count] <= 1){
+//        cell.key4Image.hidden = NO;
+//        cell.key4Label.hidden = NO;
+//    }
+}
+
+
+- (void)layoutSubviews
+{
+    [super layoutSubviews];
+    
+    CGRect imageRect = self.key1Image.frame;
+    CGRect labelRect = self.key1Label.frame;
+    if(self.key1Image.hidden == NO){
+        self.key1Image.frame = imageRect;
+        self.key1Label.frame = labelRect;
+        imageRect.origin.x += self.key1Label.frame.size.width + 17;
+        labelRect.origin.x += self.key1Label.frame.size.width + 17;
+    }
+    if(self.key3Image.hidden == NO){
+        self.key3Image.frame = imageRect;
+        self.key3Label.frame = labelRect;
+        imageRect.origin.x += self.key3Label.frame.size.width + 17;
+        labelRect.origin.x += self.key3Label.frame.size.width + 17;
+    }
+    if(self.key2Image.hidden == NO){
+        self.key2Image.frame = imageRect;
+        self.key2Label.frame = labelRect;
+        imageRect.origin.x += self.key2Label.frame.size.width - 3;
+        labelRect.origin.x += self.key2Label.frame.size.width - 3;
+    }
+    if(self.key4Image.hidden == NO){
+        self.key4Image.frame = imageRect;
+        self.key4Label.frame = labelRect;
+        imageRect.origin.x += self.key4Label.frame.size.width + 17;
+        labelRect.origin.x += self.key4Label.frame.size.width + 17;
+    }
+}
+
+@end

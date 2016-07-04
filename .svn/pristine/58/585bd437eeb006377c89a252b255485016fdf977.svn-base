@@ -1,0 +1,281 @@
+//
+//  Message.m
+//  APP
+//  消息数据结构
+//  Created by qw on 15/2/22.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "QWMessage.h"
+#import "CircleModel.h"
+#import "DCKeyValueObjectMapping.h"
+#import "DCArrayMapping.h"
+#import "DCParserConfiguration.h"
+#import "NSObject+DCKeyValueObjectMapping.h"
+
+@implementation QWMessage
+
++(NSString *)getPrimaryKey
+{
+    return @"UUID";
+}
+
+-(id)initWithMessage:(QWMessage*)msg
+{
+    if (self == [super init]) {
+        self.direction=msg.direction;
+        self.timestamp=msg.timestamp;
+        self.UUID=msg.UUID;
+        self.star=msg.star;
+        self.avatorUrl=msg.avatorUrl;
+        self.sendname=msg.sendname;
+        self.recvname=msg.recvname;
+        self.issend=msg.issend;
+        self.messagetype=msg.messagetype;
+        self.isRead=msg.isRead;
+        self.richbody=msg.richbody;
+        self.body=msg.body;
+        self.fromTag=msg.fromTag;
+        self.title=msg.title;
+        self.imgUrl=msg.imgUrl;
+        self.duration=msg.duration;
+        self.fileUrl=msg.fileUrl;
+        self.download=msg.download;
+        self.list=msg.list;
+        self.tags=msg.tags;
+        self.spec=msg.spec;
+        self.branchId=msg.branchId;
+        self.branchProId=msg.branchProId;
+        return self;
+    }
+    return nil;
+}
+@end
+
+@implementation QWXPMessage
+@synthesize  direction;                 //营销活动
+@synthesize  timestamp;
+@synthesize  UUID;                      //聊天记录id 数据库关联
+@synthesize  star;                      //营销活动 title
+@synthesize  avatorUrl;
+@synthesize  sendname;
+@synthesize  recvname;
+@synthesize  issend;
+@synthesize  messagetype;
+@synthesize  isRead;
+@synthesize  richbody;                  //营销活动 图片地址或者经纬度信息
+@synthesize  body;
+@synthesize  fromTag;
+@synthesize  title;
+@synthesize imgUrl;
+@synthesize duration;
+@synthesize fileUrl;
+@synthesize download;
+@synthesize list;
+@synthesize tags;
+@end
+
+@implementation QWPTPMessage
+@synthesize  spec;
+@synthesize  branchId;
+@synthesize  branchProId;
+@synthesize  direction;                 //营销活动
+@synthesize  timestamp;
+@synthesize  UUID;                      //聊天记录id 数据库关联
+@synthesize  star;                      //营销活动 title
+@synthesize  avatorUrl;
+@synthesize  sendname;
+@synthesize  recvname;
+@synthesize  issend;
+@synthesize  messagetype;
+@synthesize  isRead;
+@synthesize  richbody;                  //营销活动 图片地址或者经纬度信息
+@synthesize  body;
+@synthesize  fromTag;
+@synthesize  title;
+@synthesize imgUrl;
+@synthesize duration;
+@synthesize fileUrl;
+@synthesize download;
+@synthesize list;
+@synthesize tags;
+@end
+
+@implementation PharMsgModel
+
++ (NSString *)getPrimaryKey
+{
+    return @"branchId";
+}
+
+@end
+
+@implementation MsgNotifyListModel
+
++ (NSString *)getPrimaryKey
+{
+    return @"relatedid";
+}
+
+@end
+@implementation OfficialMessages
++ (NSString *)getPrimaryKey
+{
+    return @"UUID";
+}
+@end
+
+@implementation HistoryMessages
+
++ (NSString *)getPrimaryKey
+{
+    return @"relatedid";
+}
+@end
+
+@implementation TagWithMessage
+
+@end
+
+@implementation MsgBoxListModel
+@end
+
+@implementation MsgBoxListItemModel
+
+- (void)getAdditionInfo
+{
+    if (self.type.integerValue == MsgBoxListMsgTypeShopConsult) {
+        PharMsgModel *localSession = [PharMsgModel getObjFromDBWithWhere:[NSString stringWithFormat:@"sessionId = %@", _id]];
+        _imgUrl = localSession.imgUrl;
+        _unreadCount = localSession.unreadCounts.integerValue;
+        _isSend = localSession.issend;
+        _sessionId = _id;
+    } else if (self.type.integerValue == MsgBoxListMsgTypeExpertPTP) {
+        CircleChatPointModel *localSession = [CircleChatPointModel getObjFromDBWithWhere:[NSString stringWithFormat:@"sessionId = %@", _id]];
+        _imgUrl = localSession.headImg;
+        if (!localSession) {
+            _unreadCount = 0;
+        } else {
+            _unreadCount  = localSession.readFlag ? 0 : 1;
+        }
+        _isSend = localSession.isSend;
+        _sessionId = _id;
+    }
+}
+
+@end
+
+@implementation MsgBoxListModelR
+@end
+
+@implementation MsgBoxNoticeListModel
+
++(id)parse:(id)json Elements:(id)classE forAttribute:(NSString *)attribute
+{
+    id instance = nil;
+    instance = [[self alloc] init];
+    DCArrayMapping *mapper = [DCArrayMapping mapperForClassElements:classE forAttribute:attribute onClass:[instance class]];
+    
+    DCParserConfiguration *configuration = [DCParserConfiguration configuration];
+    [configuration addArrayMapper:mapper];
+    
+    DCKeyValueObjectMapping *parser = [DCKeyValueObjectMapping mapperForClass:[instance class] andConfiguration:configuration];
+    
+    @try {
+        instance   = [parser parseDictionary:json];
+        if ([instance isMemberOfClass:[MsgBoxNoticeListModel class]]) {
+            for (MsgBoxNoticeItemModel *item in [instance messages]) {
+                if (!item.url.length && item.href.length) {
+                    item.url = item.href;
+                }
+            }
+        }
+        return instance;
+    }
+    @catch (NSException *exception) {
+        DDLogError(@"可能数据模型建立错误，未与接口匹配");
+    }
+    @finally {
+        
+    }
+    return instance;
+}
+
+@end
+
+@implementation MsgBoxNoticeItemModel
++ (NSString *)getPrimaryKey
+{
+    return @"id";
+}
+@end
+
+@implementation MsgBoxNoticeListModelR
+@end
+
+@implementation MsgBoxHealthListModel
+
++(id)parse:(id)json Elements:(id)classE forAttribute:(NSString *)attribute
+{
+    id instance = nil;
+    instance = [[self alloc] init];
+    DCArrayMapping *mapper = [DCArrayMapping mapperForClassElements:classE forAttribute:attribute onClass:[instance class]];
+    
+    DCParserConfiguration *configuration = [DCParserConfiguration configuration];
+    [configuration addArrayMapper:mapper];
+    
+    DCObjectMapping *tagsToTagstr = [DCObjectMapping mapKeyPath:@"tags" toAttribute:@"tagsStr" onClass:[MsgBoxHealthItemModel class]];
+    [configuration addObjectMapping:tagsToTagstr];
+    
+    DCKeyValueObjectMapping *parser = [DCKeyValueObjectMapping mapperForClass:[instance class] andConfiguration:configuration];
+    
+    //    instance   = [parser parseDictionary:json];
+    @try {
+        instance = [parser parseDictionary:json];
+        if ([instance isMemberOfClass:[MsgBoxHealthListModel class]]) {
+            for (MsgBoxHealthItemModel *item in [instance notices]) {
+                [item fixTags];
+            }
+        }
+        return instance;
+    }
+    @catch (NSException *exception) {
+        DDLogError(@"可能数据模型建立错误，未与接口匹配");
+    }
+    @finally {
+        
+    }
+    return instance;
+}
+@end
+
+@implementation MsgBoxHealthItemModel
++ (NSString *)getPrimaryKey
+{
+    return @"id";
+}
+- (void)fixTags
+{
+    if ([self.tagsStr isKindOfClass:[NSString class]]) {
+        NSError *err;
+        _tags = [NSJSONSerialization JSONObjectWithData:[self.tagsStr dataUsingEncoding:NSUTF8StringEncoding] options:NSJSONReadingMutableLeaves error:&err];
+        if (err) {
+            DDLogError(@"[%@ %s]:%d. parse tags failed. \nERROR: %@", NSStringFromClass(self.class), __func__, __LINE__, err);
+            _tags = nil;
+        }
+    } else if ([self.tagsStr isKindOfClass:[NSArray class]]) {
+        _tags = (NSArray *)self.tagsStr;
+    }
+}
+@end
+
+@implementation MsgBoxHealthListModelR
+
+@end
+
+@implementation MsgBoxListSetReadTypeModelR
+
+@end
+
+@implementation MsgBoxListRemoveByTypeModelR
+@end

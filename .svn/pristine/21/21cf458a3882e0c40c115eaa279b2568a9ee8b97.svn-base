@@ -1,0 +1,300 @@
+//
+//  CommonDiseaseViewController.m
+//  APP
+//
+//  Created by Meng on 15/6/2.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "CommonDiseaseViewController.h"
+
+//api
+#import "Disease.h"
+
+//model
+#import "DiseaseModel.h"
+#import "DiseaseModelR.h"
+
+//cell
+#import "CommonDiseaseRootCell.h"
+#import "CommonDiseaseSubCell.h"
+#import "WebDirectViewController.h"
+//reference controller
+#import "CommonDiseaseDetailViewController.h"
+
+static NSString * const rootCellIdentifier = @"rootCellIdentifier";
+
+@interface CommonDiseaseViewController ()<UITableViewDataSource,UITableViewDelegate>
+{
+    NSInteger currentRow;
+}
+@property (nonatomic ,strong) NSMutableArray *rootDataSource;
+@property (nonatomic ,strong) NSArray *subDataSource;
+@property (weak, nonatomic) IBOutlet UITableView *rootTableView;
+@property (weak, nonatomic) IBOutlet UITableView *subTableView;
+@property (weak, nonatomic) IBOutlet UIView *bgView;
+@property (weak, nonatomic) IBOutlet UIImageView *netImageView;
+@property (weak, nonatomic) IBOutlet UILabel *netLabel;
+
+@property (weak, nonatomic) IBOutlet UIButton *netButton;
+
+@end
+
+@implementation CommonDiseaseViewController
+
+- (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    if (self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil]) {
+        self.title = @"常见疾病";
+        self.rootDataSource = [NSMutableArray array];
+    }
+    return self;
+}
+
+- (instancetype)init
+{
+    if (self = [super init]) {
+        self.title = @"常见疾病";
+        self.rootDataSource = [NSMutableArray array];
+    }
+    return self;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    currentRow = 0;
+    // Do any additional setup after loading the view from its nib.
+    
+    [self.subTableView registerClass:[UITableViewCell class] forCellReuseIdentifier:@"subCellIdentifier"];
+    self.rootTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    UINib *rootNib = [UINib nibWithNibName:@"CommonDiseaseRootCell" bundle:nil];
+    [self.rootTableView registerNib:rootNib forCellReuseIdentifier:rootCellIdentifier];
+    
+    [self netButtonClick];
+    
+    
+    UIView *view = [[UIView alloc] init];
+    self.rootTableView.tableFooterView = view;
+    self.subTableView.tableFooterView = view;
+    
+}
+
+-(void)popVCAction:(id)sender {
+    [super popVCAction:sender];
+    [QWGLOBALMANAGER statisticsEventId:@"x_yp_2_fh" withLable:@"药品" withParams:nil];
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if ([tableView isEqual:self.rootTableView]) {
+        return self.rootDataSource.count;
+    }else
+        if([tableView isEqual:self.subTableView]){
+            return self.subDataSource.count;
+    }
+    return 0;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if ([tableView isEqual:self.rootTableView]) {
+        return 90;
+    }else if ([tableView isEqual:self.subTableView]){
+        return 48;
+    }
+    return 0;
+}
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if ([tableView isEqual:self.rootTableView]) {
+        CommonDiseaseRootCell *cell = [self.rootTableView dequeueReusableCellWithIdentifier:rootCellIdentifier forIndexPath:indexPath];
+        DiseaseClassListModel *listModel = self.rootDataSource[indexPath.row];
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        if (currentRow == indexPath.row) {
+            [cell.headImage setImage:[UIImage imageNamed:[NSString stringWithFormat:@"ic_btn_%ld_selected",indexPath.row + 1]]];
+            cell.bgView.hidden = YES;
+        }else{
+            [cell.headImage setImage:[UIImage imageNamed:[NSString stringWithFormat:@"ic_btn_%ld",indexPath.row + 1]]];
+            cell.bgView.hidden = NO;
+        }
+        cell.nameLabel.text = listModel.name;
+        return cell;
+    }else if ([tableView isEqual:self.subTableView])
+    {
+        static NSString *subCellIdentifier = @"subCellIdentifier";
+        UITableViewCell *cell = [self.subTableView dequeueReusableCellWithIdentifier:subCellIdentifier forIndexPath:indexPath];
+        DiseaseSubClassModel *subModel = self.subDataSource[indexPath.row];
+        cell.textLabel.text = subModel.name;
+        cell.textLabel.font = fontSystem(15);
+        cell.textLabel.textColor = RGBHex(qwColor6);
+        cell.selectedBackgroundView = [[UIView alloc]init];
+        cell.selectedBackgroundView.backgroundColor = RGBHex(qwColor10);
+        return cell;
+    }
+    return nil;
+}
+
+
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    if ([tableView isEqual:self.rootTableView]) {
+        
+        currentRow = indexPath.row;
+        CommonDiseaseRootCell *cell = (CommonDiseaseRootCell *)[tableView cellForRowAtIndexPath:indexPath];
+        [cell.headImage setImage:[UIImage imageNamed:[NSString stringWithFormat:@"ic_btn_%ld_selected",indexPath.row + 1]]];
+        cell.bgView.hidden = YES;
+        [self.rootTableView selectRowAtIndexPath:indexPath animated:YES scrollPosition:UITableViewScrollPositionTop];
+        DiseaseClassListModel *listModel = self.rootDataSource[indexPath.row];
+        NSMutableDictionary *tdParams = [NSMutableDictionary dictionary];
+        tdParams[@"点击内容"] = listModel.name;
+        [QWGLOBALMANAGER statisticsEventId:@"x_jb_1" withLable:@"疾病" withParams:tdParams];
+        self.subDataSource = listModel.subClass;
+        [self.subTableView reloadData];
+        
+    }else if ([tableView isEqual:self.subTableView]){
+        [self.subTableView deselectRowAtIndexPath:indexPath animated:YES];
+        DiseaseSubClassModel *subDisease = self.subDataSource[indexPath.row];
+        NSString *type = subDisease.type;
+        if ([type isEqualToString:@"A"]) {
+            DiseaseClassListModel *listModel = self.rootDataSource[currentRow];
+            
+            NSMutableDictionary *tdParams = [NSMutableDictionary dictionary];
+            tdParams[@"点击内容"] = subDisease.name;
+            [QWGLOBALMANAGER statisticsEventId:@"x_yp_2" withLable:@"疾病" withParams:tdParams];
+            CommonDiseaseDetailViewController *commonDiseaseDetail = [[CommonDiseaseDetailViewController alloc] init];
+            commonDiseaseDetail.title = subDisease.name;
+            commonDiseaseDetail.diseaseId = subDisease.diseaseId;
+            [self.navigationController pushViewController:commonDiseaseDetail animated:YES];
+        }else{
+            NSString *diseaseId = subDisease.diseaseId;
+            WebDirectViewController *vcWebDirect = [[UIStoryboard storyboardWithName:@"WebDirect" bundle:nil] instantiateViewControllerWithIdentifier:@"WebDirectViewController"];
+            
+            vcWebDirect.showConsultBtn = YES;
+            WebDiseaseDetailModel *modelDisease = [[WebDiseaseDetailModel alloc] init];
+            modelDisease.diseaseId = diseaseId;
+            
+            WebDirectLocalModel *modelLocal = [[WebDirectLocalModel alloc] init];
+            modelLocal.modelDisease = modelDisease;
+            NSString *title = [NSString stringWithFormat:@"%@详情",subDisease.name];
+            modelLocal.title = title;
+            modelLocal.typeTitle = WebTitleTypeOnlyShare;
+            modelLocal.typeLocalWeb = WebPageToWebTypeDisease;
+            [vcWebDirect setWVWithLocalModel:modelLocal];
+            
+            vcWebDirect.hidesBottomBarWhenPushed = YES;
+            [self.navigationController pushViewController:vcWebDirect animated:YES];
+        }
+    }
+}
+
+- (void)tableView:(UITableView *)tableView didDeselectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if ([tableView isEqual:self.rootTableView]) {
+        CommonDiseaseRootCell *cell = (CommonDiseaseRootCell *)[tableView cellForRowAtIndexPath:indexPath];
+        cell.bgView.hidden = NO;
+        [cell.headImage setImage:[UIImage imageNamed:[NSString stringWithFormat:@"ic_btn_%ld",indexPath.row + 1]]];
+    }
+}
+
+//数据请求
+- (void)loadDiseaseData{
+    if (QWGLOBALMANAGER.currentNetWork != kNotReachable) {
+        
+        [self removeInfoView];
+        DiseaseClassModelR *model = [DiseaseClassModelR new];
+        model.currPage = @"1";
+        model.pageSize = @"0";//不需要分页
+        
+        [Disease queryDiseaseClassWithParams:model success:^(id obj) {
+            
+            DiseaseClassModel *classModel = (DiseaseClassModel *)obj;
+            NSArray * arr = classModel.list;
+            if (arr.count > 0) {
+                [self manageDataWithArr:arr];
+                //缓存数据
+                for (DiseaseClassListModel *listModel in arr) {
+                    [DiseaseClassListModel updateObjToDB:listModel WithKey:listModel.classId];
+                }
+            }else{
+//                [self showInfoView:kWarning30 image:nil];
+                [self showBgView:YES];
+            }
+            
+        } failure:^(HttpException *e) {
+            if(e.errorCode!=-999){
+                if(e.errorCode == -1001){
+//                    [self showInfoView:kWarning215N26 image:@"网络信号icon.png"];
+                    [self showBgView:NO];
+                }else{
+                    [self showBgView:NO];
+//                    [self showInfoView:kWarning12 image:@"网络信号icon.png"];
+                }
+                
+            }
+            return;
+        }];
+        
+    }
+}
+
+/**
+ *  @brief  处理拿到的数据
+ *
+ *  @param arr        数据源
+ *  @param localCache 是否是本地数据
+ */
+- (void)manageDataWithArr:(NSArray *)arr
+{
+    for (DiseaseClassListModel *listModel in arr) {
+        [self.rootDataSource addObject:listModel];
+    }
+
+    self.bgView.hidden = YES;
+    DiseaseClassListModel *listModel = self.rootDataSource[0];
+    self.subDataSource = listModel.subClass;
+    [self.rootTableView reloadData];
+    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:0 inSection:0];
+    [self.rootTableView selectRowAtIndexPath:indexPath animated:YES scrollPosition:UITableViewScrollPositionTop];
+    [self.subTableView reloadData];
+}
+
+/**
+ *  @brief 显示背景
+ *
+ *  @param noData 是否有数据
+ */
+- (void)showBgView:(BOOL)noData
+{
+    if (noData) {
+        self.bgView.hidden = NO;
+        self.netImageView.hidden = YES;
+        self.netButton.hidden = YES;
+        self.netLabel.text = kWarning30;
+    }else{
+        self.bgView.hidden = NO;
+        self.netImageView.hidden = NO;
+        self.netLabel.text = kWarning12;
+        self.netButton.hidden = NO;
+        [self.netButton addTarget:self action:@selector(netButtonClick) forControlEvents:UIControlEventTouchUpInside];
+    }
+}
+
+- (void)netButtonClick{
+    if (QWGLOBALMANAGER.currentNetWork != kNotReachable) {
+        [self loadDiseaseData];
+    }else{  //加载本地数据
+        NSArray * arr = [DiseaseClassListModel getArrayFromDBWithWhere:nil];
+        if (arr.count > 0) {
+            [self manageDataWithArr:arr];
+        }else{
+            [self showBgView:NO];
+//            [self showInfoView:kWarning12 image:@"网络信号icon.png"];
+        }
+    }
+}
+@end

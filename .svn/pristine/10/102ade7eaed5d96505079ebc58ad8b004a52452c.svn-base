@@ -1,0 +1,17 @@
+//
+//  RegionBestSellerCell.m
+//  APP
+//
+//  Created by Meng on 15/6/8.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "RegionBestSellerCell.h"
+
+@implementation RegionBestSellerCell
+
+- (void)awakeFromNib {
+    // Initialization code
+}
+
+@end

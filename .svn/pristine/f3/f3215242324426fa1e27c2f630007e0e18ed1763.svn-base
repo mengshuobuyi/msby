@@ -1,0 +1,680 @@
+//
+//  PharmacyGoodsListViewController.m
+//  APP
+//  微商药房详情-商品Tab
+//  使用接口如下：
+//  h5/mmall/queryClassify              店内药品分类列表数据
+//  h5/mmall/queryDiscountPackage       店内药品套餐分类商品(不分页)
+//  h5/mmall/queryProductByclassifyID   店内药品分类列表(分页加载)
+//  Created by 李坚 on 15/12/31.
+//  Copyright © 2015年 carret. All rights reserved.
+//
+
+#import "PharmacyGoodsListViewController.h"
+#import "StoreGoodTableViewCell.h"
+#import "MedicineDetailViewController.h"
+#import "ConsultStore.h"
+#import "MallCart.h"
+#import "SBJson.h"
+#import "SVProgressHUD.h"
+#import "LeftSideTableViewCell.h"
+#import "NoticeCustomView.h"
+#import "AppDelegate.h"
+#import "SimpleShoppingCartViewController.h"
+#import "HomeSearchMedicineViewController.h"
+
+#define TableViewHeight     49.0f
+#define HeadViewHeight      24.0f
+#define FootViewHeight      60.0f
+
+typedef enum  Product_Type {
+    Enum_Product_Normal    = 0,    //普通商品
+    Enum_Product_Package  = 1,     //套餐
+}ProductType;
+
+static NSString *const storeGoodCellIdentifier = @"StoreGoodTableViewCell";
+static NSString *const ClassityCellIdentifier = @"LeftSideTableViewCell";
+
+@interface PharmacyGoodsListViewController ()<UITableViewDelegate,UITableViewDataSource,StoreGoodTableViewCellDelegate>{
+    CGFloat lastContentOffsetY;
+    NSIndexPath *selectedIndex;
+    NSInteger currSection;
+    NSTimer *time;
+    ProductType productType;
+    NSInteger currPage;
+    NSString *classId;
+    BranchNoticeVO *noticeModel;
+
+}
+@property (weak, nonatomic) IBOutlet UITableView *leftTableView;//分类TableView
+@property (weak, nonatomic) IBOutlet UITableView *rightTableView;//商品TableView
+@property (weak, nonatomic) IBOutlet UILabel *noticeLabel;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *NoticeViewHeightConstant;
+@property (weak, nonatomic) IBOutlet UIView *noticeView;
+
+@property (weak, nonatomic) IBOutlet UIButton *noticeBtn;
+
+@property (weak, nonatomic) IBOutlet UIButton *goodCarBtn;//购物车按钮
+@property (weak, nonatomic) IBOutlet UILabel *goodCountLabel;//用于显示购物车商品数量
+
+@property (nonatomic, strong) NSMutableArray *classiftyList;//分类数组
+@property (nonatomic, strong) NSMutableArray *productList;//商品数组
+
+@end
+
+@implementation PharmacyGoodsListViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    _NoticeViewHeightConstant.constant = 0.0f;
+    _noticeView.hidden = YES;
+    [_noticeBtn addTarget:self action:@selector(noticeAction) forControlEvents:UIControlEventTouchUpInside];
+    
+    self.title = [QWGLOBALMANAGER getMapInfoModel].branchName;
+    [self naviRightBottonImage:@"icon_navigation_search_common" action:@selector(searchAction)];
+    currPage = 1;
+    selectedIndex   = [NSIndexPath indexPathForRow:0 inSection:0];
+    _classiftyList  = [[NSMutableArray alloc]init];
+    _productList    = [[NSMutableArray alloc]init];
+    self.goodCountLabel.layer.masksToBounds = YES;
+    self.goodCountLabel.layer.cornerRadius = 12.5f;
+    [self.goodCarBtn addTarget:self action:@selector(pushToGoodsCar:) forControlEvents:UIControlEventTouchUpInside];
+    if([QWGLOBALMANAGER getUnreadShoppingCart] == 0){
+        self.goodCountLabel.hidden = YES;
+    }else{
+        self.goodCountLabel.hidden = NO;
+        self.goodCountLabel.text = [NSString stringWithFormat:@"%d",[QWGLOBALMANAGER getUnreadShoppingCart]];
+    }
+    
+    currSection = 0;
+    [self.view layoutIfNeeded];
+    [self setupTableView];
+    [self loadClassityListData];
+    [self loadNotice];
+}
+
+#pragma mark - 跳转药房搜索
+- (void)searchAction{
+    [QWGLOBALMANAGER checkEventId:@"分类_搜索" withLable:nil withParams:nil];
+    
+    HomeSearchMedicineViewController *VC = [[HomeSearchMedicineViewController alloc]initWithNibName:@"HomeSearchMedicineViewController" bundle:nil];
+    VC.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:VC animated:YES];
+}
+
+#pragma mark - 购物车按钮点击Action
+- (void)pushToGoodsCar:(id)sender{
+    
+    [QWGLOBALMANAGER statisticsEventId:@"x_dnyp_gwc" withLable:nil withParams:nil];
+    SimpleShoppingCartViewController *simpleShoppingCartViewController = [[SimpleShoppingCartViewController alloc] initWithNibName:@"SimpleShoppingCartViewController" bundle:nil];
+    simpleShoppingCartViewController.shouldRequireShoppingList = YES;
+    [self.navigationController pushViewController:simpleShoppingCartViewController animated:YES];
+    NSMutableDictionary *setting = [NSMutableDictionary dictionary];
+    setting[@"上级页面"] = @"药房详情";
+    [QWGLOBALMANAGER statisticsEventId:@"x_gwcym_cx" withLable:@"购物车页面-出现" withParams:setting];
+}
+
+#pragma mark - Notification接收
+- (void)getNotifType:(Enum_Notification_Type)type data:(id)data target:(id)obj{
+    if(type == NotifShoppingUnreadUpdate){
+        if([QWGLOBALMANAGER getUnreadShoppingCart] == 0){
+            self.goodCountLabel.hidden = YES;
+        }else{
+            self.goodCountLabel.hidden = NO;
+            self.goodCountLabel.text = [NSString stringWithFormat:@"%d",[QWGLOBALMANAGER getUnreadShoppingCart]];
+        }
+    }
+}
+
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+#pragma mark - UITableView相关操作
+- (void)setupTableView{
+    
+    [_rightTableView registerNib:[UINib nibWithNibName:storeGoodCellIdentifier bundle:nil] forCellReuseIdentifier:storeGoodCellIdentifier];
+    [_leftTableView registerNib:[UINib nibWithNibName:ClassityCellIdentifier bundle:nil] forCellReuseIdentifier:ClassityCellIdentifier];
+    _leftTableView.showsVerticalScrollIndicator = NO;
+    _rightTableView.backgroundColor = RGBHex(qwColor4);
+    _leftTableView.backgroundColor = RGBHex(qwColor11);
+    _rightTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    _leftTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    
+    //产品要求改回原先版本UI，为用户体验添加一个footView
+    UIView *footView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, 76.0f, 68.0f)];
+    footView.backgroundColor = RGBHex(qwColor11);
+    self.leftTableView.tableFooterView = footView;
+}
+
+#pragma mark - UITableView加载更多
+- (void)loadMoreData{
+    
+    currPage ++;
+    if(productType == Enum_Product_Normal){
+        [self loadNormalData];
+    }else if(productType == Enum_Product_Package){
+        [self loadPackageData];
+    }else{
+        [_rightTableView.footer endRefreshing];
+    }
+}
+
+#pragma mark - 分类数据请求
+- (void)loadClassityListData{
+    
+    CategoryModelR *modelR = [CategoryModelR new];
+    modelR.branchId = self.branchId;
+    [QWLOADING showLoading];
+    
+    [ConsultStore MallClassifyList:modelR success:^(DrugClassifyList *model) {
+        
+        if([model.apiStatus intValue] == 0 && model.list.count > 0){
+            [_classiftyList removeAllObjects];
+            [_classiftyList addObjectsFromArray:model.list];
+            
+            if(StrIsEmpty(self.classID)){
+                
+                DrugClassifyVO *VO = model.list[0];
+                selectedIndex = [NSIndexPath indexPathForRow:0 inSection:0];
+                [_leftTableView reloadData];
+                
+                if([VO.classType intValue] == 1){
+                    classId = VO.classID;
+                    [self loadNormalData];
+                }else{
+                    [self loadPackageData];
+                }
+            }else{
+                if([self.classID isEqualToString:COMBO_CATEGROY_ID]){
+                    //套餐分类
+                    for(DrugClassifyVO *VO in model.list){
+                        if([VO.classType intValue] == 2){
+                            selectedIndex = [NSIndexPath indexPathForRow:[model.list indexOfObject:VO] inSection:0];
+                            break;
+                        }
+                    }
+                    [self loadPackageData];
+                    
+                }else{
+                    //其他分类
+                    for(DrugClassifyVO *VO in model.list){
+                        if([VO.classID isEqualToString:self.classID]){
+                            classId = VO.classID;
+                            selectedIndex = [NSIndexPath indexPathForRow:[model.list indexOfObject:VO] inSection:0];
+                            break;
+                        }
+                    }
+                    [self loadNormalData];
+                }
+            }
+            [_leftTableView reloadData];
+        }else{
+            [QWLOADING removeLoading];
+            [self showInfoView:@"药房暂无可售商品" image:@"ic_img_fail"];
+        }
+        
+    } failure:^(HttpException *e) {
+        [QWLOADING removeLoading];
+        if(e.errorCode == -1001){
+            [self showInfoView:kWarning215N26 image:@"ic_img_fail"];
+        }else{
+            [self showInfoView:kWarning39 image:@"ic_img_fail"];
+        }
+    }];
+}
+
+#pragma mark - 普通商品列表数据请求
+// [self.view bringSubviewToFront:avatar];
+
+- (void)loadNormalData{
+    
+    
+    if(!_rightTableView.footer){
+        [_rightTableView addFooterWithTarget:self action:@selector(loadMoreData)];
+    }
+    CategoryNormalProductModelR *modelR = [CategoryNormalProductModelR new];
+    modelR.branchId = self.branchId;
+    modelR.classifyId = classId;
+    modelR.currPage = @(currPage);
+    modelR.pageSize = @(10);
+    if(currPage == 1){
+        [QWLOADING showLoading];
+    }
+    
+    [ConsultStore MallProductByClassify:modelR success:^(BranchProductList *model) {
+        
+        if(currPage == 1){
+            [_productList removeAllObjects];
+            _rightTableView.footer.canLoadMore = YES;
+        }
+        
+        if([model.apiStatus intValue] == 0 && model.list.count > 0){
+            [_productList addObjectsFromArray:model.list];
+        }
+        if(currPage != 1 && model.list.count < 10){
+            _rightTableView.footer.canLoadMore = NO;
+        }
+        
+        [_rightTableView.footer endRefreshing];
+        productType = Enum_Product_Normal;
+        [_rightTableView reloadData];
+        
+        if(currPage == 1 && _productList.count > 0){
+            [_rightTableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0] atScrollPosition:UITableViewScrollPositionNone animated:YES];
+        }
+        [QWLOADING removeLoading];
+        
+    } failure:^(HttpException *e) {
+        [QWLOADING removeLoading];
+        [_rightTableView.footer endRefreshing];
+    }];
+}
+
+#pragma mark - 套餐商品列表数据请求
+- (void)loadPackageData{
+    
+    [_rightTableView removeFooter];
+    
+    CategoryModelR *modelR = [CategoryModelR new];
+    modelR.branchId = self.branchId;
+    [QWLOADING showLoading];
+    
+    [ConsultStore MallProductByPackage:modelR success:^(CartPackageList *model) {
+        
+        [_productList removeAllObjects];
+        [_productList addObjectsFromArray:model.list];
+        [_rightTableView.footer endRefreshing];
+        productType = Enum_Product_Package;
+        [_rightTableView reloadData];
+        
+        if(_productList.count > 0){
+            CartComboVoModel *VO = _productList[0];
+            if(VO.druglist.count > 0){
+                [_rightTableView scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0] atScrollPosition:UITableViewScrollPositionNone animated:YES];
+            }
+        }
+        [QWLOADING removeLoading];
+    } failure:^(HttpException *e) {
+        [QWLOADING removeLoading];
+    }];
+}
+
+#pragma mark - ScrollViewDelegate
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView{
+    
+    CGFloat sectionHeaderHeight = 0.0f;
+    if(_productList.count == 0){
+        sectionHeaderHeight = 0.0f;
+    }
+    if(productType == Enum_Product_Normal){
+        sectionHeaderHeight =  0.0f;
+    }else if(productType == Enum_Product_Package){
+        sectionHeaderHeight =  FootViewHeight;
+    }else{
+        sectionHeaderHeight =  0.0f;
+    }
+    if(scrollView.contentOffset.y <= sectionHeaderHeight && scrollView.contentOffset.y >= 0){
+        scrollView.contentInset = UIEdgeInsetsMake(-scrollView.contentOffset.y, 0, 0, 0);
+    }else if (scrollView.contentOffset.y>=sectionHeaderHeight) {
+        scrollView.contentInset = UIEdgeInsetsMake(-sectionHeaderHeight, 0, 0, 0);
+    }
+}
+#pragma mark - UITableViewDelegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
+    if([tableView isEqual:_leftTableView]){
+        return 1;
+    }else{
+        if(productType == Enum_Product_Normal){
+            return 1;
+        }else if(productType == Enum_Product_Package){
+            return _productList.count;
+        }else{
+            return 0;
+        }
+    }
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    
+    if([tableView isEqual:_leftTableView]){
+        return _classiftyList.count;
+    }else{
+        if(productType == Enum_Product_Normal){
+            return _productList.count;
+        }else if(productType == Enum_Product_Package){
+            CartComboVoModel *VO = _productList[section];
+            return  VO.druglist.count;
+        }else{
+            return 0;
+        }
+    }
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
+    if([tableView isEqual:_leftTableView]){
+        return 0.0f;
+    }else{
+        if(productType == Enum_Product_Package){
+            return  HeadViewHeight;
+        }else{
+            return 0.0f;
+        }
+    }
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
+    if([tableView isEqual:_leftTableView]){
+        return nil;
+    }else if(_classiftyList.count == 0){
+        return nil;
+    }
+    if(_productList.count == 0){
+        return nil;
+    }
+    if(productType == Enum_Product_Normal){
+        return nil;
+    }
+    
+    UIView *headView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W - 76.0f, HeadViewHeight)];
+    headView.backgroundColor = RGBHex(qwColor18);
+    UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(12, 0, APP_W - 88.0f, HeadViewHeight)];
+    label.font = fontSystem(kFontS6);
+    label.textColor = RGBHex(qwColor7);
+    
+    if(productType == Enum_Product_Package){
+        CartComboVoModel *VO = _productList[section];
+        label.text = VO.desc;
+    }else{
+        DrugClassifyVO *VO = _classiftyList[selectedIndex.row];
+        label.text = VO.className;
+    }
+    [headView addSubview:label];
+    UIView *line = [[UIView alloc]initWithFrame:CGRectMake(0, HeadViewHeight - 0.5, APP_W, 0.5)];
+    line.backgroundColor = RGBHex(qwColor10);
+    [headView addSubview:line];
+    
+    if(section != 0){
+        UIView *topLine = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, 0.5)];
+        topLine.backgroundColor = RGBHex(qwColor10);
+        [headView addSubview:topLine];
+    }
+    
+    return headView;
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section{
+    if([tableView isEqual:_leftTableView]){
+        return 0.0f;
+    }else{
+        if(_productList.count == 0){
+            return 0.0f;
+        }
+        if(productType == Enum_Product_Normal){
+            return  0.0f;
+        }else if(productType == Enum_Product_Package){
+            return  FootViewHeight;
+        }else{
+            return  0.0f;
+        }
+    }
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section{
+    if(_productList.count == 0){
+        return nil;
+    }
+    if([tableView isEqual:_rightTableView] && productType == Enum_Product_Package){
+        CartComboVoModel *VO = _productList[section];
+        
+        UIView *footView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W - 76.0f, FootViewHeight)];
+        footView.backgroundColor = RGBHex(qwColor4);
+        
+        UIView *topLine = [[UIView alloc]initWithFrame:CGRectMake(15, 0, APP_W - 91.0f, 0.5)];
+        topLine.backgroundColor = RGBHex(qwColor10);
+        [footView addSubview:topLine];
+        
+        UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(12, 12, 45, 12)];
+        label.textColor = RGBHex(qwColor6);
+        label.font = fontSystem(kFontS5);
+        label.text = @"套餐价:";
+        [footView addSubview:label];
+        
+        UILabel *priceLabel = [[UILabel alloc]initWithFrame:CGRectMake(64, 12, 100, 12)];
+        priceLabel.text = [NSString stringWithFormat:@"￥%.2f",VO.price];
+        priceLabel.font = fontSystem(kFontS5);
+        priceLabel.textColor = RGBHex(qwColor3);
+        [footView addSubview:priceLabel];
+        
+        UILabel *reducePriceLabel = [[UILabel alloc]initWithFrame:CGRectMake(64, 36, 100, 12)];
+        reducePriceLabel.text = [NSString stringWithFormat:@"立省￥%.2f",VO.reduce];
+        reducePriceLabel.font = fontSystem(kFontS6);
+        reducePriceLabel.textColor = RGBHex(qwColor8);
+        [footView addSubview:reducePriceLabel];
+        
+        UIButton *btn = [[UIButton alloc]initWithFrame:CGRectMake(APP_W - 118.0f, (FootViewHeight - 21)/2.0f, 27, 27)];
+        [btn setImage:[UIImage imageNamed:@"icon_addcar_shoppin"] forState:UIControlStateNormal];
+        btn.tag = section;
+        [btn addTarget:self action:@selector(addPackageAction:) forControlEvents:UIControlEventTouchUpInside];
+        [footView addSubview:btn];
+        
+        return footView;
+    }else{
+        return nil;
+    }
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    if([tableView isEqual:_leftTableView]){
+        return [LeftSideTableViewCell getCellHeight:nil];
+    }else{
+        if(productType == Enum_Product_Normal){
+            return [StoreGoodTableViewCell getCellHeight:[_productList objectAtIndex:indexPath.row]];
+        }else{
+            
+            CartComboVoModel *VO = _productList[indexPath.section];
+            ComboProductVoModel *drug = VO.druglist[indexPath.row];
+            NSString *proNameText;
+            if(drug.count == 0){
+                proNameText = [NSString stringWithFormat:@"%@",drug.name];
+                
+            }else{
+                proNameText = [NSString stringWithFormat:@"%@*%d",drug.name,(int)drug.count];
+                
+            }
+            return 65.0f + [QWGLOBALMANAGER sizeText:proNameText font:fontSystem(kFontS4) limitWidth:APP_W - 167.0f].height;
+        }
+    }
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    if([tableView isEqual:_leftTableView]){
+        
+        LeftSideTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:ClassityCellIdentifier];
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        
+        DrugClassifyVO *VO = _classiftyList[indexPath.row];
+        
+        cell.mainLabel.textAlignment = NSTextAlignmentCenter;
+        cell.mainLabel.adjustsFontSizeToFitWidth = YES;
+        cell.mainLabel.text = VO.className;
+        cell.mainLabel.font = fontSystem(kFontS11);
+        
+        
+        if(indexPath.row == selectedIndex.row){
+            cell.sepateLine.hidden = YES;
+            cell.leftView.hidden = NO;
+            cell.backgroundColor = RGBHex(qwColor4);
+            cell.mainLabel.textColor = RGBHex(qwColor1);
+        }else{
+            cell.sepateLine.hidden = NO;
+            cell.leftView.hidden = YES;
+            cell.backgroundColor = RGBHex(qwColor21);
+            cell.mainLabel.textColor = RGBHex(qwColor6);
+        }
+        
+        return cell;
+    }else{
+        StoreGoodTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:storeGoodCellIdentifier];
+        if(productType == Enum_Product_Normal){
+            CartProductVoModel *VO = [_productList objectAtIndex:indexPath.row];
+            cell.path = indexPath;
+            cell.addBtn.hidden = NO;
+            cell.delegate = self;
+            [cell setCell:VO];
+        }else if(productType == Enum_Product_Package){
+            CartComboVoModel *VO = _productList[indexPath.section];
+            ComboProductVoModel *drug = VO.druglist[indexPath.row];
+            [cell setPackageCell:drug];
+        }
+        
+        return cell;
+    }
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
+    if([tableView isEqual:_leftTableView]){
+        //刷新左边分类TableView并请求第indexPath.row行分类对应的商品列表
+        selectedIndex = indexPath;
+        [_leftTableView reloadData];
+        
+        DrugClassifyVO *VO = _classiftyList[indexPath.row];
+        currPage = 1;
+        [QWGLOBALMANAGER statisticsEventId:@"x_dnyp_first" withLable:@"药房详情-店内药品-一级点击" withParams:[NSMutableDictionary dictionaryWithObject:VO.className forKey:@"名字"]];
+        if([VO.classType intValue] == 1){
+            classId = VO.classID;
+            [self loadNormalData];
+        }else{
+            [self loadPackageData];
+        }
+    }
+    if([tableView isEqual:_rightTableView]){
+        //跳转药品详情
+        NSString *productId;
+        NSString *productName;
+        if(productType == Enum_Product_Normal){//普通商品一维数组
+            CartProductVoModel *VO = [_productList objectAtIndex:indexPath.row];
+            productName = VO.name;
+            productId = VO.id;
+        }else if(productType == Enum_Product_Package){//套餐二维数组
+            CartComboVoModel *VO = _productList[indexPath.section];
+            CartPackageDrugVO *drug = VO.druglist[indexPath.row];
+            productName = drug.name;
+            productId = drug.branchProId;
+        }
+        
+        DrugClassifyVO *classifyVO = _classiftyList[selectedIndex.row];
+        NSMutableDictionary *param = [[NSMutableDictionary alloc]init];
+        [param setObject:classifyVO.className forKey:@"分类"];
+        [param setObject:productName forKey:@"药品名"];
+        
+        [QWGLOBALMANAGER statisticsEventId:@"x_dnyp_yp" withLable:@"药房详情-店内药品-点击某个药品" withParams:param];
+        
+        MedicineDetailViewController *medicintDetail = [[MedicineDetailViewController alloc]initWithNibName:@"MedicineDetailViewController" bundle:nil];
+        medicintDetail.lastPageName = @"店内药品列表";
+        medicintDetail.proId = productId;
+        [self.navigationController pushViewController:medicintDetail animated:YES];
+    }
+}
+
+#pragma mark - 购物车添加套餐
+- (void)addPackageAction:(UIButton *)btn
+{
+    CartBranchVoModel *branchModel = [CartBranchVoModel new];
+    branchModel.branchId = self.branchId;
+    branchModel.branchName = [QWGLOBALMANAGER getMapInfoModel].branchName;
+    branchModel.groupName = [QWGLOBALMANAGER getMapInfoModel].branchName;
+    branchModel.timeStamp = [[NSDate date] timeIntervalSince1970];
+    CartComboVoModel *model = _productList[btn.tag];
+    model.quantity = 1;
+    model.choose = YES;
+    branchModel.combos = [NSMutableArray arrayWithObject:model];
+    [QWGLOBALMANAGER postNotif:NotifShoppingCartSync data:branchModel object:nil];
+    StoreGoodTableViewCell *cell = [_rightTableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:model.druglist.count-1 inSection:btn.tag]];
+    CGPoint startPoint = [cell convertPoint:cell.imgUrl.center toView:[UIApplication sharedApplication].keyWindow];
+    CGPoint endPoint = [self.view convertPoint:self.goodCarBtn.center toView:[UIApplication sharedApplication].keyWindow];
+    CGPoint midPoint = CGPointMake((startPoint.x + endPoint.x)/2.0f , (startPoint.y + endPoint.y)/2.0f);
+
+    [self JoinCartAnimationWithStratPoint:startPoint endPoint:endPoint middlePoint:midPoint withImage:cell.imgUrl.image];
+}
+
+#pragma mark - 购物车添加商品
+- (void)addGoodWitIndexPath:(NSIndexPath *)path
+{
+    CartProductVoModel *model = _productList[path.row];
+    //判断是否有库存，没有库存不可点击fixed by lijian at V3.2.0
+    if(model.stock == 0){
+//        [SVProgressHUD showErrorWithStatus:@"没库存了"];
+        return;
+    }
+    model.choose = YES;
+    model.quantity = 1;
+    
+    CartBranchVoModel *branchModel = [CartBranchVoModel new];
+    branchModel.branchId = self.branchId;
+    branchModel.branchName = [QWGLOBALMANAGER getMapInfoModel].branchName;
+    branchModel.groupName = [QWGLOBALMANAGER getMapInfoModel].branchName;
+    branchModel.timeStamp = [[NSDate date] timeIntervalSince1970];
+    
+    branchModel.products = [NSMutableArray arrayWithObject:model];
+    [QWGLOBALMANAGER postNotif:NotifShoppingCartSync data:branchModel object:nil];
+    
+    
+    StoreGoodTableViewCell *cell = [_rightTableView cellForRowAtIndexPath:path];
+    CGPoint startPoint = [cell convertPoint:cell.imgUrl.center toView:[UIApplication sharedApplication].keyWindow];
+    CGPoint endPoint = [self.view convertPoint:self.goodCarBtn.center toView:[UIApplication sharedApplication].keyWindow];
+    CGPoint midPoint = CGPointMake((startPoint.x + endPoint.x)/2.0f , (startPoint.y + endPoint.y)/2.0f);
+    [self JoinCartAnimationWithStratPoint:startPoint endPoint:endPoint middlePoint:midPoint withImage:cell.imgUrl.image];
+    
+    DrugClassifyVO *classify = _classiftyList[selectedIndex.row];
+    [QWGLOBALMANAGER statisticsEventId:@"x_dnyp_jrgwc" withLable:@"店内药品" withParams:[NSMutableDictionary dictionaryWithDictionary:@{@"药品名":model.name,@"分类":classify.className,@"价格":model.price}]];
+    
+    //    [self syncShoppingCart:model];
+}
+
+#pragma mark - 动画结束移除操作
+- (void)removeFromLayer:(CALayer *)layerAnimation{
+    
+    [super removeFromLayer:layerAnimation];
+
+}
+
+#pragma mark - 药房公告请求
+- (void)loadNotice{
+    
+    CategoryModelR *modelR = [CategoryModelR new];
+    modelR.branchId = [QWGLOBALMANAGER getMapBranchId];
+    
+    [ConsultStore branchContent:modelR success:^(BranchNoticeVO *model) {
+        if([model.apiStatus integerValue] == 0 && model.content.length > 0){
+            noticeModel = model;
+            _NoticeViewHeightConstant.constant = 31.0f;
+            _noticeLabel.text = model.content;
+            _noticeView.hidden = NO;
+        }else{
+            _NoticeViewHeightConstant.constant = 0.0f;
+            _noticeView.hidden = YES;
+        }
+    } failure:^(HttpException *e) {
+        
+    }];
+}
+
+#pragma mark - 点击药房公告Action
+- (void)noticeAction{
+    
+    //    现在服务器返回title字段，由于V3.1.1公告标题是写死的，所以按照测试要求V3.2.0版本依然写死处理
+    //    NSString *noticeTitle = noticeModel.title.length > 0?noticeModel.title:@"公告";
+    
+    NSString *noticeTitle = @"公告";
+    
+    [NoticeCustomView showNoticeViewInView:APPDelegate.window WithTitle:noticeTitle content:_noticeLabel.text];
+}
+@end

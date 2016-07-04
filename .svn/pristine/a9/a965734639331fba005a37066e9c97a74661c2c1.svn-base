@@ -1,0 +1,77 @@
+//
+//  Favorite.h
+//  APP
+//
+//  Created by qw on 15/3/4.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import "HttpClient.h"
+#import "FavoriteModelR.h"
+#import "FavoriteModel.h"
+@interface Favorite : NSObject
+
+//check药房是否已被收藏 add by lijian at V4.0
++ (void)checkCollectBranch:(NSString *)branchId
+                   success:(void(^)(id))success
+                   failure:(void(^)(HttpException * e))failure;
+//收藏药房 add by lijian at V4.0
++ (void)CollectBranch:(NSString *)branchId
+              success:(void(^)(id))success
+              failure:(void(^)(HttpException * e))failure;
+//取消收藏药房 add by lijian at V4.0
++ (void)CancelCollectBranch:(NSString *)branchId
+                    success:(void(^)(id))success
+                    failure:(void(^)(HttpException * e))failure;
+//收藏的药房列表 add by lijian at V4.0
++ (void)CollectedBranchList:(FavoriteModelR *)modelR
+                    success:(void(^)(id))success
+                    failure:(void(^)(HttpException * e))failure;
+
+//我关注的药房
++ (void)queryStoreCollectListWithParams:(FavoriteModelR *)param
+                                success:(void(^)(id DFUserModel))success
+                                failure:(void(^)(HttpException * e))failure;
+
+//添加取消收藏
++ (void)collectWithParam:(FavoriteCollectR *)param
+                  success:(void(^)(id))success
+                  failure:(void(^)(HttpException * e))failure;
+
+//我收藏的商品
++ (void)queryProductCollectListWithParams:(FavoriteModelR *)param
+                                success:(void(^)(id DFUserModel))success
+                                failure:(void(^)(HttpException * e))failure;
+
+
+//我收藏的症状
++ (void)querySpmCollectListWithParams:(FavoriteModelR *)param
+                                success:(void(^)(id DFUserModel))success
+                                failure:(void(^)(HttpException * e))failure;
+
+
+//我收藏的疾病
++ (void)queryDiseaseCollectListWithParams:(FavoriteModelR *)param
+                                success:(void(^)(id DFUserModel))success
+                                failure:(void(^)(HttpException * e))failure;
+
+
+//我收藏的资讯 (弃用)
++ (void)queryAdviceCollectListWithParams:(FavoriteModelR *)param
+                                success:(void(^)(id DFUserModel))success
+                                failure:(void(^)(HttpException * e))failure;
+
+
++ (void)checkAdviceCollectWithParams:(AdviceFavoriteCollectR *)param
+                             success:(void(^)(id DFUserModel))success
+                             failure:(void(^)(HttpException * e))failure;
+
+// 我收藏的资讯列表 V300
++ (void)getMyCollectMsgWithParams:(FavRequestModelR *)param
+                          success:(void(^)(MyFavMsgLists *model))success
+                          failure:(void(^)(HttpException * e))failure;
+
+// 我的收藏 删除 V300
++(void)DelMyCollection:(DelCollectionR *)param success:(void(^)(DelCollectionModel *model))success failure:(void(^)(HttpException * e))failure;
+@end

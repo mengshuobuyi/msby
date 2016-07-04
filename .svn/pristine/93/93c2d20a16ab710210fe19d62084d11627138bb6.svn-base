@@ -1,0 +1,227 @@
+//
+//  MsgBoxNoticeCell.m
+//  APP
+//
+//  Created by  ChenTaiyu on 16/6/23.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "MsgBoxNoticeCell.h"
+#import "QWMessage.h"
+#import "QWImageView.h"
+#import "UIImageView+WebCache.h"
+
+const CGFloat kMsgBoxNoticeCellIndentX = 12.0;
+
+@interface MsgBoxNoticeCell ()
+
+@property (weak, nonatomic) IBOutlet UIView *cellWrapper;
+@property (weak, nonatomic) IBOutlet UILabel *contentLabel;
+@property (weak, nonatomic) IBOutlet UIView *midSeperator;
+@property (weak, nonatomic) IBOutlet UIButton *actionBtn;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *timeLabelHeight;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *timeLabelTopMargin;
+@property (weak, nonatomic) IBOutlet UILabel *timeLabel;
+@property (weak, nonatomic) IBOutlet UILabel *titleLabel;
+@property (weak, nonatomic) IBOutlet QWImageView *contentImageView;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *separatorHeight;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *titleLabelTopMargin;
+
+@end
+
+@implementation MsgBoxNoticeCell
+
++ (instancetype)cell
+{
+    MsgBoxNoticeCell *cell;
+    NSArray *cellArr = [[NSBundle mainBundle] loadNibNamed:@"MsgBoxNoticeCell" owner:nil options:nil];
+    for (UITableViewCell *nibCell in cellArr) {
+        if ([nibCell isKindOfClass:[self class]]) {
+            cell = (MsgBoxNoticeCell *)nibCell;
+            break;
+        }
+    }
+    return cell;
+}
+
+- (void)awakeFromNib
+{
+    self.backgroundColor = [UIColor clearColor];
+    self.contentView.backgroundColor = [UIColor clearColor];
+    self.backgroundView = nil;
+    self.selectedBackgroundView = nil;
+    self.midSeperator.backgroundColor = RGBHex(0xc8c7cc);
+    self.timeLabel.textColor = RGBHex(qwColor8);
+    self.timeLabel.font = fontSystem(kFontS5);
+    self.titleLabel.textColor = RGBHex(qwColor6);
+    self.titleLabel.font = fontSystem(kFontS4);
+    self.contentLabel.textColor = RGBHex(qwColor7);
+    self.contentLabel.font = fontSystem(kFontS5);
+    self.contentLabel.lineBreakMode = NSLineBreakByWordWrapping;
+    self.actionBtn.titleLabel.font = fontSystem(kFontS4);
+    [self.actionBtn setTitleColor:RGBHex(qwColor5) forState:UIControlStateNormal];
+    self.cellWrapper.layer.borderColor = RGBHex(0xc8c7cc).CGColor;
+    self.cellWrapper.layer.borderWidth = 0.5;
+    self.cellWrapper.layer.cornerRadius = 3.0f;
+    self.cellWrapper.clipsToBounds = YES;
+    self.selectionStyle = UITableViewCellSelectionStyleNone;
+    [self.actionBtn addTarget:self action:@selector(actionBtnClicked:) forControlEvents:UIControlEventTouchUpInside];
+    self.actionBtn.enabled = NO;
+    self.separatorHeight.constant = 0.5;
+//    self.swipeBackgroundColor = [UIColor clearColor];
+}
+
+- (void)actionBtnClicked:(UIButton *)btn
+{
+    if (self.actionBlock) {
+        self.actionBlock(btn);
+    }
+}
+
+- (void)setCell:(id)obj
+{
+    MsgBoxNoticeItemModel *model = obj;
+    BOOL hasTime = model.formatShowTime.length > 0;
+    if (!hasTime) {
+        self.timeLabelHeight.constant = 0;
+        self.timeLabelTopMargin.constant = 0;
+    } else {
+        self.timeLabelHeight.constant = 15.0;
+        self.timeLabelHeight.constant = 15.0;
+    }
+    self.timeLabel.text = model.formatShowTime;
+    self.titleLabelTopMargin.constant = model.title.length ? 10 : 0;
+    self.titleLabel.text = model.title;
+    self.contentLabel.text = model.content;
+    if (model.objType.integerValue == MsgBoxNoticeTypeCoupon) {
+//        if (model.scope.integerValue == 7 || model.scope.integerValue == 8) {
+//            self.contentLabel.text = model.priceInfo;
+//        } else {
+//            self.contentLabel.text = model.couponValue;
+//        }
+        self.contentImageView.image = [UIImage imageNamed:@"bg_quan_news"];
+    } else {
+        [self.contentImageView setImageWithURL:[NSURL URLWithString:model.imgUrl] placeholderImage:[UIImage imageNamed:@"bg_default_news"]];
+    }
+    
+}
+
++ (CGFloat)getCellHeightWithModel:(MsgBoxNoticeItemModel *)model
+{
+    MsgBoxNoticeCell *cell = [self cell];
+    [cell setCell:model];
+    [cell setNeedsUpdateConstraints];
+    [cell updateConstraintsIfNeeded];
+    cell.bounds = CGRectMake(0.0f, 0.0f, SCREEN_W, CGRectGetHeight(cell.bounds));
+    [cell setNeedsLayout];
+    [cell layoutIfNeeded];
+    cell.contentLabel.preferredMaxLayoutWidth = CGRectGetWidth(cell.contentLabel.bounds);
+    CGFloat height = [cell.contentView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize].height;
+    return height;
+}
+
+@end
+
+
+@interface MsgBoxNoticeCell2 ()
+@property (weak, nonatomic) IBOutlet UIView *cellWrapper;
+@property (weak, nonatomic) IBOutlet UILabel *contentLabel;
+@property (weak, nonatomic) IBOutlet UIView *midSeperator;
+@property (weak, nonatomic) IBOutlet UIButton *actionBtn;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *timeLabelHeight;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *timeLabelTopMargin;
+@property (weak, nonatomic) IBOutlet UILabel *timeLabel;
+@property (weak, nonatomic) IBOutlet UILabel *titleLabel;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *separatorHeight;
+
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *titleLabelTopMargin;
+
+@end
+
+@implementation MsgBoxNoticeCell2
+
+- (void)awakeFromNib
+{
+    self.backgroundColor = [UIColor clearColor];
+    self.contentView.backgroundColor = [UIColor clearColor];
+    self.backgroundView = nil;
+    self.selectedBackgroundView = nil;
+    self.midSeperator.backgroundColor = RGBHex(0xc8c7cc);
+    self.timeLabel.textColor = RGBHex(qwColor8);
+    self.timeLabel.font = fontSystem(kFontS5);
+    self.titleLabel.textColor = RGBHex(qwColor6);
+    self.titleLabel.font = fontSystem(kFontS4);
+    self.contentLabel.textColor = RGBHex(qwColor7);
+    self.contentLabel.font = fontSystem(kFontS5);
+    self.contentLabel.lineBreakMode = NSLineBreakByWordWrapping;
+    self.actionBtn.titleLabel.font = fontSystem(kFontS4);
+    [self.actionBtn setTitleColor:RGBHex(qwColor5) forState:UIControlStateNormal];
+    self.cellWrapper.layer.borderColor = RGBHex(0xc8c7cc).CGColor;
+    self.cellWrapper.layer.borderWidth = 0.5;
+    self.cellWrapper.layer.cornerRadius = 3.0f;
+    self.cellWrapper.clipsToBounds = YES;
+    self.selectionStyle = UITableViewCellSelectionStyleNone;
+    [self.actionBtn addTarget:self action:@selector(actionBtnClicked:) forControlEvents:UIControlEventTouchUpInside];
+    self.separatorHeight.constant = 0.5;
+//    self.swipeBackgroundColor = [UIColor clearColor];
+    self.actionBtn.enabled = NO;
+}
+
+- (void)actionBtnClicked:(UIButton *)btn
+{
+    if (self.actionBlock) {
+        self.actionBlock(btn);
+    }
+}
+
++ (instancetype)cell
+{
+    MsgBoxNoticeCell2 *cell;
+    NSArray *cellArr = [[NSBundle mainBundle] loadNibNamed:@"MsgBoxNoticeCell" owner:nil options:nil];
+    for (UITableViewCell *nibCell in cellArr) {
+        if ([nibCell isKindOfClass:[self class]]) {
+            cell = (MsgBoxNoticeCell2 *)nibCell;
+            break;
+        }
+    }
+    return cell;
+}
+
+
+- (void)setCell:(id)obj
+{
+    MsgBoxNoticeItemModel *model = obj;
+    BOOL hasTime = model.formatShowTime.length > 0;
+    if (!hasTime) {
+        self.timeLabelHeight.constant = 0;
+        self.timeLabelTopMargin.constant = 0;
+    } else {
+        self.timeLabelHeight.constant = 15.0;
+        self.timeLabelHeight.constant = 15.0;
+    }
+    self.timeLabel.text = model.formatShowTime;
+    self.titleLabelTopMargin.constant = model.title.length ? 10 : 0;
+    self.titleLabel.text = model.title;
+    self.contentLabel.text = model.content;
+}
+
++ (CGFloat)getCellHeightWithModel:(MsgBoxNoticeItemModel *)model
+{
+    MsgBoxNoticeCell2 *cell = [self cell];
+    [cell setCell:model];
+    [cell setNeedsUpdateConstraints];
+    [cell updateConstraintsIfNeeded];
+    cell.bounds = CGRectMake(0.0f, 0.0f, SCREEN_W, CGRectGetHeight(cell.bounds));
+    [cell setNeedsLayout];
+    [cell layoutIfNeeded];
+    cell.contentLabel.preferredMaxLayoutWidth = CGRectGetWidth(cell.contentLabel.bounds);
+    CGFloat height = [cell.contentView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize].height;
+    return height;
+}
+
+- (void)layoutSubviews
+{
+    [super layoutSubviews];
+}
+
+@end

@@ -1,0 +1,791 @@
+//
+//  ConsultPharmacyViewController.m
+//  APP
+//  附近药房列表 3.0.0版本
+//  Created by 李坚 on 15/12/31.
+//  Copyright © 2015年 carret. All rights reserved.
+//
+
+#import "ConsultPharmacyViewController.h"
+#import "ComboxView.h"
+#import "SelectView.h"
+#import "RightAccessButton.h"
+#import "WeiStoreTableViewCell.h"
+#import "StoreModel.h"
+#import "ComboxViewCell.h"
+#import "SVProgressHUD.h"
+#import "ConsultStore.h"
+#import "PharmacySotreSearchViewController.h"
+#import "ReceiverAddressTableViewController.h"
+#import "PharmacyStoreDetailViewController.h"
+#import "MallStoreMainViewController.h"
+#import "BranchGoodListViewController.h"
+
+static NSString *const storeCellIdentifier = @"WeiStoreTableViewCell";
+static NSString *const MenuIdentifier = @"MenuIdentifier";
+
+@interface ConsultPharmacyViewController ()<UITableViewDelegate,UITableViewDataSource,ComboxViewDelegate>{
+    
+    ComboxView                  *leftComboxView;
+    ComboxView                  *rightComboxView;
+    SelectView                  *rightSelectView;
+    UILabel *addressLabel;
+    RightAccessButton           *leftButton;
+    RightAccessButton           *rightButton;
+    
+    NSInteger leftIndex;
+    NSArray *leftMenuItems;
+    
+    UISegmentedControl *segementView;
+    
+    NSInteger currPage;
+    SelectFlagModel *requestModel;
+}
+
+@property (nonatomic, strong) UITableView *mainTableView;
+@property (nonatomic, strong) NSMutableArray *dataArray;//存放药房列表数据
+
+@end
+
+@implementation ConsultPharmacyViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    leftMenuItems = @[@"离我最近",@"评价最高"];
+    
+    _dataArray = [[NSMutableArray alloc]init];
+
+    requestModel = [SelectFlagModel new];
+    
+    [self setupSearchItem];
+    [self setupSegmentView];
+    [self setupTableView];
+    [self setupHeaderView];
+    
+    currPage = 1;
+    [self loadConsultData];
+}
+
+- (void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    ((QWBaseNavigationController *)self.navigationController).canDragBack = NO;
+    [self naviLeftBottonImage:nil highlighted:nil action:nil];
+ 
+    NSString *address = [QWGLOBALMANAGER QWGetLocation].formattedAddress;
+    NSString *city = [QWGLOBALMANAGER QWGetLocation].city;
+    if ([address rangeOfString:city].location != NSNotFound) {
+        addressLabel.text = [[address componentsSeparatedByString:city] lastObject];
+    }else {
+        addressLabel.text = address;
+    }
+}
+
+- (void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    ((QWBaseNavigationController *)self.navigationController).canDragBack = YES;
+    
+}
+
+#pragma mark - 建立右上方搜索按钮
+- (void)setupSearchItem{
+    UIBarButtonItem *searchBarButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"ic_fangda"] style:UIBarButtonItemStylePlain target:self action:@selector(searchBarButtonClick)];
+    self.navigationItem.rightBarButtonItems = @[searchBarButton];
+}
+
+#pragma mark - 右上方搜索按钮Action
+- (void)searchBarButtonClick{
+    
+    if(rightSelectView){
+        [rightSelectView viewRemove];
+    }
+    
+    [leftComboxView dismissView];
+    
+    //跳转新药房搜索页面
+    PharmacySotreSearchViewController *VC = [[PharmacySotreSearchViewController alloc]initWithNibName:@"PharmacySotreSearchViewController" bundle:nil];
+    VC.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:VC animated:YES];
+    [QWGLOBALMANAGER readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) {
+        NSString *cityEnable;
+        if(mapInfoModel.status == 3){//启用微商,商品搜索
+            cityEnable = @"开通";
+        }
+        if(mapInfoModel.status == 1 || mapInfoModel.status == 2){//未启用微商,商品搜索
+            cityEnable = @"未开通";
+        }
+        [QWGLOBALMANAGER statisticsEventId:@"x_yflb_ss" withLable:@"附近药房列表" withParams:[NSMutableDictionary dictionaryWithDictionary:@{@"是否开通微商":cityEnable == nil?@"":cityEnable}]];
+    }];
+}
+
+#pragma mark - 建立SegmentView
+- (void)setupSegmentView{
+    
+    segementView = [[UISegmentedControl alloc]initWithItems:@[@"热门药房",@"周边药房"]];
+    segementView.frame = CGRectMake(0, 0, 150, 30);
+    segementView.tintColor = [UIColor whiteColor];
+    NSDictionary *dicSelected = [NSDictionary dictionaryWithObjectsAndKeys:RGBHex(0x5abba8),UITextAttributeTextColor,  fontSystem(13.0f),UITextAttributeFont ,[UIColor clearColor],UITextAttributeTextShadowColor ,nil];
+    [segementView setTitleTextAttributes:dicSelected forState:UIControlStateSelected];
+    NSDictionary *dicNormal = [NSDictionary dictionaryWithObjectsAndKeys:RGBHex(qwColor4),UITextAttributeTextColor,  fontSystem(13.0f),UITextAttributeFont ,[UIColor clearColor],UITextAttributeTextShadowColor ,nil];
+    [segementView setTitleTextAttributes:dicNormal forState:UIControlStateNormal];
+    
+    segementView.selectedSegmentIndex = self.segementIndex;
+    [segementView addTarget:self action:@selector(segementAction:)forControlEvents:UIControlEventValueChanged];  //
+    self.navigationItem.titleView=segementView;
+}
+
+#pragma mark - UISegmentControlAction
+- (void)segementAction:(UISegmentedControl *)segment{
+    
+    self.segementIndex = segment.selectedSegmentIndex;
+    [self setupHeaderView];
+    //segment被点击，请求数据
+    currPage = 1;
+    [self removeInfoView];
+    [_mainTableView.footer setCanLoadMore:YES];
+    [self loadConsultData];
+}
+
+#pragma mark - 建立TableView
+- (void)setupTableView{
+    
+    _mainTableView = [[UITableView alloc]initWithFrame:self.view.frame];
+    _mainTableView.dataSource = self;
+    _mainTableView.delegate = self;
+    _mainTableView.backgroundColor = RGBHex(qwColor11);
+    _mainTableView.tableFooterView = [[UIView alloc]init];
+    [_mainTableView addStaticImageHeader];
+    [_mainTableView addFooterWithTarget:self action:@selector(refreshMoreData)];
+    [_mainTableView registerNib:[UINib nibWithNibName:storeCellIdentifier bundle:nil] forCellReuseIdentifier:storeCellIdentifier];
+    [self.view addSubview:_mainTableView];
+}
+
+#pragma mark - 上拉加载更多Action
+- (void)refreshMoreData{
+    
+    currPage ++;
+    [self loadConsultData];
+}
+
+#pragma mark - 准备请求数据，热门/周边/筛选条件ModelR准备
+- (void)loadConsultData{
+    
+    NearByStoreModelR *modelR = [NearByStoreModelR new];
+    modelR.type = @(requestModel.transportType);
+    modelR.eFee = @(requestModel.transCostEnable);
+    modelR.sFee = @(requestModel.startCostEnable);
+    modelR.sale = @(requestModel.couponEnable);
+    modelR.page = @(currPage);
+    modelR.pageSize = @(10);
+    if(leftIndex == 0){
+        modelR.nearest = YES;
+        modelR.best = NO;
+    }else{
+        modelR.nearest = NO;
+        modelR.best = YES;
+    }
+    
+    if(currPage == 1){
+        HttpClientMgr.progressEnabled = YES;
+    }else{
+        HttpClientMgr.progressEnabled = NO;
+    }
+    
+    [QWGLOBALMANAGER readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) {
+        
+        modelR.city = mapInfoModel.city;
+        
+        
+        modelR.longitude = @([QWGLOBALMANAGER QWGetLocation].location.coordinate.longitude);
+        modelR.latitude = @([QWGLOBALMANAGER QWGetLocation].location.coordinate.latitude);
+        NSString *str;
+        if(self.segementIndex == 0){
+            //热门药房
+            [self loadHotConsultData:modelR];
+            str = @"x_yflb_rmyf";
+        }else{
+            //周边药房
+            [self loadNearConsultData:modelR];
+            str = @"x_yflb_zbyf";
+        }
+        [QWGLOBALMANAGER readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) { //add by jxb
+            NSString *cityEnable=@"";
+            if(mapInfoModel.status == 3){//启用微商,商品搜索
+                cityEnable = @"开通";
+            }
+            if(mapInfoModel.status == 1 || mapInfoModel.status == 2){//未启用微商,商品搜索
+                cityEnable = @"未开通";
+            }
+            [QWGLOBALMANAGER statisticsEventId:str withLable:@"附近药房列表" withParams:[NSMutableDictionary dictionaryWithDictionary:@{@"是否开通微商":cityEnable == nil?@"":cityEnable}]];
+        }];
+
+    }];
+
+}
+
+#pragma mark - 周边药房列表数据HTTP请求
+- (void)loadNearConsultData:(NearByStoreModelR *)modelR{
+    
+    [ConsultStore AroundBranchs:modelR success:^(MicroMallBranchListVo *model) {
+        
+        if([model.apiStatus intValue] == 0 && model.branchs.count > 0){
+            [self removeInfoView];
+            if(currPage == 1){
+                [_dataArray removeAllObjects];
+            }
+            [_dataArray addObjectsFromArray:model.branchs];
+            [_mainTableView reloadData];
+        }else{
+            if(currPage == 1){
+                [self showMyInfoView:@"没有查到您想要的结果~" image:@"ic_img_fail"];
+            }else{
+                [_mainTableView.footer setCanLoadMore:NO];
+            }
+        }
+        if(currPage != 1){
+            [_mainTableView.footer endRefreshing];
+        }
+    } failure:^(HttpException *e) {
+        [_mainTableView.footer endRefreshing];
+        if(e.errorCode!=-999){
+            if(e.errorCode == -1001){
+                [self showMyInfoView:kWarning215N26 image:@"ic_img_fail"];
+            }else{
+                [self showMyInfoView:kWarning39 image:@"ic_img_fail"];
+            }
+        }
+    }];
+}
+
+#pragma mark - 热门药房列表数据HTTP请求
+- (void)loadHotConsultData:(NearByStoreModelR *)modelR{
+    
+    [ConsultStore MallBranchs:modelR success:^(MicroMallBranchListVo *model) {
+        
+        if([model.apiStatus intValue] == 0 && model.branchs.count > 0){
+            if(currPage == 1){
+                [_dataArray removeAllObjects];
+            }
+            [self removeInfoView];
+            [_dataArray addObjectsFromArray:model.branchs];
+            [_mainTableView reloadData];
+        }else{
+            if(currPage == 1){
+                [self showMyInfoView:@"没有查到您想要的结果" image:@"ic_img_fail"];
+            }else{
+                [_mainTableView.footer setCanLoadMore:NO];
+            }
+        }
+        
+        if(currPage != 1){
+            [_mainTableView.footer endRefreshing];
+        }
+    } failure:^(HttpException *e) {
+        [_mainTableView.footer endRefreshing];
+        if(e.errorCode!=-999){
+            if(e.errorCode == -1001){
+                [self showMyInfoView:kWarning215N26 image:@"ic_img_fail"];
+            }else{
+                [self showMyInfoView:kWarning39 image:@"ic_img_fail"];
+            }
+        }
+    }];
+    
+    
+}
+
+#pragma mark - 地址点击事件
+- (void)addressAction:(id)sender{
+    
+    
+    
+}
+
+#pragma mark - 建立筛选框UI
+- (void)setupHeaderView
+{
+    UIImageView *headerView = nil;
+    if(![self.view viewWithTag:1008])
+    {
+        headerView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, APP_W, 40)];
+        headerView.tag = 1008;
+        headerView.userInteractionEnabled = YES;
+        headerView.backgroundColor = RGBHex(qwColor4);
+        //        [headerView setImage:[UIImage imageNamed:@"菜单下拉背景new.png"]];
+        UIView *line = [[UIView alloc]initWithFrame:CGRectMake(APP_W/2, 8, 0.5, 24)];
+        line.backgroundColor = RGBHex(qwColor10);
+        [headerView addSubview:line];
+        
+        leftButton = [[RightAccessButton alloc] initWithFrame:CGRectMake(0, 0, APP_W / 2.0, 40)];
+        [headerView addSubview:leftButton];
+        rightButton = [[RightAccessButton alloc] initWithFrame:CGRectMake(APP_W / 2.0, 0, APP_W / 2.0, 40)];
+        [headerView addSubview:rightButton];
+        
+        UIImageView *accessView1 = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 12, 11)];
+        UIImageView *accessView2 = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 12, 11)];
+        
+        
+        [accessView1 setImage:[UIImage imageNamed:@"btn_img_down.png"]];
+        [accessView2 setImage:[UIImage imageNamed:@"btn_img_down.png"]];
+        
+        
+        leftButton.accessIndicate = accessView1;
+        rightButton.accessIndicate = accessView2;
+        
+        [leftButton setCustomColor:RGBHex(qwColor6)];
+        [rightButton setCustomColor:RGBHex(qwColor6)];
+        
+        [leftButton setButtonTitle:@"离我最近"];
+        [rightButton setButtonTitle:@"筛选"];
+        leftButton.customFont = fontSystem(kFontS4);
+        rightButton.customFont = fontSystem(kFontS4);
+        
+        [rightButton addTarget:self action:@selector(showRightTable:) forControlEvents:UIControlEventTouchDown];
+        [leftButton addTarget:self action:@selector(showLeftTable:) forControlEvents:UIControlEventTouchDown];
+        
+        leftComboxView = [[ComboxView alloc] initWithFrame:CGRectMake(0, 38, APP_W, [leftMenuItems count]*[ComboxViewCell getCellHeight:nil])];
+        [leftComboxView.tableView registerClass:[ComboxViewCell class] forCellReuseIdentifier:MenuIdentifier];
+        leftComboxView.delegate = self;
+        leftComboxView.comboxDeleagte = self;
+        leftComboxView.tableView.scrollEnabled = NO;
+        
+        UIView *addressView = [[UIView alloc]initWithFrame:CGRectMake(0, 40, APP_W, 32)];
+        
+        UIView *sepatorLine = [[UIView alloc]initWithFrame:CGRectMake(0, 39.5, APP_W, 0.5)];
+        sepatorLine.backgroundColor = RGBHex(qwColor10);
+        [headerView addSubview:sepatorLine];
+        
+        addressView.backgroundColor = RGBHex(qwColor11);
+        
+        UIImageView *LocationImage = [[UIImageView alloc]initWithFrame:CGRectMake(15, 9.5, 13, 13)];
+        LocationImage.image = [UIImage imageNamed:@"icon_details_map_grey"];
+        [addressView addSubview:LocationImage];
+        
+        UIImageView *editImage = [[UIImageView alloc]initWithFrame:CGRectMake(APP_W - 30, 8.5, 15, 15)];
+        editImage.image = [UIImage imageNamed:@"icon_editor_grey"];
+        [addressView addSubview:editImage];
+        
+        //地址编辑按钮
+        UIButton *editBtn = [[UIButton alloc]initWithFrame:CGRectMake(0, 0, APP_W, 35)];
+        [editBtn addTarget:self action:@selector(editAddress:) forControlEvents:UIControlEventTouchUpInside];
+        [addressView addSubview:editBtn];
+        
+        if(!addressLabel){
+            addressLabel = [[UILabel alloc]initWithFrame:CGRectMake(33, 0, APP_W - 65, 32)];
+            addressLabel.font = fontSystem(kFontS5);
+            addressLabel.textColor = RGBHex(qwColor7);
+            addressLabel.text = @"";
+            UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(addressAction:)];
+            [addressLabel addGestureRecognizer:tap];
+            [addressView addSubview:addressLabel];
+        }
+        _mainTableView.tableHeaderView = addressView;
+        [self.view addSubview:headerView];
+    }else{
+        headerView = (UIImageView *)[self.view viewWithTag:1008];
+    }
+    if(_segementIndex == 0){
+        [UIView animateWithDuration:0.5 animations:^{
+            CGRect rect = self.view.frame;
+            rect.size.height = APP_H - NAV_H - TAB_H - 40;
+            rect.origin.y = 40.0f;
+            _mainTableView.frame = rect;
+            headerView.frame = CGRectMake(0, 0, APP_W, 40);
+        } completion:^(BOOL finished) {
+        }];
+    }else{
+        [rightSelectView viewRemove];
+        [leftButton changeArrowDirectionUp:NO];
+        leftButton.isToggle = NO;
+        [leftComboxView dismissView];
+        [UIView animateWithDuration:0.5 animations:^{
+            CGRect rect = self.view.frame;
+            rect.size.height = APP_H - NAV_H - TAB_H;
+            rect.origin.y = 0.0f;
+            _mainTableView.frame = rect;
+            headerView.frame = CGRectMake(0, -40, APP_W, 40);
+        } completion:^(BOOL finished) {
+        }];
+    }
+}
+
+#pragma mark - 右侧筛选点击事件
+- (void)showRightTable:(id)sender{
+    
+    [leftButton changeArrowDirectionUp:NO];
+    [leftButton setCustomColor:RGBHex(qwColor6)];
+    leftButton.isToggle = NO;
+    [leftComboxView dismissView];
+    
+    
+    if(rightButton.isToggle) {
+        [rightButton setCustomColor:RGBHex(qwColor6)];
+        rightButton.accessIndicate.image = [UIImage imageNamed:@"btn_img_choose"];
+        [rightSelectView viewRemove];
+        rightButton.isToggle = NO;
+        
+    }else{
+        //筛选橘黄色按钮
+        [rightButton setCustomColor:RGBHex(qwColor2)];
+        [rightButton changeArrowDirectionUp:YES];
+        rightButton.accessIndicate.image = [UIImage imageNamed:@"btn_img_up"];
+        rightButton.isToggle = YES;
+        rightSelectView = [SelectView showSelectViewInView:self.view andModel:requestModel withCallBack:^(SelectFlagModel *model) {
+            requestModel = model;
+            //左边筛选确定被点击，进行请求
+            currPage = 1;
+            [_mainTableView.footer setCanLoadMore:YES];
+            [self loadConsultData];
+            
+            NSString *transpor;
+            switch (model.transportType) {
+                case 0:
+                    transpor = @"不限";
+                    break;
+                case 1:
+                    transpor = @"送货上门";
+                    break;
+                case 2:
+                    transpor = @"同城快递";
+                    break;
+            }
+            [QWGLOBALMANAGER statisticsEventId:@"x_yflb_sx2" withLable:@"附近药房列表" withParams:[NSMutableDictionary dictionaryWithDictionary:@{@"筛选内容":[NSString stringWithFormat:@"配送方式：%@，免配送费：%@，免起送价：%@，优惠活动：%@",transpor,model.transCostEnable?@"是":@"否",model.startCostEnable?@"是":@"否",model.couponEnable?@"有":@"无"]}]];
+            } disMissCallBacl:^(id obj) {
+            [rightButton setTitleColor:RGBHex(qwColor7) forState:UIControlStateNormal];
+            [rightButton changeArrowDirectionUp:NO];
+            rightButton.accessIndicate.image = [UIImage imageNamed:@"btn_img_down"];
+            [rightButton setCustomColor:RGBHex(qwColor6)];
+            rightButton.isToggle = NO;
+        }];
+    }
+}
+#pragma mark - 左侧筛选点击事件
+- (void)showLeftTable:(id)sender{
+    [rightButton changeArrowDirectionUp:NO];
+    rightButton.isToggle = NO;
+    [rightSelectView viewRemove];
+    [rightButton setCustomColor:RGBHex(qwColor6)];
+    //筛选橘黄色按钮
+    rightButton.accessIndicate.image = [UIImage imageNamed:@"btn_img_down"];
+    
+    if(leftButton.isToggle) {
+        [leftComboxView dismissView];
+        [leftButton setCustomColor:RGBHex(qwColor6)];
+        [leftButton changeArrowDirectionUp:NO];
+        leftButton.accessIndicate.image = [UIImage imageNamed:@"btn_img_down"];
+    }else{
+        [leftButton setCustomColor:RGBHex(qwColor2)];
+        leftComboxView.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+        [leftComboxView showInWindow:[UIApplication sharedApplication].keyWindow];
+        [leftComboxView.tableView reloadData];
+        [leftButton changeArrowDirectionUp:YES];
+        leftButton.accessIndicate.image = [UIImage imageNamed:@"btn_img_up"];
+        leftButton.isToggle = YES;
+    }
+}
+
+#pragma mark - ComboxViewDelegate消失回调
+- (void)comboxViewDidDisappear:(ComboxView *)combox{
+    
+    [leftButton setCustomColor:RGBHex(qwColor6)];
+    [leftButton changeArrowDirectionUp:NO];
+    leftButton.accessIndicate.image = [UIImage imageNamed:@"btn_img_down"];
+    leftButton.isToggle = NO;
+}
+
+#pragma mark - 编辑地址
+- (void)editAddress:(id)sender{
+    
+    if(rightSelectView){
+        [rightSelectView viewRemove];
+    }
+    ReceiverAddressTableViewController *VC = [[ReceiverAddressTableViewController alloc]init];
+    VC.pageType = PageComeFromStoreList;
+    [QWGLOBALMANAGER statisticsEventId:@"x_yflb_cxdw" withLable:nil withParams:nil];
+    VC.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:VC animated:YES];
+    
+    
+    [QWGLOBALMANAGER readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) { //add by jxb
+        NSString *cityEnable;
+        if(mapInfoModel.status == 3){//启用微商,商品搜索
+            cityEnable = @"开通";
+        }
+        if(mapInfoModel.status == 1 || mapInfoModel.status == 2){//未启用微商,商品搜索
+            cityEnable = @"未开通";
+        }
+        [QWGLOBALMANAGER statisticsEventId:@"x_yflb_dz" withLable:@"附近药房列表" withParams:[NSMutableDictionary dictionaryWithDictionary:@{@"是否开通微商":cityEnable == nil?@"":cityEnable}]];
+    }];
+}
+
+
+#pragma mark - UITableViewDelegate
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    if([tableView isEqual:_mainTableView]){
+        return [WeiStoreTableViewCell getCellHeight:_dataArray[indexPath.row]];
+    }else{
+        return [ComboxViewCell getCellHeight:nil];
+    }
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    if([tableView isEqual:_mainTableView]){
+        return _dataArray.count;
+
+    }else{
+        return leftMenuItems.count;
+    }
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    if([tableView isEqual:_mainTableView]){
+        WeiStoreTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:storeCellIdentifier];
+    
+        cell.path = indexPath;
+        __weak ConsultPharmacyViewController *weakSelf =self;
+
+        [cell setCell:_dataArray[indexPath.row] withSpell:^(NSIndexPath *path) {
+        
+            StoreNearByModel *model = _dataArray[path.row];
+            model.spelled = !model.spelled;
+            [weakSelf.mainTableView reloadRowsAtIndexPaths:@[path] withRowAnimation:UITableViewRowAnimationFade];
+        }];
+        return cell;
+    }else{
+        ComboxViewCell *cell = [tableView dequeueReusableCellWithIdentifier:MenuIdentifier];
+        cell.separatorHidden = NO;
+        NSString *content = leftMenuItems[indexPath.row];
+        [cell setCellWithContent:content showImage:indexPath.row == leftIndex];
+            
+        return cell;
+    }
+}
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    if([tableView isEqual:_mainTableView]){
+        
+        //新药店详情界面
+        MicroMallBranchVo *VO = _dataArray[indexPath.row];
+        
+//        BranchGoodListViewController *VC = [[BranchGoodListViewController alloc]initWithNibName:@"BranchGoodListViewController" bundle:nil];
+//        VC.branchId = VO.branchId;
+//        VC.branchTitle = VO.branchName;
+//        VC.hidesBottomBarWhenPushed = YES;
+//        [self.navigationController pushViewController:VC animated:YES];
+
+//        [QWGLOBALMANAGER pushBranchDetail:VO.branchId withType:VO.type navigation:self.navigationController];
+        
+        
+        [QWGLOBALMANAGER readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) {
+            NSString *cityEnable;
+            if(mapInfoModel.status == 3){//启用微商,商品搜索
+                cityEnable = @"开通";
+            }
+            if(mapInfoModel.status == 1 || mapInfoModel.status == 2){//未启用微商,商品搜索
+                cityEnable = @"未开通";
+            }
+            NSString *typeEnable;
+            if(self.segementIndex == 0){
+                typeEnable = @"热门";
+            }else{
+                typeEnable = @"周边";
+            }
+            [QWGLOBALMANAGER statisticsEventId:@"x_yflb_yf" withLable:@"附近药房列表" withParams:[NSMutableDictionary dictionaryWithDictionary:@{@"是否开通微商":cityEnable == nil?@"":cityEnable,@"药房类别":typeEnable}]];
+        }];
+    }
+    if ([tableView isEqual:leftComboxView.tableView]) {
+        
+        if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+            [SVProgressHUD showErrorWithStatus:kWarning12 duration:0.8f];
+            return;
+        }
+        
+        
+        [leftButton setButtonTitle:leftMenuItems[indexPath.row]];
+        [leftComboxView dismissView];
+        if(indexPath.row != leftIndex){
+            leftIndex = indexPath.row;
+            //左边筛选被点击，进行请求
+            currPage = 1;
+            [_mainTableView.footer setCanLoadMore:YES];
+            [self loadConsultData];
+            [leftComboxView.tableView reloadData];
+            [QWGLOBALMANAGER statisticsEventId:@"x_yflb_sx1" withLable:@"附近药房列表" withParams:[NSMutableDictionary dictionaryWithDictionary:@{@"筛选内容":leftMenuItems[indexPath.row]}]];
+        }
+    }
+}
+
+- (void)viewInfoClickAction:(id)sender{
+    
+    currPage = 1;
+    [_mainTableView.footer setCanLoadMore:YES];
+    [self loadConsultData];
+}
+
+
+#pragma mark - 请求无结果试图
+-(UIView *)showMyInfoView:(NSString *)text image:(NSString*)imageName
+{
+    UIImage * imgInfoBG = [UIImage imageNamed:imageName];
+    
+    if (self.vInfo==nil) {
+        self.vInfo = [[UIView alloc] initWithFrame:CGRectMake(0, 72, APP_W, APP_H - 64 - 72)];
+        self.vInfo.backgroundColor = RGBHex(qwColor4);
+    }
+    
+    if(segementView.selectedSegmentIndex == 0){
+        self.vInfo.frame = CGRectMake(0, 72, APP_W, APP_H - 64 - 72);
+    }else{
+        self.vInfo.frame = CGRectMake(0, 32, APP_W, APP_H - 64 - 32);
+    }
+    
+    for (id obj in self.vInfo.subviews) {
+        [obj removeFromSuperview];
+    }
+    
+    UIImageView *imgvInfo;
+    UILabel* lblInfo;
+    
+    imgvInfo=[[UIImageView alloc]init];
+    [self.vInfo addSubview:imgvInfo];
+    
+    lblInfo = [[UILabel alloc]init];
+    lblInfo.tag = 101;
+    lblInfo.numberOfLines=0;
+    lblInfo.font = fontSystem(kFontS1);
+    lblInfo.textColor = RGBHex(qwColor8);//0x89889b 0x6a7985
+    lblInfo.textAlignment = NSTextAlignmentCenter;
+    [self.vInfo addSubview:lblInfo];
+    
+    UIButton *btnClick = [[UIButton alloc] initWithFrame:self.vInfo.bounds];
+    [btnClick addTarget:self action:@selector(viewInfoClickAction:) forControlEvents:UIControlEventTouchUpInside];
+    [self.vInfo addSubview:btnClick];
+    
+    
+    float vw=CGRectGetWidth(self.vInfo.bounds);
+    
+    CGRect frm;
+    frm=RECT((vw-imgInfoBG.size.width)/2,45, imgInfoBG.size.width, imgInfoBG.size.height);
+    imgvInfo.frame=frm;
+    imgvInfo.image = imgInfoBG;
+    
+    float lw=vw-40*2;
+    CGSize sz=[QWGLOBALMANAGER sizeText:text font:lblInfo.font limitWidth:lw];
+    frm=RECT((vw-lw)/2, imgvInfo.frame.origin.y + imgvInfo.frame.size.height + 22, lw,sz.height);
+    lblInfo.frame=frm;
+    lblInfo.text = text;
+    
+    [self.view addSubview:self.vInfo];
+    [self.view bringSubviewToFront:self.vInfo];
+    return self.vInfo;
+}
+
+#pragma mark - 定位失败试图
+-(UIView *)showLocationFailInfoView
+{
+    UIImage * imgInfoBG = [UIImage imageNamed:@"ic_img_cry"];
+    NSString *text = @"未能成功定位到您当前地址";
+    
+    if (self.vInfo==nil) {
+        self.vInfo = [[UIView alloc] initWithFrame:CGRectMake(0, 72, APP_W, APP_H - 64 - 72)];
+        self.vInfo.backgroundColor = RGBHex(qwColor4);
+    }
+    
+    for (id obj in self.vInfo.subviews) {
+        [obj removeFromSuperview];
+    }
+    
+    UIImageView *imgvInfo;
+    UILabel* lblInfo;
+    
+    imgvInfo=[[UIImageView alloc]init];
+    [self.vInfo addSubview:imgvInfo];
+    
+    lblInfo = [[UILabel alloc]init];
+    lblInfo.tag = 101;
+    lblInfo.numberOfLines=0;
+    lblInfo.font = fontSystem(kFontS1);
+    lblInfo.textColor = RGBHex(qwColor8);//0x89889b 0x6a7985
+    lblInfo.textAlignment = NSTextAlignmentCenter;
+    [self.vInfo addSubview:lblInfo];
+    
+    UIButton *btnClick = [[UIButton alloc] initWithFrame:CGRectMake((APP_W - 155.0f)/2.0f, lblInfo.frame.origin.y + 21, 155.0f, 40.0f)];
+    [btnClick setTitle:@"重新定位" forState:UIControlStateNormal];
+    [btnClick setTitleColor:RGBHex(qwColor2) forState:UIControlStateNormal];
+    btnClick.titleLabel.font = fontSystem(kFontS3);
+    btnClick.backgroundColor = [UIColor clearColor];
+    btnClick.layer.masksToBounds = YES;
+    btnClick.layer.borderColor = RGBHex(qwColor2).CGColor;
+    btnClick.layer.borderWidth = 1.0f;
+    btnClick.layer.cornerRadius = 3.0f;
+
+    [btnClick addTarget:self action:@selector(locationAction:) forControlEvents:UIControlEventTouchUpInside];
+    [self.vInfo addSubview:btnClick];
+    
+    
+    float vw=CGRectGetWidth(self.vInfo.bounds);
+    
+    CGRect frm;
+    frm=RECT((vw-imgInfoBG.size.width)/2,45, imgInfoBG.size.width, imgInfoBG.size.height);
+    imgvInfo.frame=frm;
+    imgvInfo.image = imgInfoBG;
+    
+    float lw=vw-40*2;
+    CGSize sz=[QWGLOBALMANAGER sizeText:text font:lblInfo.font limitWidth:lw];
+    frm=RECT((vw-lw)/2, imgvInfo.frame.origin.y + imgvInfo.frame.size.height + 22, lw,sz.height);
+    lblInfo.frame=frm;
+    lblInfo.text = text;
+    btnClick.frame = CGRectMake((APP_W - 155.0f)/2.0f, lblInfo.frame.origin.y + lblInfo.frame.size.height + 21, 155.0f, 40.0f);
+    
+    [self.view addSubview:self.vInfo];
+    [self.view bringSubviewToFront:self.vInfo];
+    return self.vInfo;
+}
+
+#pragma mark - 重新定位按钮事件
+- (void)locationAction:(id)sender{
+    
+    
+}
+
+//首页重新定位和更换地址
+- (void)getNotifType:(Enum_Notification_Type)type data:(id)data target:(id)obj{
+    if (NotifLocateFinished == type) {
+        MapInfoModel *addressModel=(MapInfoModel*)data;
+        
+        //更新定位地址UI
+        NSString *address = addressModel.formattedAddress;
+        NSString *city = addressModel.city;
+        if ([address rangeOfString:city].location != NSNotFound) {
+            addressLabel.text = [[address componentsSeparatedByString:city] lastObject];
+        }else {
+            addressLabel.text = address;
+        }
+        //重新请求当前定位下的药房列表数据
+        currPage = 1;
+        [self loadConsultData];
+        
+    }else if (NotifManualUpdateAddress == type){//更换地址的通知
+        MapInfoModel *addressModel = [QWUserDefault getObjectBy:kModifiedCityModel];
+        
+        //更新定位地址UI
+        NSString *address = addressModel.formattedAddress;
+        NSString *city = addressModel.city;
+        if ([address rangeOfString:city].location != NSNotFound) {
+            addressLabel.text = [[address componentsSeparatedByString:city] lastObject];
+        }else {
+            addressLabel.text = address;
+        }
+        //重新请求当前定位下的药房列表数据
+        currPage = 1;
+        [self loadConsultData];
+    }
+    
+}
+
+
+
+
+
+
+@end

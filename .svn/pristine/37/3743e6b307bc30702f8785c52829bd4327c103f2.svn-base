@@ -1,0 +1,168 @@
+/*!
+ @header Notification.h
+ @abstract 所有通知常量
+ @author .
+ @version 1.00 2015/01/01  (1.00)
+ */
+
+
+#ifndef APP_Notification_h
+#define APP_Notification_h
+
+
+typedef NS_ENUM(NSInteger, Enum_Notification_Type)  {
+    //GPS   关于地址的
+    NotifLocationNeedReload,        // 需要重新刷新地址
+    NotifLocateFinished,            // 后台进前台定位完成
+    NotifAddressRefreshOne,         // 搜索地址返回添加收货地址
+    NotifAddressRefreshTwo,         // 删除确认订单地址（兼容跨市）
+    NotifManualUpdateAddress,
+    NotifMallAddressAddOrEdit,      // 确认订单进入的地址增加或编辑
+    //药房是否咨询的通知
+    NotifBranchDetailRequestSuccess,
+    NotifBranchDetailRequestFail,
+    //用户
+    NotifQuitOut,               // 用户退出
+    NotifLoginSuccess,              // 登录成功
+    NotifUserNickNameUpdate,
+    NotifSanpUpCountDonwUpdate,     // 抢购倒计时通知
+    //药物，药店
+    NotifPharmacyNeedUpdate,        // 发出通知,更新用药列表
+    
+    //消息
+    NotifMessageNeedUpdate,         // 更新message
+    NotifPTPMsgNeedUpdate,
+    NotifMessageOfficial,
+    NotifKickOff,
+    
+    //网络
+    NotifNetworkDisconnect,         // 网络断线
+    NotifNetworkReconnect,          // 网络重连
+    NotifNetworkReachabilityChanged,
+    NotifNetworkDisconnectWhenStart,
+  
+    
+    //系统
+    NotifAppCheckVersion,
+    
+    //慢病订阅
+    NotifHasNewDisease,             // 有新的慢病订阅
+    NotiJumptoDisease,              // 跳转到慢病订阅
+    NotiNewUnreadMessage,           // 拉取到未读消息
+    NotiNewUnreadPTPMsg,            // 拉取到新的点对点信息
+    
+    //消息盒子数据刷新
+    NotiMessageBoxUpdateList,       // 更新消息盒子列表
+    NotiMessagePTPUpdateList,       // 更新点对点列表
+    NotiMessageUpdateMsgNotiList,   // 更新通知列表
+    NotiMessageUpdateMsgCouponList, // 更新优惠券列表
+    NotiMessageUpdateMsgSysList,    // 更新系统列表
+    NotiMessageBoxUpdateStatue,     // 更新消息盒子某条数据状态
+    NotiMessageQueueSendImage,      // 新建问题,逐个发送图片
+    NotiMessageBoxNeedUpdate,       // 消息盒子需要更新
+    NotiMessagePTPNeedUpdate,       // 点对点消息需要更新
+    NotimessageIMTabelUpdate,       // 跟新Imtable View
+    NotiRestartTimer,
+    NotiReleaseTimer,               // 聊天详情取消通知
+    NotimessageBoxUpdate ,          // 发送图片后更新消息盒子
+    NotimessageBoxPharUpdate,       // 发送图片后更新点对点聊天
+    NotiMessageBadgeNum,            // 更新四大首页信封小红点
+    NotiMessageOPLaunchingScreenDisappear,
+    NotiHightUpdate,
+    NotiCountDonwRegister,
+    NotiCountDonwChangePhone,
+    NotiCountDonwForgetPassword,
+    NotiCountDonwValidCodeLogin,
+    NotiGetMobileLoginVerifyCodeSucess, // 无密码登录获取验证码成功通知
+    NotiGetMobileLoginVerifyCodeFailed, // 无密码登录获取验证码失败通知
+    NotifMobileLoginFailed,             // 无密码登录失败
+    NotiGetRegisterVerifyCodeSucess,    // 注册获取验证码成功通知
+    NotiGetRegisterVerifyCodeFailed,    // 注册获取验证码失败通知
+    NotiCountDonwValidVoiceCodeLogin,
+    NotiWhetherHaveNewMessage,      // 是否有新消息，显示小红点
+    
+    NotifAppDidEnterBackground,     // 到后台
+    NotifAppDidBecomeActive,
+    NotifAppWillEnterForeground,    // 前台
+    
+    NotifIMCenterSended,            // 消息中心发送结束
+    
+    NOtifVoiceReceivedSuccess,      // 语音消息下载成功
+    NOtifVoiceReceivedFailure,      // 语音消息下载失败
+    NOtifCouponStatusChanged,       // 优惠券状态变更,需刷新
+    NOtifAppversionNew,
+    NOtifHotKeyChange,
+    NOtifSaveFamilyInfo,            // 保存编辑家庭成员资料通知
+    NotifUpdateMyPh,                // 更新
+    NotifDismssKeyboard,            // 消失键盘
+    
+    NotifWebHeight,                 // 获取webview 高度
+    NotifRefreshCurH5Page,          // 通知刷新H5页面
+    NotifRefreshIntegralIndex,      // 积分商城商品详情返回首页
+    
+    NotifRefreshCurAppPageOne,      // 邀请好友刷新当前页面
+    NotifRefreshCurAppPageTwo,      // 邀请好友刷新积分页面
+ 
+    NotiEditPostTextViewBeginEdit,  // 发帖中点击了textview
+    NotiEditPostTextViewDidEndEdit, // 发帖中的textview完成的编辑
+//3.0
+    NotiPostCommentSuccess,         // 回帖成功
+    
+    NotifInfoListTabbarSelected,    // 资讯页面tabbar点击
+    NotifInfoListUpdated,           // 资讯页面刷新
+    NotifForcedTransferToContentScreen,
+    
+    NotifTransitionToTabbarOne,     // 如果不是第一个tabbar，那么翻转到第一个tabbar, 发送通知，翻转页面
+    NotifTransitionToTabbarTwo,     // 如果不是第二个tabbar，那么翻转到第二个tabbar, 发送通知，翻转页面
+
+    NotifWillTransitionToTabbarTwo, // 发送一个将要翻转到第二页的通知  (内容页)
+    NotifDidTransitionToTabbarTwo,  // 发送一个已经翻转到第二页的通知
+    NotifTabsWillTransition,        // 发送一个将要翻转的通知
+    NotifTabsDidTransition,         // 发送一个已经翻转的通知
+    NotifGotoCareExpertFromCredit,  // 从我的积分页面跳到关注专家
+    
+    NotifDidModifyUserInfo,         // 发送一个修改用户信息的通知
+    
+    NotifSendPostCheckResult,        // 发送帖子验证成功与否通知
+    NotifSendPostResult,            // 发送帖子通知
+    NotifDeletePostSuccess,         // 成功删除帖子
+    NotifHiddenPostdetailExpertActionView,  // 隐藏帖子详情中的评价的辅助目录
+    NotifShoppingCartSync,
+    NotifShoppingUnreadUpdate,      // 微商药品加入购物车成功通知
+    NotifAppWillTerminal,
+    NotifCityHasChanged,            // 城市切换通知
+    NotifShoppingCartShouldClear,
+    NotifShoppingCartForcedClear,   //强制删除购物车数据
+    NotifShoppingCartUpdateEveryTime,
+    NotifCircleMessage,             // 圈子消息小红点
+    NotifCircleMsgRedPoint,         // 圈子和私聊小红点
+    NotifNewCircleMsg,              // 获取新的圈子消息通知
+    
+    NotifHiddenCommentRedPoint,
+    NotifHiddenFlowerRedPoint,
+    NotifHiddenSystemInfoRedPoint,
+
+    
+    NotifRemoveHealthView,          //移除健康工具view
+    NotifUpdateUnreadNum,
+    
+    //支付
+    NotifPayStatusUnknown,          //支付 状态未知，支付失败1 阿里 2 微信
+    NotifPayStatusFinish,           //支付 成功
+    NotifPayStatusAlert,            //订单详情的Alert
+    NotifShoppingCartDelete,        //购物车商品数量发生变更
+    NotifShoppingSyncAll,            //主购物车发生变更后,通知临时界面
+    
+    NotifPushViewAfterStartUp,      // 应用启动后通知推送页面
+    NotifPushCategroy,              // 首页
+    NotifHomepagePharmacyStoreChanged,      //首页药房发生变更提醒
+    NotifHomepagePharmacyDataReceived,      //首页药房相关基本数据请求成功
+
+    NotifChangeBranchFromHomePage,      //从首页进入切换药房
+    NotifChangeBranchFromGoodList,      //从分类进入切换药房
+    
+    NotiMessageExpertPTPNeedUpdate,  // 专家私聊发送状态更新
+    NotiDismissSwitchAnimationLoading,      //隐藏切换药房动画
+};
+#endif
+

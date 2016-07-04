@@ -1,0 +1,16 @@
+//
+//  QWUnreadCountModel.m
+//  wenYao-store
+//
+//  Created by PerryChen on 6/11/15.
+//  Copyright (c) 2015 carret. All rights reserved.
+//
+
+#import "QWUnreadCountModel.h"
+
+@implementation QWUnreadCountModel
++ (NSString *)getPrimaryKey
+{
+    return @"passport";
+}
+@end

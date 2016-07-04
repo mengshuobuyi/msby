@@ -1,0 +1,186 @@
+//
+//  LeveyPopListView.m
+//  LeveyPopListViewDemo
+//
+//  Created by Levey on 2/21/12.
+//  Copyright (c) 2012 Levey. All rights reserved.
+//
+
+#import "LeveyPopListViewCUS.h"
+#import "LeveyPopListViewCellCUS.h"
+#import "Constant.h"
+#import "QWGlobalManager.h"
+#define POPLISTVIEW_SCREENINSET 0
+#define POPLISTVIEW_HEADER_HEIGHT 0
+#define RADIUS 0.
+
+@interface LeveyPopListViewCUS (private)
+- (void)fadeIn;
+- (void)fadeOut;
+@end
+
+@implementation LeveyPopListViewCUS
+@synthesize delegate;
+#pragma mark - initialization & cleaning up
+- (id)initWithTitle:(NSString *)aTitle options:(NSArray *)aOptions
+{
+    CGRect rect = [[UIScreen mainScreen] bounds];
+    rect.size.height -= 64;
+    if (self = [super initWithFrame:rect])
+    {
+        _selectedIndex = -1;
+        self.backgroundColor = [UIColor clearColor];
+        _title = [aTitle copy];
+        _options = [aOptions copy];
+        
+        
+        CGFloat tableViewHeight = 0.0f;
+        
+        if(aOptions.count > 7) {
+            tableViewHeight = 8 * 44;
+        }else{
+            tableViewHeight = aOptions.count * 44;
+        }
+        _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0,
+                                                                   rect.size.height - tableViewHeight,
+                                                                   rect.size.width - 2 * POPLISTVIEW_SCREENINSET,
+                                                                   tableViewHeight)];
+        _tableView.separatorColor = RGBHex(qwColor10);
+        _tableView.backgroundColor = [UIColor whiteColor];
+        _tableView.dataSource = self;
+        _tableView.delegate = self;
+        _tableView.scrollEnabled = NO;
+        [self addSubview:_tableView];
+
+    }
+    return self;    
+}
+
+- (void)setSelectedIndex:(NSInteger)selectedIndex
+{
+    _selectedIndex = selectedIndex;
+    [_tableView reloadData];
+}
+
+- (void)dealloc
+{
+ 
+}
+
+#pragma mark - Private Methods
+- (void)fadeIn
+{
+    __block CGRect rect = _tableView.frame;
+    rect.origin.y += rect.size.height;
+    _tableView.frame = rect;
+    self.alpha = 0;
+    [UIView animateWithDuration:.35 animations:^{
+        self.alpha = 1;
+        rect = _tableView.frame;
+        rect.origin.y -= rect.size.height;
+        _tableView.frame = rect;
+    }];
+}
+
+- (void)fadeOut
+{
+    [UIView animateWithDuration:.35 animations:^{
+        self.alpha = 0.0;
+        CGRect rect = _tableView.frame;
+        rect.origin.y += rect.size.height;
+        _tableView.frame = rect;
+        
+    } completion:^(BOOL finished) {
+        if (finished) {
+            [self removeFromSuperview];
+        }
+    }];
+}
+
+#pragma mark - Instance Methods
+- (void)showInView:(UIView *)aView animated:(BOOL)animated
+{
+    [aView addSubview:self];
+    if (animated) {
+        [self fadeIn];
+    }
+}
+
+#pragma mark - Tableview datasource & delegates
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 45.0;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return [_options count];
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *cellIdentity = @"PopListViewCell";
+    
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellIdentity];
+    if (cell ==  nil) {
+        cell = [[LeveyPopListViewCellCUS alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentity]  ;
+    }
+    NSString *title = _options[indexPath.row];
+    cell.textLabel.text = title;
+     cell.textLabel.textAlignment = NSTextAlignmentCenter;
+    if(indexPath.row == self.selectedIndex) {
+        cell.textLabel.textColor = RGBHex(qwColor8);
+    }else{
+        cell.textLabel.textColor = RGBHex(qwColor6);
+        cell.accessoryView = nil;
+    }
+    cell.textLabel.font = [UIFont systemFontOfSize:15.0];
+    if (self.type == 1) {
+        
+        if (indexPath.row == 0) {
+            cell.textLabel.textColor = RGBHex(qwColor1);
+        }
+    }
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+//    cell.selectedBackgroundView = [[UIView alloc] initWithFrame:cell.frame];
+//    cell.selectedBackgroundView.backgroundColor = RGBHex(qwColor10);
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (self.type == 1) {
+        if (indexPath.row == 0) {
+            return;
+        }else if (indexPath.row == 3)
+        {
+            [self fadeOut];
+        }
+    }
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    if (self.selectedIndex != indexPath.row) {
+        if (self.delegate && [self.delegate respondsToSelector:@selector(leveyPopListViewCUS:didSelectedIndex:)]) {
+            [self.delegate leveyPopListViewCUS:self didSelectedIndex:[indexPath row]];
+        }
+        
+        // dismiss self
+        [self fadeOut];
+    }
+        // tell the delegate the selection
+
+  
+  
+}
+#pragma mark - TouchTouchTouch
+- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    // tell the delegate the cancellation
+    if (self.delegate && [self.delegate respondsToSelector:@selector(leveyPopListViewCUSDidCancel)]) {
+        [self.delegate leveyPopListViewCUSDidCancel];
+    }
+    
+    // dismiss self
+    [self fadeOut];
+}
+
+
+@end

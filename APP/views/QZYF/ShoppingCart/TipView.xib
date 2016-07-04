@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="TipView">
+            <rect key="frame" x="0.0" y="0.0" width="600" height="76"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="[百年灵] 维C银翘片" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mhf-7S-uZs">
+                    <rect key="frame" x="12" y="16" width="576" height="17"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="17" id="AYu-hN-Iup"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                    <color key="textColor" red="0.050980392156862744" green="0.4823529411764706" blue="0.92156862745098034" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="800" text="不得饮料或饮料" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ne7-dp-FM7">
+                    <rect key="frame" x="12" y="45" width="576" height="17"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="17" id="1hd-17-16j"/>
+                        <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="17" id="HjC-TF-5jo"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                    <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                    <variation key="default">
+                        <mask key="constraints">
+                            <exclude reference="1hd-17-16j"/>
+                            <exclude reference="HjC-TF-5jo"/>
+                        </mask>
+                    </variation>
+                </label>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstAttribute="trailing" secondItem="mhf-7S-uZs" secondAttribute="trailing" constant="12" id="9hA-YN-pde"/>
+                <constraint firstItem="Ne7-dp-FM7" firstAttribute="top" secondItem="mhf-7S-uZs" secondAttribute="bottom" constant="12" id="Aul-Wo-ccn"/>
+                <constraint firstItem="Ne7-dp-FM7" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="12" id="c4M-1i-CvN"/>
+                <constraint firstAttribute="trailing" secondItem="Ne7-dp-FM7" secondAttribute="trailing" constant="12" id="eFA-te-WN7"/>
+                <constraint firstItem="mhf-7S-uZs" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="12" id="f8h-hT-yAb"/>
+                <constraint firstAttribute="bottom" secondItem="Ne7-dp-FM7" secondAttribute="bottom" priority="600" constant="16" id="h2A-DN-4vs"/>
+                <constraint firstItem="mhf-7S-uZs" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="16" id="uMb-S9-DaL"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="contentTwoLabel" destination="Ne7-dp-FM7" id="rFD-qY-fdT"/>
+                <outlet property="tipTitleLabel" destination="mhf-7S-uZs" id="2Xh-dg-m4K"/>
+            </connections>
+            <point key="canvasLocation" x="249" y="101"/>
+        </view>
+    </objects>
+</document>

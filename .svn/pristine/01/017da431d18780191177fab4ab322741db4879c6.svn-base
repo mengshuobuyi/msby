@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9529"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="ActivityDetailViewController">
+            <connections>
+                <outlet property="contentLabel" destination="MOc-UX-sXV" id="Osc-Ez-qll"/>
+                <outlet property="dateLabel" destination="Hec-xn-vCj" id="Ktr-gd-0oQ"/>
+                <outlet property="imageView" destination="E6x-g9-k0h" id="kJe-Gr-kq1"/>
+                <outlet property="scrollView" destination="OZj-yb-YwS" id="KuR-eg-wHm"/>
+                <outlet property="titleLabel" destination="aEW-A9-biH" id="pR8-Wq-bmP"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="64" width="320" height="504"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="OZj-yb-YwS">
+                    <rect key="frame" x="0.0" y="0.0" width="320" height="504"/>
+                    <subviews>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="本店每逢周六购药一律8.8折!" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="aEW-A9-biH">
+                            <rect key="frame" x="10" y="19" width="302" height="22"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="302" id="DUr-Bd-ffy"/>
+                            </constraints>
+                            <fontDescription key="fontDescription" type="system" pointSize="18"/>
+                            <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="E6x-g9-k0h">
+                            <rect key="frame" x="10" y="80" width="300" height="130"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="130" id="zl6-BD-ewh"/>
+                            </constraints>
+                        </imageView>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="吸烟," lineBreakMode="characterWrap" numberOfLines="999" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="MOc-UX-sXV">
+                            <rect key="frame" x="10" y="213" width="292" height="17"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                            <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="2014-08-15" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Hec-xn-vCj">
+                            <rect key="frame" x="12" y="49" width="86" height="21"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="21" id="3TO-MT-yFC"/>
+                                <constraint firstAttribute="width" constant="86" id="QZx-2o-ucV"/>
+                            </constraints>
+                            <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                            <color key="textColor" red="0.59999999999999998" green="0.59999999999999998" blue="0.59999999999999998" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                    </subviews>
+                    <constraints>
+                        <constraint firstItem="Hec-xn-vCj" firstAttribute="leading" secondItem="OZj-yb-YwS" secondAttribute="leading" constant="12" id="450-YY-FgI"/>
+                        <constraint firstItem="MOc-UX-sXV" firstAttribute="leading" secondItem="OZj-yb-YwS" secondAttribute="leading" constant="10" id="Aym-IO-mHY"/>
+                        <constraint firstItem="E6x-g9-k0h" firstAttribute="top" secondItem="Hec-xn-vCj" secondAttribute="bottom" constant="10" id="EaY-kT-Vat"/>
+                        <constraint firstItem="aEW-A9-biH" firstAttribute="top" secondItem="OZj-yb-YwS" secondAttribute="top" constant="19" id="G0y-D4-2yS"/>
+                        <constraint firstItem="Hec-xn-vCj" firstAttribute="top" secondItem="aEW-A9-biH" secondAttribute="bottom" constant="8.5" id="HIV-pr-gQa"/>
+                        <constraint firstAttribute="trailing" secondItem="MOc-UX-sXV" secondAttribute="trailing" constant="18" id="HOu-63-9l9"/>
+                        <constraint firstItem="MOc-UX-sXV" firstAttribute="top" secondItem="E6x-g9-k0h" secondAttribute="bottom" constant="3" id="J64-SK-y84"/>
+                        <constraint firstItem="aEW-A9-biH" firstAttribute="leading" secondItem="OZj-yb-YwS" secondAttribute="leading" constant="10" id="Va6-aw-cOf"/>
+                        <constraint firstAttribute="trailing" secondItem="aEW-A9-biH" secondAttribute="trailing" constant="8" id="c73-1C-BGH"/>
+                        <constraint firstItem="E6x-g9-k0h" firstAttribute="leading" secondItem="OZj-yb-YwS" secondAttribute="leading" constant="10" id="ckQ-qk-nHK"/>
+                        <constraint firstAttribute="trailing" secondItem="E6x-g9-k0h" secondAttribute="trailing" constant="10" id="zWN-gw-AH6"/>
+                    </constraints>
+                </scrollView>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstAttribute="trailing" secondItem="OZj-yb-YwS" secondAttribute="trailing" id="417-fj-mL9"/>
+                <constraint firstAttribute="bottom" secondItem="OZj-yb-YwS" secondAttribute="bottom" id="KYw-uF-nbm"/>
+                <constraint firstItem="OZj-yb-YwS" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="b7h-Hv-kMu"/>
+                <constraint firstItem="OZj-yb-YwS" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="sGa-5i-Ykj"/>
+            </constraints>
+            <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" translucent="NO" prompted="NO"/>
+            <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina4"/>
+            <point key="canvasLocation" x="21" y="99"/>
+        </view>
+    </objects>
+</document>

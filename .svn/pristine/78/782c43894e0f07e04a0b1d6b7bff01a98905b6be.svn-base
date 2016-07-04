@@ -1,0 +1,433 @@
+//
+//  Consult.m
+//  APP
+//
+//  Created by chenzhipeng on 5/5/15.
+//  Copyright (c) 2015 carret. All rights reserved.
+//
+
+#import "Consult.h"
+
+@implementation Consult
+
+//全量拉取消息盒子数据
++ (void)getConsultCustomerListWithParam:(ConsultCustomerModelR *)param
+                                success:(void (^)(ConsultCustomerListModel *responModel))succsee
+                                failure:(void (^)(HttpException *e))failure
+{
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] get:ConsultCustomer params:[param dictionaryModel] success:^(id responseObj) {
+        ConsultCustomerListModel *listModel = [ConsultCustomerListModel parse:responseObj Elements:[ConsultCustomerModel class] forAttribute:@"consults"];
+        if (succsee) {
+            succsee(listModel);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+//增量拉取消息盒子数据
++ (void)getNewConsultCustomerListWithParam:(ConsultCustomerNewModelR *)param
+                                   success:(void (^)(ConsultCustomerListModel *responModel))succsee
+                                   failure:(void (^)(HttpException *e))failure
+{
+    [HttpClient sharedInstance].progressEnabled=NO;
+    [[HttpClient sharedInstance] get:ConsultCustomerNewDetail params:[param dictionaryModel] success:^(id responseObj) {
+        ConsultCustomerListModel *listModel = [ConsultCustomerListModel parse:responseObj Elements:[ConsultCustomerModel class] forAttribute:@"consults"];
+        if (succsee) {
+            succsee(listModel);
+        }
+        
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+/**
+ *  @brief 全量获取消息盒子通知列表
+ *
+ */
++ (void)getNoticeListByCustomerWithParam:(ConsultCustomerModelR *)param
+                                 success:(void (^)(ConsultCustomerListModel *responModel))succsee
+                                 failure:(void (^)(HttpException *e))failure
+{
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] get:ConsultNoticeListByCustomer params:[param dictionaryModel] success:^(id responseObj) {
+        ConsultCustomerListModel *listModel = [ConsultCustomerListModel parse:responseObj Elements:[CustomerConsultVoModel class] forAttribute:@"consults"];
+        if (succsee) {
+            succsee(listModel);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
++ (void)getMsgBoxIndexListWithParam:(MsgBoxListModelR *)param
+                                 success:(void (^)(MsgBoxListModel *responModel))success
+                                 failure:(void (^)(HttpException *e))failure
+{
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] get:MsgBoxIndexList params:[param dictionaryModel] success:^(id responseObj) {
+        MsgBoxListModel *listModel = [MsgBoxListModel parse:responseObj Elements:[MsgBoxListItemModel class] forAttribute:@"notices"];
+        if (success) {
+            success(listModel);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
++ (void)getMsgBoxNoticeListWithParam:(MsgBoxNoticeListModelR *)param
+                            success:(void (^)(MsgBoxNoticeListModel *responModel))success
+                            failure:(void (^)(HttpException *e))failure
+{
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] get:MsgBoxNoticeMsgList params:[param dictionaryModel] success:^(id responseObj) {
+        MsgBoxNoticeListModel *listModel = [MsgBoxNoticeListModel parse:responseObj Elements:[MsgBoxNoticeItemModel class] forAttribute:@"messages"];
+        if (success) {
+            success(listModel);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
++ (void)getMsgBoxHealthListWithParam:(MsgBoxHealthListModelR *)param
+                             success:(void (^)(MsgBoxHealthListModel *responModel))success
+                             failure:(void (^)(HttpException *e))failure
+{
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] get:MsgBoxHealthMsgList params:[param dictionaryModel] success:^(id responseObj) {
+        MsgBoxHealthListModel *listModel = [MsgBoxHealthListModel parse:responseObj Elements:[MsgBoxHealthItemModel class] forAttribute:@"notices"];
+        if (success) {
+            success(listModel);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+
+/**
+ *  @brief 增量获取消息盒子通知列表
+ *
+ */
++ (void)pollNoticeListByCustomerWithParam:(ConsultCustomerModelR *)param
+                                  success:(void (^)(ConsultCustomerListModel *responModel))succsee
+                                  failure:(void (^)(HttpException *e))failure
+{
+    [HttpClient sharedInstance].progressEnabled=NO;
+    [[HttpClient sharedInstance] getWithoutProgress:ConsultPollNoticeListByCustomer params:[param dictionaryModel] success:^(id responseObj) {
+        ConsultCustomerListModel *listModel = [ConsultCustomerListModel parse:responseObj Elements:[CustomerConsultVoModel class] forAttribute:@"consults"];
+        if (succsee) {
+            succsee(listModel);
+        }
+        
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+//设置全部为已读
++ (void)updateConsultAllReaded:(ConsultModelR *)param
+                       success:(void (^)(ConsultModel *responModel))success
+                       failure:(void (^)(HttpException *e))failure;
+{
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] put:ConsultCustomerAllRead params:[param dictionaryModel] success:^(id responseObj) {
+        ConsultModel *model = [ConsultModel parse:responseObj];
+        if (success) {
+            success(model);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
++ (void)consultDetailCreateWithParams:(ConsultDetailCreateModelR *)param
+                              success:(void(^)(ConsultDetailCreateModel *obj))success
+                              failure:(void(^)(HttpException * e))failure
+{
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] post:ConsultDetailCreate params:[param dictionaryModel] success:^(id responseObj) {
+        if (success) {
+            ConsultDetailCreateModel *detailCreateModel = [ConsultDetailCreateModel parse:responseObj];
+            success(detailCreateModel);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
++ (void)postConsultDoctorWithParam:(ConsultDocModelR *)param
+                           success:(void (^)(ConsultDocModel *responModel))success
+                           failure:(void (^)(HttpException *e))failure{
+
+    [[HttpClient sharedInstance] post:ConsultDoctor params:[param dictionaryModel] success:^(id responseObj) {
+        ConsultDocModel *listModel = [ConsultDocModel parse:responseObj Elements:[ConsultDetailModel class] forAttribute:@"details"];
+        
+        if (success) {
+            success(listModel);
+        }
+        
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
++ (void)postConsultSPDoctorWithParam:(ConsultDocModelR *)param
+                           success:(void (^)(ConsultDocModel *responModel))success
+                           failure:(void (^)(HttpException *e))failure{
+    [HttpClient sharedInstance].progressEnabled=YES;
+    [[HttpClient sharedInstance] post:ConsultSPDoctor params:[param dictionaryModel] success:^(id responseObj) {
+        ConsultDocModel *listModel = [ConsultDocModel parse:responseObj Elements:[ConsultDetailModel class] forAttribute:@"details"];
+
+        
+        if (success) {
+            success(listModel);
+        }
+        
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+//设置为已读
++ (void)updateConsultItemRead:(ConsultItemReadModelR *)param
+                      success:(void (^)(ConsultModel *responModel))success
+                      failure:(void (^)(HttpException *e))failure
+{
+    [HttpClient sharedInstance].progressEnabled=YES;
+    [[HttpClient sharedInstance] put:ConsultCustomerItemRead params:[param dictionaryModel] success:^(id responseObj) {
+        ConsultModel *model = (ConsultModel *)responseObj;
+        if (success) {
+            success(model);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
++ (void)consultDetailCustomerWithParam:(ConsultDetailCustomerModelR *)param
+                               success:(void(^)(id DFModel))success
+                               failure:(void (^)(HttpException *e))failure
+{
+    [HttpClient sharedInstance].progressEnabled = NO;
+    [[HttpClient sharedInstance] get:ConsultDetailCustomer params:[param dictionaryModel] success:^(id responseObj) {
+        if(success) {
+            PharConsultDetail *consultDetail = [PharConsultDetail parse:responseObj Elements:[ConsultDetail class] forAttribute:@"details"];
+            success(consultDetail);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
++ (void)consultRemoveExpiredWithParam:(ConsultExpiredModelR *)param
+                                 success:(void(^)(BaseAPIModel *model))success
+                                 failure:(void (^)(HttpException *e))failure
+{
+    [[HttpClient sharedInstance] put:ConsultRemoveExpired params:[param dictionaryModel] success:^(id responseObj) {
+        if(success) {
+            BaseAPIModel *model = [BaseAPIModel parse:responseObj];
+            success(model);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
++ (void)consultRemoveAllExpiredWithParam:(ConsultExpiredModelR *)param
+                                 success:(void(^)(BaseAPIModel *model))success
+                                 failure:(void (^)(HttpException *e))failure
+{
+    [[HttpClient sharedInstance] put:ConsultRemoveAllExpired params:[param dictionaryModel] success:^(id responseObj) {
+        if(success) {
+            BaseAPIModel *model = [BaseAPIModel parse:responseObj];
+            success(model);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
++ (void)setAllReadMsgBoxListWithParam:(ConsultModelR *)param
+                              success:(void (^)(ConsultModel *responModel))succsee
+                              failure:(void (^)(HttpException *e))failure
+{
+    [[HttpClient sharedInstance] put:ConsultMsgListSetAllReaded params:[param dictionaryModel] success:^(id responseObj) {
+        if(succsee) {
+            ConsultModel *model = [ConsultModel parse:responseObj];
+            succsee(model);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
++ (void)setReadMsgBoxListByTypeWithParam:(MsgBoxListSetReadTypeModelR *)param
+                              success:(void (^)(BaseAPIModel *responModel))succsee
+                              failure:(void (^)(HttpException *e))failure
+{
+    [[HttpClient sharedInstance] put:MsgBoxSetReadByType params:[param dictionaryModel] success:^(id responseObj) {
+        if(succsee) {
+            BaseAPIModel *model = [BaseAPIModel parse:responseObj];
+            succsee(model);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
++ (void)removeMsgBoxListByTypeWithParam:(MsgBoxListRemoveByTypeModelR *)param
+                                 success:(void (^)(BaseAPIModel *responModel))succsee
+                                 failure:(void (^)(HttpException *e))failure
+{
+    [[HttpClient sharedInstance] put:MsgBoxRemoveByType params:[param dictionaryModel] success:^(id responseObj) {
+        if(succsee) {
+            BaseAPIModel *model = [BaseAPIModel parse:responseObj];
+            succsee(model);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+
++ (void)consultExpiredWithParam:(ConsultExpiredModelR *)param
+                        success:(void(^)(ConsultCustomerListModel *model))success
+                        failure:(void (^)(HttpException *e))failure
+{
+    [[HttpClient sharedInstance] get:ConsultCustomerExpired params:[param dictionaryModel] success:^(id responseObj) {
+        if(success) {
+            ConsultCustomerListModel *model = [ConsultCustomerListModel parse:responseObj Elements:[CustomerConsultVoModel class] forAttribute:@"consults"];
+            success(model);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+
++ (void)consultSpreadWithParam:(ConsultSpreadModelR *)param
+                       success:(void(^)(BaseAPIModel *model))success
+                       failure:(void (^)(HttpException *e))failure
+{
+    [HttpClient sharedInstance].progressEnabled = NO;
+    [[HttpClient sharedInstance] put:ConsultSpread params:[param dictionaryModel] success:^(id responseObj) {
+        if(success) {
+            BaseAPIModel *model = [BaseAPIModel parse:responseObj];
+            success(model);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+
++ (void)consultDetailRemoveWithParams:(ConsultDetailRemoveModelR *)param
+                              success:(void(^)(id obj))success
+                              failure:(void(^)(HttpException * e))failure
+{
+    [[HttpClient sharedInstance] put:ConsultDetailRemove params:[param dictionaryModel] success:^(id responseObj) {
+        if (success) {
+            success(responseObj);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
++ (void)consultDetailCustomerPollWithParam:(ConsultDetailCustomerModelR *)param
+                                   success:(void(^)(id DFModel))success
+                                   failure:(void (^)(HttpException *e))failure
+{
+    [HttpClient sharedInstance].progressEnabled = NO;
+    [[HttpClient sharedInstance] get:ConsultDetailCustomerPoll params:[param dictionaryModel] success:^(id responseObj) {
+        if(success){
+            PharConsultDetail *consultDetail = [PharConsultDetail parse:responseObj Elements:[ConsultDetail class] forAttribute:@"details"];
+            success(consultDetail);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
++ (void)updateNotiNumberWithParam:(ConsultSetUnreadNumModelR *)param
+                          success:(void(^)(id ResModel))success
+                          failure:(void (^)(HttpException *e))failure
+{
+    [HttpClient sharedInstance].progressEnabled = YES;
+    [[HttpClient sharedInstance] put:ConsultSetUnreadNum params:[param dictionaryModel] success:^(id responseObj) {
+        if(success){
+            ConsultModel *consultDetail = [ConsultModel parse:responseObj];
+            success(consultDetail);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
++ (void)removeByCustomer:(RemoveByCustomerR *)param
+                 success:(void(^)(id ResModel))success
+                 failure:(void (^)(HttpException *e))failure
+{
+    [HttpClient sharedInstance].progressEnabled = YES;
+    [[HttpClient sharedInstance] put:RemoveByCustomer params:[param dictionaryModel] success:^(id responseObj) {
+        if(success){
+//            ConsultModel *consultDetail = [ConsultModel parse:responseObj];
+            success(responseObj);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+@end

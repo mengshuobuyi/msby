@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15C50" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="PostSearchViewController">
+            <connections>
+                <outlet property="resultTableView" destination="gU4-f5-nGt" id="jHZ-DN-0gy"/>
+                <outlet property="searchTableView" destination="Ca7-7J-bNn" id="rlK-zy-8o1"/>
+                <outlet property="sectionHeaderview" destination="0tR-tW-SMi" id="253-f3-LfY"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="none" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="Ca7-7J-bNn">
+                    <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                    <connections>
+                        <outlet property="dataSource" destination="-1" id="MM2-0y-BBw"/>
+                        <outlet property="delegate" destination="-1" id="bBX-78-OZm"/>
+                    </connections>
+                </tableView>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="none" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="gU4-f5-nGt">
+                    <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                    <connections>
+                        <outlet property="dataSource" destination="-1" id="5aC-Aj-650"/>
+                        <outlet property="delegate" destination="-1" id="FMn-bx-nHA"/>
+                    </connections>
+                </tableView>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstAttribute="trailing" secondItem="Ca7-7J-bNn" secondAttribute="trailing" id="8lz-1l-Fnp"/>
+                <constraint firstItem="gU4-f5-nGt" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="H1B-JH-ji4"/>
+                <constraint firstItem="Ca7-7J-bNn" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="dPx-Re-cLa"/>
+                <constraint firstItem="gU4-f5-nGt" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="ds4-Ib-1Jx"/>
+                <constraint firstItem="Ca7-7J-bNn" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="par-pj-eFo"/>
+                <constraint firstAttribute="bottom" secondItem="gU4-f5-nGt" secondAttribute="bottom" id="tKA-DJ-fbz"/>
+                <constraint firstAttribute="bottom" secondItem="Ca7-7J-bNn" secondAttribute="bottom" id="vIl-my-yhS"/>
+                <constraint firstAttribute="trailing" secondItem="gU4-f5-nGt" secondAttribute="trailing" id="xQx-wP-2al"/>
+            </constraints>
+            <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina47"/>
+        </view>
+        <view contentMode="scaleToFill" id="0tR-tW-SMi">
+            <rect key="frame" x="0.0" y="0.0" width="400" height="42"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <subviews>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="历史搜索" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="csZ-aG-4fB">
+                    <rect key="frame" x="15" y="13" width="52" height="16"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                    <color key="textColor" red="0.76078431372549016" green="0.76078431372549016" blue="0.76078431372549016" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Bs0-H7-2Od">
+                    <rect key="frame" x="335" y="11" width="50" height="20"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="50" id="2tU-kD-FRW"/>
+                        <constraint firstAttribute="height" constant="20" id="Quo-Pn-UGW"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                    <state key="normal" title="  清空" image="ic_search_trash">
+                        <color key="titleColor" red="0.59999999999999998" green="0.59999999999999998" blue="0.59999999999999998" alpha="1" colorSpace="calibratedRGB"/>
+                    </state>
+                    <connections>
+                        <action selector="deleteSearchHistory:" destination="-1" eventType="touchUpInside" id="4e5-No-gpQ"/>
+                    </connections>
+                </button>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="3Wf-hg-3L1">
+                    <rect key="frame" x="0.0" y="42" width="400" height="0.0"/>
+                    <color key="backgroundColor" red="0.8784313725490196" green="0.8784313725490196" blue="0.8784313725490196" alpha="1" colorSpace="calibratedRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="0.5" id="wS3-BI-k06"/>
+                    </constraints>
+                </view>
+            </subviews>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="Bs0-H7-2Od" firstAttribute="centerY" secondItem="0tR-tW-SMi" secondAttribute="centerY" id="7Th-QD-h3J"/>
+                <constraint firstAttribute="trailing" secondItem="Bs0-H7-2Od" secondAttribute="trailing" constant="15" id="G0L-Bs-Xsq"/>
+                <constraint firstItem="3Wf-hg-3L1" firstAttribute="leading" secondItem="0tR-tW-SMi" secondAttribute="leading" id="dWS-cx-nGA"/>
+                <constraint firstAttribute="trailing" secondItem="3Wf-hg-3L1" secondAttribute="trailing" id="f0l-Wk-i7y"/>
+                <constraint firstAttribute="bottom" secondItem="3Wf-hg-3L1" secondAttribute="bottom" id="flu-sP-GEk"/>
+                <constraint firstItem="csZ-aG-4fB" firstAttribute="centerY" secondItem="0tR-tW-SMi" secondAttribute="centerY" id="i1H-xj-CAO"/>
+                <constraint firstItem="csZ-aG-4fB" firstAttribute="leading" secondItem="0tR-tW-SMi" secondAttribute="leading" constant="15" id="rD1-b3-a4c"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <point key="canvasLocation" x="-84" y="-42"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="ic_search_trash" width="10" height="13"/>
+    </resources>
+</document>

@@ -1,0 +1,357 @@
+
+#import "ChangePasswdViewController.h"
+#import "SVProgressHUD.h"
+#import "LoginViewController.h"
+
+#import "QWGlobalManager.h"
+#import "Mbr.h"
+#import "MessageBoxListViewController.h"
+#import "LoginViewController.h"
+#import "ReturnIndexView.h"
+
+@interface ChangePasswdViewController ()<UIAlertViewDelegate>
+
+@property (strong, nonatomic) IBOutlet UIView *oldFieldContainerView;
+@property (weak, nonatomic) IBOutlet UITextField *oldField;
+
+@property (strong, nonatomic) IBOutlet UIView *firstPasswrodFieldContainerView;
+@property (weak, nonatomic) IBOutlet UITextField *firstPassordField;
+
+@property (weak, nonatomic) IBOutlet UIButton *commitButton;
+
+- (IBAction)commitButtonClick:(id)sender;
+@property (nonatomic, strong) UILabel *numLabel;   //数字角标
+@property (nonatomic, strong) UILabel *redLabel;   //小红点
+@property (strong, nonatomic) ReturnIndexView *indexView;
+@property (assign, nonatomic) int passNumber;
+
+
+@end
+
+@implementation ChangePasswdViewController
+
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event{
+    [self.oldField resignFirstResponder];
+    [self.firstPassordField resignFirstResponder];
+}
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        self.title = @"修改密码";
+        if (iOSv7 && self.view.frame.origin.y==0) {
+            self.edgesForExtendedLayout = UIRectEdgeNone;
+            self.extendedLayoutIncludesOpaqueBars = NO;
+            self.modalPresentationCapturesStatusBarAppearance = NO;
+        }
+        
+    }
+    return self;
+}
+
+- (void)setUpRightItem
+{
+    UIBarButtonItem *fixed = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
+    fixed.width = -15;
+    
+    UIView *rightView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 60, 40)];
+    
+    //三个点button
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    button.frame = CGRectMake(5, -2, 50, 40);
+    [button setImage:[UIImage imageNamed:@"icon-unfold.PNG"] forState:UIControlStateNormal];
+    [button addTarget:self action:@selector(returnIndex) forControlEvents:UIControlEventTouchUpInside];
+    [rightView addSubview:button];
+    
+    //数字角标
+    self.numLabel = [[UILabel alloc] initWithFrame:CGRectMake(38, 1, 18, 18)];
+    self.numLabel.backgroundColor = RGBHex(qwColor3);
+    self.numLabel.layer.cornerRadius = 9.0;
+    self.numLabel.textColor = [UIColor whiteColor];
+    self.numLabel.font = [UIFont systemFontOfSize:11];
+    self.numLabel.textAlignment = NSTextAlignmentCenter;
+    self.numLabel.layer.masksToBounds = YES;
+    self.numLabel.text = @"10";
+    self.numLabel.hidden = YES;
+    [rightView addSubview:self.numLabel];
+    
+    //小红点
+    self.redLabel = [[UILabel alloc] initWithFrame:CGRectMake(43, 10, 8, 8)];
+    self.redLabel.backgroundColor = RGBHex(qwColor3);
+    self.redLabel.layer.cornerRadius = 4.0;
+    self.redLabel.layer.masksToBounds = YES;
+    self.redLabel.hidden = YES;
+    [rightView addSubview:self.redLabel];
+    
+    UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithCustomView:rightView];
+    self.navigationItem.rightBarButtonItems = @[fixed,rightItem];
+    
+    if (self.passNumber > 0)
+    {
+        //显示数字
+        self.numLabel.hidden = NO;
+        self.redLabel.hidden = YES;
+        if (self.passNumber > 99) {
+            self.passNumber = 99;
+        }
+        self.numLabel.text = [NSString stringWithFormat:@"%d",self.passNumber];
+        
+    }else if (self.passNumber == 0)
+    {
+        //显示小红点
+        self.numLabel.hidden = YES;
+        self.redLabel.hidden = NO;
+        
+    }else if (self.passNumber < 0)
+    {
+        //全部隐藏
+        self.numLabel.hidden = YES;
+        self.redLabel.hidden = YES;
+    }
+
+}
+- (void)returnIndex
+{
+    self.indexView = [ReturnIndexView sharedManagerWithImage:@[@"ic_img_notice",@"icon home.PNG"] title:@[@"消息",@"首页"] passValue:self.passNumber];
+    self.indexView.delegate = self;
+    [self.indexView show];
+}
+- (void)RetunIndexView:(ReturnIndexView *)ReturnIndexView didSelectedIndex:(NSIndexPath *)indexPath
+{
+    [self.indexView hide];
+    
+    if (indexPath.row == 0)
+    {
+        if(!QWGLOBALMANAGER.loginStatus) {
+            LoginViewController *loginViewController = [[LoginViewController alloc] initWithNibName:@"LoginViewController" bundle:nil];
+            UINavigationController *navgationController = [[QWBaseNavigationController alloc] initWithRootViewController:loginViewController];
+            loginViewController.isPresentType = YES;
+            [self presentViewController:navgationController animated:YES completion:NULL];
+            return;
+        }
+        
+        MessageBoxListViewController *vcMsgBoxList = [[UIStoryboard storyboardWithName:@"MessageBoxListViewController" bundle:[NSBundle mainBundle]] instantiateViewControllerWithIdentifier:@"MessageBoxListViewController"];
+        
+        vcMsgBoxList.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:vcMsgBoxList animated:YES];
+        
+    }else if (indexPath.row == 1)
+    {
+        [self.navigationController popToRootViewControllerAnimated:YES];
+        [self performSelector:@selector(delayPopToHome) withObject:nil afterDelay:0.01];
+    }
+    
+}
+- (void)delayPopToHome
+{
+    [QWGLOBALMANAGER.tabBar setSelectedIndex:0];
+}
+
+- (void)popVCAction:(id)sender
+{
+    if (self.isForceChange) {
+        if (self.isPresentType) {
+            [self dismissViewControllerAnimated:YES completion:^{
+                [QWGLOBALMANAGER clearAccountInformation];
+            }];
+        }
+        else
+        {
+            [self.navigationController popToRootViewControllerAnimated:YES];
+            [QWGLOBALMANAGER clearAccountInformation];
+        }
+    }
+    else
+    {
+        [super popVCAction:sender];
+    }
+}
+
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    self.oldField.secureTextEntry = YES;
+    self.firstPassordField.secureTextEntry = YES;
+    
+    [self.oldField addTarget:self action:@selector(textFieldChanged:) forControlEvents:UIControlEventEditingChanged];
+    [self.firstPassordField addTarget:self action:@selector(textFieldChanged:) forControlEvents:UIControlEventEditingChanged];
+    
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    self.passNumber = [QWGLOBALMANAGER updateRedPoint];
+    // 如果是强制要求更改密码， 不显示右上角按钮
+    if (!self.isForceChange) {
+//        [self setUpRightItem];
+    }
+}
+
+- (void)UIGlobal
+{
+    self.view.backgroundColor = RGBHex(qwColor11);
+    UIColor* borderColor = RGBHex(qwColor10);
+    CGFloat cornerRadius = 4;
+    CGFloat borderWidth = 1.f / [[UIScreen mainScreen] scale];
+    
+    self.oldFieldContainerView.layer.masksToBounds = YES;
+    self.oldFieldContainerView.layer.cornerRadius = cornerRadius;
+    self.oldFieldContainerView.layer.borderColor = borderColor.CGColor;
+    self.oldFieldContainerView.layer.borderWidth = borderWidth;
+    
+    self.firstPasswrodFieldContainerView.layer.masksToBounds = YES;
+    self.firstPasswrodFieldContainerView.layer.cornerRadius = cornerRadius;
+    self.firstPasswrodFieldContainerView.layer.borderColor = borderColor.CGColor;
+    self.firstPasswrodFieldContainerView.layer.borderWidth = borderWidth;
+    
+    self.commitButton.layer.masksToBounds = YES;
+    self.commitButton.layer.cornerRadius = cornerRadius;
+    [self.commitButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    self.commitButton.backgroundColor = RGBHex(qwColor9);
+    self.commitButton.enabled = NO;
+}
+
+- (void)textFieldChanged:(UITextField*)textField
+{
+    if (StrIsEmpty(self.oldField.text) || StrIsEmpty(self.firstPassordField.text)) {
+        self.commitButton.backgroundColor = RGBHex(qwColor9);
+        self.commitButton.enabled = NO;
+    }
+    else
+    {
+        self.commitButton.backgroundColor = RGBHex(qwColor2);
+        self.commitButton.enabled = YES;
+    }
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    //Dispose of any resources that can be recreated.
+}
+
+- (IBAction)commitButtonClick:(id)sender {
+    if (self.oldField.text.length == 0) {
+        [SVProgressHUD showErrorWithStatus:@"请输入当前密码" duration:DURATION_SHORT];
+    }else{
+        if ([@"123456" isEqualToString:self.firstPassordField.text]) {
+            [SVProgressHUD showErrorWithStatus:kWarning30001];
+            return;
+        }
+        if (self.firstPassordField.text.length >= 6 && self.firstPassordField.text.length < 16)
+        {
+            if(QWGLOBALMANAGER.currentNetWork == NotReachable)
+            {
+                [SVProgressHUD showErrorWithStatus:@"网络未连接，请重试" duration:0.8f];
+                return;
+            }
+            //请求服务器
+            NSCharacterSet *nameCharacters = [[NSCharacterSet
+                                               characterSetWithCharactersInString:@"_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"] invertedSet];
+            NSRange userNameRange = [self.firstPassordField.text rangeOfCharacterFromSet:nameCharacters];
+            if (userNameRange.length == 1) {
+                [SVProgressHUD showErrorWithStatus:@"请设置新密码，6~16位数字或字母" duration:DURATION_SHORT];
+                return;
+            }else{
+            
+                NSMutableDictionary *param = [NSMutableDictionary dictionary];
+                param[@"token"] = QWGLOBALMANAGER.configure.userToken;
+                param[@"newPwd"] = self.firstPassordField.text;
+                param[@"oldPwd"] = self.oldField.text;
+                param[@"oldCredentials"]=[AESUtil encryptAESData:self.oldField.text app_key:AES_KEY];
+                param[@"newCredentials"]=[AESUtil encryptAESData:self.firstPassordField.text app_key:AES_KEY];
+                
+                
+                [Mbr updatePasswordWithParams:param
+                                      success:^(id resultObj){
+                                          
+                                          BaseAPIModel *model = (BaseAPIModel *)resultObj;
+                         
+                                          if([model.apiStatus intValue] == 0){
+                                            [SVProgressHUD showSuccessWithStatus:@"修改成功" duration:DURATION_SHORT];
+                                              if (self.isPresentType) {
+                                                  [self dismissViewControllerAnimated:YES completion:nil];
+                                              }
+                                              else
+                                                  [self.navigationController popToRootViewControllerAnimated:YES];
+                                          }else{
+                                              [SVProgressHUD showErrorWithStatus:model.apiMessage duration:DURATION_SHORT];
+                                              
+                                          }
+                                          
+                                      }
+                                      failure:^(HttpException *e){
+                                          [SVProgressHUD showErrorWithStatus:e.Edescription duration:DURATION_SHORT];
+                                      }];
+            }
+        }
+        else if (self.firstPassordField.text.length == 0)
+        {
+            [SVProgressHUD showErrorWithStatus:@"请输入新密码" duration:DURATION_SHORT];
+        }
+        else if (self.firstPassordField.text.length > 0 && self.firstPassordField.text.length < 6)
+        {
+            [SVProgressHUD showErrorWithStatus:@"密码长度应大于六位" duration:DURATION_SHORT];
+        }
+        else if (self.firstPassordField.text.length > 16)
+        {
+            [SVProgressHUD showErrorWithStatus:@"密码长度应小于十六位" duration:DURATION_SHORT];
+        }
+    }
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex{
+    if (alertView.tag == 999) {
+        if (buttonIndex == 0) {
+            LoginViewController * login = [[LoginViewController alloc] initWithNibName:@"LoginViewController" bundle:nil];
+            login.isPresentType = YES;
+            login.parentNavgationController = self.navigationController;
+            UINavigationController * nav = [[QWBaseNavigationController alloc] initWithRootViewController:login];
+            [self presentViewController:nav animated:YES completion:nil];
+        }
+    }else if (buttonIndex == 1) {
+        LoginViewController * login = [[LoginViewController alloc] initWithNibName:@"LoginViewController" bundle:nil];
+        login.isPresentType = YES;
+        login.parentNavgationController = self.navigationController;
+        UINavigationController * nav = [[QWBaseNavigationController alloc] initWithRootViewController:login];
+        [self presentViewController:nav animated:YES completion:nil];
+    }
+}
+
+- (void)getNotifType:(Enum_Notification_Type)type data:(id)data target:(id)obj{
+    if (NotiWhetherHaveNewMessage == type) {
+        
+        NSString *str = data;
+        self.passNumber = [str integerValue];
+        self.indexView.passValue = self.passNumber;
+        [self.indexView.tableView reloadData];
+        if (self.passNumber > 0)
+        {
+            //显示数字
+            self.numLabel.hidden = NO;
+            self.redLabel.hidden = YES;
+            if (self.passNumber > 99) {
+                self.passNumber = 99;
+            }
+            self.numLabel.text = [NSString stringWithFormat:@"%d",self.passNumber];
+            
+        }else if (self.passNumber == 0)
+        {
+            //显示小红点
+            self.numLabel.hidden = YES;
+            self.redLabel.hidden = NO;
+            
+        }else if (self.passNumber < 0)
+        {
+            //全部隐藏
+            self.numLabel.hidden = YES;
+            self.redLabel.hidden = YES;
+        }
+    }
+}
+
+
+@end

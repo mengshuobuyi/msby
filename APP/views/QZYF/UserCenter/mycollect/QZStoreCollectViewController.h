@@ -1,0 +1,14 @@
+//
+//  QZLikeShopViewController.h
+//  wenyao
+//
+//  Created by Meng on 15/1/16.
+//  Copyright (c) 2015年 xiezhenghong. All rights reserved.
+//
+
+#import "QWBaseVC.h"
+
+@interface QZStoreCollectViewController : QWBaseVC<UITableViewDataSource,UITableViewDelegate>
+
+
+@end

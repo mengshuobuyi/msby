@@ -1,0 +1,28 @@
+//
+//  PharmacyStoreDetailViewController.h
+//  APP
+//  非微商城市普通药房详情页面
+//  Created by Meng on 15/6/2.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "QWBaseVC.h"
+
+@interface PharmacyStoreDetailViewController : QWBaseVC
+
+@property (nonatomic, strong) UINavigationController *navigation;
+@property (nonatomic, strong) NSString *lastPageName;
+@property (nonatomic ,strong) StoreNearByModel *storeModel;
+/**
+ *  @brief 只须传入storeId
+ */
+@property (nonatomic ,strong) NSString *storeId;
+
+/**
+ *  @brief 聊天进店可以重新推入下一层聊天,如果为yes《上一层界面已经有聊天详情,则pop到上层界面
+ */
+@property (nonatomic, assign) BOOL      shouldPushNextWeChat;
+
+@property(nonatomic,assign)NSInteger bannerStatus;
+
+@end

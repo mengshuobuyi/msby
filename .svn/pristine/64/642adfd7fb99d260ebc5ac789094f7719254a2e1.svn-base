@@ -1,0 +1,25 @@
+//
+//  ReportConsultTableViewCell.m
+//  APP
+//
+//  Created by 李坚 on 16/1/6.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "ReportConsultTableViewCell.h"
+
+@implementation ReportConsultTableViewCell
+
+- (void)awakeFromNib {
+    // Initialization code
+    self.selectionStyle = UITableViewCellSelectionStyleNone;
+    
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+@end

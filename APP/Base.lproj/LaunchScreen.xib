@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9529"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="480"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="启动页" translatesAutoresizingMaskIntoConstraints="NO" id="3S0-mb-GLT">
+                    <rect key="frame" x="0.0" y="0.0" width="320" height="480"/>
+                </imageView>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstAttribute="bottom" secondItem="3S0-mb-GLT" secondAttribute="bottom" id="VS3-5w-FDC"/>
+                <constraint firstAttribute="trailing" secondItem="3S0-mb-GLT" secondAttribute="trailing" id="faH-GB-C4s"/>
+                <constraint firstItem="3S0-mb-GLT" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="gXx-Hz-gp0"/>
+                <constraint firstItem="3S0-mb-GLT" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="xwC-1R-1aM"/>
+            </constraints>
+            <nil key="simulatedStatusBarMetrics"/>
+            <simulatedScreenMetrics key="simulatedDestinationMetrics"/>
+            <point key="canvasLocation" x="548" y="455"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="启动页" width="640" height="960"/>
+    </resources>
+</document>

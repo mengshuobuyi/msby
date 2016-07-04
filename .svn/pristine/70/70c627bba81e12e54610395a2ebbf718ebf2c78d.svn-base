@@ -1,0 +1,30 @@
+//
+//  DrugStoreCell.h
+//  APP
+//
+//  Created by Meng on 15/6/29.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "RatingView.h"
+#import "MLEmojiLabel.h"
+
+
+@interface DrugStoreCell : UITableViewCell
+@property (weak, nonatomic) IBOutlet UILabel *titleLabel;
+       //标题
+@property (weak, nonatomic) IBOutlet RatingView     *ratingView;        //星星
+@property (weak, nonatomic) IBOutlet UIImageView    *huiImageView;      //“惠”字  默认隐藏
+@property (weak, nonatomic) IBOutlet UILabel        *addressLabel;      //地址
+@property (weak, nonatomic) IBOutlet UIImageView    *phoneImageView;    //电话ImageView
+@property (weak, nonatomic) IBOutlet UIImageView    *consultImageView;  //咨询按钮ImageView
+@property (weak, nonatomic) IBOutlet UIButton *consultButton;
+@property (weak, nonatomic) IBOutlet UIButton *phoneButton;
+@property (weak, nonatomic) IBOutlet UIImageView *verifyLogo;
+
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *ratingConstraint;
+
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *huiConstraint;
+
+@end

@@ -1,0 +1,530 @@
+//
+//  ConsultForFreeRootViewController.m
+//  APP
+//
+//  Created by PerryChen on 8/18/15.
+//  Copyright (c) 2015 carret. All rights reserved.
+//
+
+#import "ConsultForFreeRootViewController.h"
+#import "CustomImageCollectionViewCell.h"
+#import "QYPhotoAlbum.h"
+#import "PhotoAlbum.h"
+#import "QYImage.h"
+#import "PhotoModel.h"
+#import "PhotoPreView.h"
+#import "LoginViewController.h"
+#import "PatientListViewController.h"
+
+static NSInteger maxTextNum = 1000;     // 免费咨询的最大文字数
+static NSInteger minTextNum = 5;    // 免费咨询的最小文字数
+static NSInteger kMaxNum = 4;   // 图片一行最多显示的item数
+@interface ConsultForFreeRootViewController () <UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource,UIAlertViewDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate>
+@property (weak, nonatomic) IBOutlet UICollectionView *collectionViewImages;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *constraintBottom;  // 图片选择器底部的约束
+@property (weak, nonatomic) IBOutlet UITextView *tvConsultContent;
+@property (weak, nonatomic) IBOutlet UILabel *lblTips;
+
+@property (strong, nonatomic) NSMutableArray *arrPhotos;
+@property (strong, nonatomic) NSMutableArray *arrTemp;
+
+@property (assign, nonatomic) BOOL showPlaceholder;
+@property (weak, nonatomic) IBOutlet UIView *viewContent;
+@property (nonatomic, strong) QWWebViewController *vcWeb;
+- (IBAction)action_ChoosePhoto:(UIButton *)sender;
+- (IBAction)action_TakePhoto:(UIButton *)sender;
+
+@end
+
+@implementation ConsultForFreeRootViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.navigationItem.title = @"免费咨询";
+    [self checkCity];
+    
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    /**
+        键盘弹出收起的通知
+     */
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardChangeFrame:) name:UIKeyboardWillChangeFrameNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(textViewEditChanged:)
+                                                 name:UITextViewTextDidChangeNotification
+                                               object:nil];
+    self.tvConsultContent.textColor = RGBHex(qwColor8);
+    self.tvConsultContent.font = fontSystem(kFontS4);
+}
+
+- (void)popVCAction:(id)sender
+{
+    [super popVCAction:sender];
+}
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+// 判断城市是否开通
+-(void)checkCity{
+    BOOL canConsult=[QWUserDefault getBoolBy:kCanConsultPharmacists];
+    if(canConsult){
+        [self loadAllViews];
+    }else{
+        //城市未开通
+        [self showInfoView:@"当前定位城市暂未开通免费问药服务，敬请期待！" image:nil];
+    }
+}
+
+// 设置页面展示
+- (void)loadAllViews
+{
+    [self.tvConsultContent becomeFirstResponder];
+//    [self naviRightBotton:@"下一步  " action:@selector(submitAction)];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"下一步  " style:UIBarButtonItemStyleDone target:self action:@selector(submitAction)];
+    self.arrPhotos = [@[] mutableCopy];
+    // 点击空白取消键盘
+    UITapGestureRecognizer *gestureTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOnEmptyView)];
+    [self.view addGestureRecognizer:gestureTap];
+    [self.collectionViewImages addGestureRecognizer:gestureTap];
+    
+    // 文本框的提示信息
+    self.lblTips.hidden = YES;
+    // 设置剩余数目
+    [self setRemainWord:0];
+    // 是否显示placeholder
+    self.showPlaceholder = YES;
+    [self setTextViewPlaceholder:YES];
+
+    // 设置图片collection view的layout,控制一行四个图片
+    UICollectionViewFlowLayout *viewLayout = [[UICollectionViewFlowLayout alloc] init];
+    viewLayout.sectionInset = UIEdgeInsetsMake(10, 10, 10, 10);
+    viewLayout.itemSize = CGSizeMake((self.collectionViewImages.frame.size.width)/kMaxNum, self.collectionViewImages.frame.size.width/kMaxNum);
+    self.collectionViewImages.collectionViewLayout = viewLayout;
+}
+
+// 登录按钮
+- (void)loginButtonClick
+{
+    LoginViewController *loginViewController = [[LoginViewController alloc] initWithNibName:@"LoginViewController" bundle:nil];
+    loginViewController.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:loginViewController animated:YES];
+}
+
+// 进入选择家庭成员
+- (void)submitAction
+{
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+        [self showError:kWarning12];
+        return;
+    }
+    if (QWGLOBALMANAGER.loginStatus == NO) {
+        LoginViewController *loginViewController = [[LoginViewController alloc] initWithNibName:@"LoginViewController" bundle:nil];
+        UINavigationController *navgationController = [[QWBaseNavigationController alloc] initWithRootViewController:loginViewController];
+        loginViewController.isPresentType = YES;
+        [self presentViewController:navgationController animated:YES completion:NULL];
+        return;
+    }
+    NSString *strConsultContent = [self.tvConsultContent.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    if (self.showPlaceholder) {
+        [self showError:kWarning215N18];        // 未输入满5个字
+        return;
+    } else {
+        if (strConsultContent.length < minTextNum) {
+            [self showError:kWarning215N18];        // 未输入满5个字
+            return;
+        } else if (strConsultContent.length > maxTextNum) {
+            [self showError:kWarning215N25];        // 输入超过限制
+            return;
+        }
+    }
+    [self performSegueWithIdentifier:@"segueToPatientList" sender:nil];
+    
+}
+
+// 重新刷新选择的图片
+- (void)showAllPickedPhotos
+{
+    [self.collectionViewImages reloadData];
+}
+
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    if ([segue.identifier isEqualToString:@"segueToPatientList"]) { // 进入选择家庭成员
+        PatientListViewController *vcPatientList = (PatientListViewController *)segue.destinationViewController;
+        ConsultContentModel *modelContent = [ConsultContentModel new];
+        modelContent.strConsultTitle = [self.tvConsultContent.text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        modelContent.arrPhotos = self.arrPhotos;
+        vcPatientList.modelContent = modelContent;
+    }
+}
+
+
+#pragma mark - UICollectionView methods
+// 删除图片
+- (void)deletePhotoByIndex:(NSInteger)index{
+    if (index<self.arrPhotos.count) {
+        [self.arrPhotos removeObjectAtIndex:index];
+        [self showAllPickedPhotos];
+    }
+}
+// 暂时没用，图片上的删除按钮点击事件
+- (void)delPhoto:(UIButton *)btnDelPhoto
+{
+    NSInteger i = btnDelPhoto.tag;
+    [self deletePhotoByIndex:i];
+}
+// 显示图片
+- (void)showPhoto:(UIButton *)btnShowPhoto
+{
+    NSInteger indexShow = btnShowPhoto.tag;
+    self.arrTemp=nil;
+    self.arrTemp=[[NSMutableArray alloc]initWithCapacity:self.arrPhotos.count];
+    int i = 1,j = 0;
+    for (PhotoModel *mode in self.arrPhotos) {
+        if(i==indexShow){
+            j=i;
+        }
+        // 有大图就显示大图
+        if (mode.fullImage)
+            [self.arrTemp addObject:mode.fullImage];
+        i++;
+    }
+    
+    UIStoryboard *sb = [UIStoryboard storyboardWithName:@"PhotoAlbum" bundle:nil];
+    PhotoPreView* vc = [sb instantiateViewControllerWithIdentifier:@"PhotoPreView"];
+    vc.toSelection=YES;
+    vc.dontSave=YES;
+    vc.arrPhotos = self.arrTemp;
+    vc.indexSelected = j;
+    vc.blockSelect = ^(NSInteger oid){
+        [self deletePhotoByIndex:oid];
+    };
+    [self presentViewController:vc animated:YES completion:^{
+    }];
+}
+
+// 设置显示选择四张图片的控件
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
+{
+    if (self.arrPhotos.count > 0) {
+        return 4;
+    } else {
+        return 0;
+    }
+}
+
+- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView
+{
+    return 1;
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    CustomImageCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"CustomImageCollectionViewCell" forIndexPath:indexPath];
+    
+    cell.btnDelPhoto.tag = indexPath.row;
+    cell.btnShowPhoto.tag = indexPath.row;
+    cell.btnDelPhoto.hidden = YES;
+    cell.btnShowPhoto.hidden = NO;
+    cell.imgContent.hidden = NO;
+    // 如果当前的index上，是有选择的图片，则显示图片。
+    // 如果当前index上是和图片个数一样，那么显示Placeholder图片
+    // 否则就显示多余的图片位
+    if (indexPath.row < self.arrPhotos.count) {
+        PhotoModel *modelPhoto = self.arrPhotos[indexPath.row];
+        cell.imgContent.image = modelPhoto.thumbnail;
+        [cell.btnDelPhoto addTarget:self
+                             action:@selector(delPhoto:) forControlEvents:UIControlEventTouchUpInside];
+        [cell.btnShowPhoto addTarget:self
+                              action:@selector(showPhoto:) forControlEvents:UIControlEventTouchUpInside];
+    } else if (indexPath.row == self.arrPhotos.count) {
+        cell.imgContent.image = [UIImage imageNamed:@"img_bg_occupy"];
+        cell.btnShowPhoto.hidden = YES;
+    } else {
+        cell.imgContent.hidden = YES;
+        cell.btnShowPhoto.hidden = YES;
+    }
+    return cell;
+}
+
+// 设置图片的布局
+#pragma mark - UICollectionView layout methods
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    CGSize sizeCell = CGSizeMake((collectionView.frame.size.width) / kMaxNum, collectionView.frame.size.width / kMaxNum);
+    return sizeCell;
+}
+
+- (CGFloat)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout minimumInteritemSpacingForSectionAtIndex:(NSInteger)section
+{
+    return 0.0f;
+}
+
+- (UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout insetForSectionAtIndex:(NSInteger)section
+{
+    return UIEdgeInsetsMake(0, 0, 0, 0);
+}
+
+- (CGFloat)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout minimumLineSpacingForSectionAtIndex:(NSInteger)section
+{
+    return 0.0f;
+}
+
+// 选择从相册选择图片
+- (IBAction)action_ChoosePhoto:(UIButton *)sender {
+    if (![QYPhotoAlbum checkAlbumAuthorizationStatus]) {
+       [QWGLOBALMANAGER getCramePrivate];
+    }
+    UIStoryboard *sb = [UIStoryboard storyboardWithName:@"PhotoAlbum" bundle:nil];
+    PhotoAlbum* vc = [sb instantiateViewControllerWithIdentifier:@"PhotoAlbum"];
+    [vc selectPhotos:kMaxNum selected:self.arrPhotos block:^(NSMutableArray *list) {
+        // 选择完图片
+        self.arrPhotos=list;
+        [self showAllPickedPhotos];
+        
+    } failure:^(NSError *error) {
+        DebugLog(@"%@",error);
+        [vc closeAction:nil];
+    }];
+    
+    UINavigationController *nav = [[QWBaseNavigationController alloc] initWithRootViewController:vc];
+    [self presentViewController:nav animated:YES completion:^{
+    }];
+
+}
+
+// 选择拍摄照片
+- (IBAction)action_TakePhoto:(UIButton *)sender {
+    if (![QYPhotoAlbum checkCameraAuthorizationStatus]) {
+        [QWGLOBALMANAGER getCramePrivate];
+    }
+    //四张的判断
+    NSInteger numberPictures=[self.arrPhotos count];
+    if(numberPictures==kMaxNum){
+        [self showError:kWarningAlbum];
+        return;
+    }
+    
+    if ([UIImagePickerController isSourceTypeAvailable: UIImagePickerControllerSourceTypeCamera])
+    {
+        [self performSelector:@selector(showCamera) withObject:nil afterDelay:0.3];
+    }else
+    {
+        DDLogVerbose(@"模拟其中无法打开照相机,请在真机中使用");
+        UIAlertView * alertView = [[UIAlertView alloc] initWithTitle:@"提示" message:@"Sorry,您的设备不支持该功能!" delegate:self cancelButtonTitle:@"确定" otherButtonTitles:nil, nil];
+        [alertView show];
+    }
+}
+
+// 调出相机
+- (void)showCamera {
+    UIImagePickerController * picker = [[UIImagePickerController alloc] init];
+    picker.delegate = self;
+    if ([[[UIDevice currentDevice] systemVersion] floatValue]>=8.0) {
+        
+    }
+    picker.sourceType = UIImagePickerControllerSourceTypeCamera;
+    
+    [self presentViewController:picker animated:YES completion:^{
+        
+    }];
+    
+}
+
+// 勿删，否则文本框滚动会自动消失键盘
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView
+{
+    
+}
+
+#pragma mark - 相机拍照和预览
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info{
+    /**
+     *1.通过相机获取的图片都在此代理中
+     */
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+        [picker dismissViewControllerAnimated:YES completion:nil];
+        return;
+    }
+    
+    
+    // 把照片保存到相册，并把照片model保存到数组photos
+    UIImage *image = [info objectForKey:UIImagePickerControllerOriginalImage];
+    UIImage *mm=[QYImage cropThumbnail:image];
+    
+    PhotoModel *mode=[PhotoModel new];
+    mode.thumbnail=mm;
+    mode.fullImage=image;
+    if (self.arrPhotos==nil) {
+        self.arrPhotos=[NSMutableArray array];
+    }
+    [self.arrPhotos addObject:mode];
+    [self showAllPickedPhotos];
+    
+    dispatch_queue_t aQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    dispatch_async(aQueue, ^(void) {
+        // 存到相册中
+        [PhotosAlbum saveImageToSavePhoto:image resultBlock:^(NSString *url, ALAsset *asset) {
+            mode.url=url;
+            mode.asset=asset;
+        } failure:^(NSError *error) {
+            //
+        }];
+        
+    });
+    
+    [picker dismissViewControllerAnimated:YES completion:^{
+    }];
+    
+}
+
+//用户取消拍照
+-(void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
+{
+    [picker dismissViewControllerAnimated:YES completion:nil];
+}
+
+#pragma mark - UITextView methods.
+- (void)tapOnEmptyView
+{
+    [self.tvConsultContent resignFirstResponder];
+}
+// 监听文本改变
+-(void)textViewEditChanged:(NSNotification *)obj
+{
+    UITextView *textView = (UITextView *)obj.object;
+    NSString *toBeString = textView.text;
+    NSString *lang = [[textView textInputMode] primaryLanguage]; // 键盘输入模式
+    if ([lang isEqualToString:@"zh-Hans"]) { // 简体中文输入，包括简体拼音，健体五笔，简体手写
+        UITextRange *selectedRange = [textView markedTextRange];
+        //获取高亮部分
+        UITextPosition *position = [textView positionFromPosition:selectedRange.start offset:0];
+        // 没有高亮选择的字，则对已输入的文字进行字数统计和限制
+        if (!position) {
+            if (toBeString.length > maxTextNum) {
+                textView.text = [toBeString substringToIndex:maxTextNum];
+            }
+            [self setRemainWord:textView.text.length];
+        }
+        // 有高亮选择的字符串，则暂不对文字进行统计和限制
+        else{
+        }
+    }
+    // 中文输入法以外的直接对其统计限制即可，不考虑其他语种情况
+    else{
+        if (toBeString.length > maxTextNum) {
+            textView.text = [toBeString substringToIndex:maxTextNum];
+        }
+        [self setRemainWord:textView.text.length];
+    }
+}
+
+// 设置剩余输入字数
+- (void)setRemainWord:(NSInteger)wordInputted
+{
+    if (self.tvConsultContent.text.length == 0) {
+        [self setTextViewPlaceholder:YES];
+    } else {
+        [self setTextViewPlaceholder:NO];
+    }
+}
+
+// 设置文本框的Placeholder
+- (void)setTextViewPlaceholder:(BOOL)didSet
+{
+    if (didSet&&self.tvConsultContent.text.length == 0) {
+        self.lblTips.text = @"请详细描述您的病症或用药信息，药师会尽快为您提供用药方案或建议。";
+        self.lblTips.hidden = NO;
+        self.showPlaceholder = YES;
+    } else {
+        self.lblTips.hidden = YES;
+        self.showPlaceholder = NO;
+    }
+}
+- (void)textViewDidEndEditing:(UITextView *)textView
+{
+    if (textView.text.length == 0) {
+        [self setTextViewPlaceholder:YES];//显示提示
+    }
+}
+
+- (void)textViewDidBeginEditing:(UITextView *)textView
+{
+    if (self.showPlaceholder&&self.tvConsultContent.text.length>0) {
+        [self setTextViewPlaceholder:NO];//光标键入，消失提示
+    }
+}
+
+- (void)textViewDidChange:(UITextView *)textView
+{
+    if (self.tvConsultContent.text.length == 0) {//内容变化进行的操作
+        [self setTextViewPlaceholder:YES];
+    } else {
+        [self setTextViewPlaceholder:NO];
+    }
+}
+
+- (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text{
+    NSCharacterSet *doneButtonCharacterSet = [NSCharacterSet newlineCharacterSet];
+    NSRange replacementTextRange = [text rangeOfCharacterFromSet:doneButtonCharacterSet];
+    NSUInteger location = replacementTextRange.location;
+    if (location != NSNotFound){
+        [textView resignFirstResponder];
+        return NO;
+    }
+    return YES;
+}
+
+// 根据键盘弹出的情况更新页面
+#pragma mark - Keyboard methods
+- (void)keyboardWillShow:(NSNotification *)notification
+{
+    NSDictionary *info = [notification userInfo];
+    NSValue *kbFrame = [info objectForKey:UIKeyboardFrameEndUserInfoKey];
+    NSTimeInterval animationDuration = [[info objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+    CGRect keyboardFrame = [kbFrame CGRectValue];
+    CGFloat height = keyboardFrame.size.height;
+    [UIView animateWithDuration:animationDuration animations:^{
+    }];
+}
+
+- (void)keyboardChangeFrame:(NSNotification *)notification
+{
+    NSDictionary *info = [notification userInfo];
+    NSValue *kbFrame = [info objectForKey:UIKeyboardFrameEndUserInfoKey];
+    NSTimeInterval animationDuration = [[info objectForKey:UIKeyboardAnimationDurationUserInfoKey] doubleValue];
+    CGRect keyboardFrame = [kbFrame CGRectValue];
+    CGFloat height = keyboardFrame.size.height;
+    
+    [UIView animateWithDuration:animationDuration animations:^{
+        self.constraintBottom.constant = height;
+        [self.view layoutIfNeeded];
+    }];
+}
+
+- (void)keyboardWillHide:(NSNotification *)notification
+{
+    self.constraintBottom.constant = 0;
+    [self.view layoutIfNeeded];
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+@end

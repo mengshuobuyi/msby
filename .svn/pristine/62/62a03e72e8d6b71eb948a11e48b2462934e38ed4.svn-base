@@ -1,0 +1,16 @@
+//
+//  BrachPromotionListViewController.h
+//  APP
+//  药房详情-全部商品页面
+//  Created by 李坚 on 16/5/10.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "QWBaseVC.h"
+
+@interface BrachPromotionListViewController : QWBaseVC
+
+@property (nonatomic, strong) NSString *branchId;
+
+@end

@@ -1,0 +1,378 @@
+//
+//  CouponPharmacyDeailViewController.m
+//  APP
+//  夏季大放送  跑马灯
+//  Created by 李坚 on 15/8/21.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "CouponPharmacyDeailViewController.h"
+#import "ConsultCouponTableViewCell.h"
+#import "CouponDrugTableViewCell.h"
+#import "Coupon.h"
+#import "QWGlobalManager.h"
+#import "UIImageView+WebCache.h"
+#import "SVProgressHUD.h"
+#import "WebDirectViewController.h"
+#import "CenterCouponDetailViewController.h"
+#import "MutableMorePromotionTableViewCell.h"
+@interface CouponPharmacyDeailViewController ()<UITableViewDataSource,UITableViewDelegate,ConsultCouponTableViewCellDelegate>{
+    
+    activityDetailModel *model;     //优惠券基本信息
+    NSInteger currPage;             //分页加载Page
+    NSMutableArray *promotionArray; //优惠商品数组
+}
+@property (weak, nonatomic) IBOutlet UITableView *mainTableView;
+
+@end
+
+@implementation CouponPharmacyDeailViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    currPage = 1;
+    promotionArray = [NSMutableArray array];
+    model = [activityDetailModel new];
+    self.mainTableView.dataSource = self;
+    self.mainTableView.delegate = self;
+    self.mainTableView.tableFooterView = [[UIView alloc]init];
+    
+    [self.mainTableView addFooterWithTarget:self action:@selector(refreshData)];
+    self.mainTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    
+    //if(self.storeId == nil || [self.storeId isEqualToString:@""]){
+    if (StrIsEmpty(self.storeId)) {
+        [self showInfoView:@"对不起，该优惠已过期" image:@"ic_img_cry"];
+        return;
+    }
+    
+    [self loadPromotionData];
+}
+
+- (void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    
+    [self loadCouponData];
+}
+#pragma mark - 分页加载
+- (void)refreshData{
+    
+    currPage += 1;
+    [self loadPromotionData];
+}
+
+#pragma mark - 分享
+- (void)shareClick{
+    ShareContentModel *modelShare = [[ShareContentModel alloc] init];
+    modelShare.typeShare = ShareTypePharmacyWithActivity;
+    NSArray *arrParams = @[self.storeId,self.activityId];
+    modelShare.shareID = modelShare.shareID = [arrParams componentsJoinedByString:SeparateStr];
+    modelShare.title = model.title;
+    modelShare.imgURL = model.branchImgUrl;
+    modelShare.content = [NSString stringWithFormat:@"我在问药客户端发现了%@，很不错噢！",model.branchName];
+    ShareSaveLogModel *modelR = [ShareSaveLogModel new];
+    MapInfoModel *mapInfoModel = [QWUserDefault getObjectBy:APP_MAPINFOMODEL];
+    if(mapInfoModel) {
+        modelR.city = mapInfoModel.city;
+        modelR.province = mapInfoModel.province;
+    }else{
+        modelR.city = @"苏州市";
+        modelR.province = @"江苏省";
+    }
+    modelR.shareObj = @"3";
+    modelR.shareObjId = self.storeId;
+    modelShare.modelSavelog = modelR;
+    [self popUpShareView:modelShare];
+}
+#pragma mark - 请求促销活动基本信息以及优惠券列表信息
+- (void)loadCouponData{
+    
+    activityDetailModelR *modelR = [activityDetailModelR new];
+    modelR.packPromotionId = self.activityId;
+    modelR.branchId = self.storeId;
+    
+    if(QWGLOBALMANAGER.loginStatus){
+        modelR.token = QWGLOBALMANAGER.configure.userToken;
+    }
+    
+    [Coupon getAvtivityDetail:modelR success:^(id obj) {
+        
+        model = (activityDetailModel *)obj;
+        self.title = model.title;
+        
+        if([model.status intValue] == 1){
+            [self setupTableHeader];
+//            UIBarButtonItem *item = [[UIBarButtonItem alloc]initWithTitle:@"分享" style:UIBarButtonItemStylePlain target:self action:@selector(shareClick)];
+//            
+//            self.navigationItem.rightBarButtonItem = item;
+//            
+//            
+            UIView *ypDetailBarItems=[[UIView alloc]initWithFrame:CGRectMake(0, 0, 80, 55)];
+            UIButton * zoomButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
+            [zoomButton setFrame:CGRectMake(23, 2, 55,55)];
+            [zoomButton addTarget:self action:@selector(shareClick) forControlEvents:UIControlEventTouchUpInside];
+            [zoomButton setImage:[UIImage imageNamed:@"icon_share"] forState:UIControlStateNormal];
+            [zoomButton setImage:[UIImage imageNamed:@"icon_share_click"] forState:UIControlStateHighlighted];
+            [ypDetailBarItems addSubview:zoomButton];
+            UIBarButtonItem *fixed = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
+            fixed.width = -15;
+            self.navigationItem.rightBarButtonItems=@[fixed,[[UIBarButtonItem alloc]initWithCustomView:ypDetailBarItems]];
+            
+            
+            
+            
+            [self.mainTableView reloadData];
+        }else{
+            [self showInfoView:@"对不起，该优惠已过期" image:@"ic_img_cry"];
+        }
+    } failure:^(HttpException *e) {
+        
+        [SVProgressHUD showErrorWithStatus:e.Edescription duration:0.5f];
+    }];
+}
+#pragma mark - 获取相关优惠活动列表(需分页加载，因此分离两请求)
+- (void)loadPromotionData{
+    
+    activityDetailModelR *modelR = [activityDetailModelR new];
+    modelR.packPromotionId = self.activityId;
+    modelR.branchId = self.storeId;
+    modelR.currPage = @(currPage);
+    modelR.pageSize = @(10);
+    if(QWGLOBALMANAGER.loginStatus){
+        modelR.token = QWGLOBALMANAGER.configure.userToken;
+    }
+    
+    [Coupon getAvtivityDetailPromotion:modelR success:^(id obj) {
+        
+        PromotionListModel *listModel = obj;
+        
+        if(currPage == 1){
+            
+            [promotionArray removeAllObjects];
+            [promotionArray addObjectsFromArray:listModel.list];
+        }else{
+            [promotionArray addObjectsFromArray:listModel.list];
+        }
+        [self.mainTableView footerEndRefreshing];
+        [self.mainTableView reloadData];
+
+        
+    } failure:^(HttpException *e) {
+        
+        [self.mainTableView footerEndRefreshing];
+    }];
+    
+}
+
+
+#pragma mark - 建立tableHeader
+- (void)setupTableHeader{
+    
+    UIView *headerView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, 177.5)];
+//    UIView *line1 = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, 8.5)];
+//    line1.backgroundColor = RGBHex(qwColor11);
+//    [headerView addSubview:line1];
+    
+    UIImageView *headerImage = [[UIImageView alloc]initWithFrame:CGRectMake(0, 0, APP_W, 100)];
+    [headerImage setImageWithURL:[NSURL URLWithString:model.imgUrl] placeholderImage:[UIImage imageNamed:@"img_sale_nomal"]];
+    [headerView addSubview:headerImage];
+    
+    UIView *line2 = [[UIView alloc]initWithFrame:CGRectMake(0, 100.0, APP_W, 7)];
+    line2.backgroundColor = RGBHex(qwColor11);
+    [headerView addSubview:line2];
+    
+//    UIView *line3 = [[UIView alloc]initWithFrame:CGRectMake(0, 117.5, APP_W, 0.5)];
+//    line3.backgroundColor = RGBHex(qwColor10);
+//    [headerView addSubview:line3];
+    
+    UILabel *headerText = [[UILabel alloc]init];
+    CGSize size = [QWGLOBALMANAGER getTextSizeWithContent:model.desc WithUIFont:fontSystem(13.0f) WithWidth:APP_W - 16];
+    headerText.frame = CGRectMake(8, 119, APP_W - 16, size.height);
+    headerText.textColor = RGBHex(qwColor6);
+    headerText.font = fontSystem(13.0f);
+    headerText.numberOfLines = 0;
+    headerText.text = model.desc;
+    [headerView addSubview:headerText];
+    
+//    UIView *line4 = [[UIView alloc]initWithFrame:CGRectMake(0, 187.5, APP_W, 0.5)];
+//    line4.backgroundColor = RGBHex(qwColor10);
+//    [headerView addSubview:line4];
+    
+    headerView.frame = CGRectMake(0, 0, APP_W, 131.5 + size.height);
+    
+    self.mainTableView.tableHeaderView = headerView;
+}
+
+
+
+#pragma mark - TableViewDelegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
+    return 2;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
+    if(section == 1){
+        
+        if(promotionArray.count > 0){
+            return 47;
+        }else{
+            return 0.0f;
+        }
+    }else{
+        return 0.0f;
+    }
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
+    
+    if(section == 1){
+        if(promotionArray.count > 0){
+      
+        UIView *view = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, GHeight)];
+            view.backgroundColor = RGBHex(qwColor4);
+        UILabel *label = [[UILabel alloc]init];
+        label.textColor = RGBHex(qwColor6);
+        label.text = @"活动商品";
+        label.frame = CGRectMake(12, (GHeight - kSectionHeaderSpaceHeight - 21)/2, APP_W-24, 21);
+        
+        UIView *spaceView = [[UIView alloc]init];
+        spaceView.frame = CGRectMake(0, GHeight - kSectionHeaderSpaceHeight, APP_W, kSectionHeaderSpaceHeight);
+        spaceView.backgroundColor = RGBHex(qwColor11);
+        
+//        UIImage *image = [UIImage imageNamed:@"arr_right"];
+//        UIImageView *rightImage = [[UIImageView alloc]initWithImage:image];
+//        rightImage.frame = CGRectMake(APP_W - 12, (GHeight - kSectionHeaderSpaceHeight - image.size.height)/2, image.size.width, image.size.height);
+//        [view addSubview:rightImage];
+        
+        UIView *line  = [[UIView alloc]init];
+        line.frame = CGRectMake(0, 0, APP_W, 0.5);
+        line.backgroundColor = RGBHex(qwColor10);
+        [spaceView addSubview:line];
+        
+        UIView *line1  = [[UIView alloc]init];
+        line1.frame = CGRectMake(0, spaceView.frame.size.height - 0.5, APP_W, 0.5);
+        line1.backgroundColor = RGBHex(qwColor10);
+        [spaceView addSubview:line1];
+        
+        [view addSubview:spaceView];
+        [view addSubview:label];
+        
+        return view;
+        }else{
+            return nil;
+        }
+    }else{
+        return nil;
+    }
+
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    
+    if(section == 0){
+        if(model.coupons && model.coupons.count > 0){
+            return 1;
+        }else{
+            return 0;
+        }
+    }else{
+        if(promotionArray.count > 0){
+            return promotionArray.count;
+        }else{
+            return 0;
+        }
+    }
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    if(indexPath.section == 0){
+        return 77.0f;
+    }else{
+        return [CouponDrugTableViewCell getCellHeight:nil];;
+    }
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    if(indexPath.section == 0){
+        NSString *ConsultPharmacyIdentifier = @"ConsultCouponTableViewCell";
+        ConsultCouponTableViewCell *cell = (ConsultCouponTableViewCell *)[tableView dequeueReusableCellWithIdentifier:ConsultPharmacyIdentifier];
+        if(cell == nil){
+            UINib *nib = [UINib nibWithNibName:@"ConsultCouponTableViewCell" bundle:nil];
+            [tableView registerNib:nib forCellReuseIdentifier:ConsultPharmacyIdentifier];
+            cell = (ConsultCouponTableViewCell *)[tableView dequeueReusableCellWithIdentifier:ConsultPharmacyIdentifier];
+        }
+        cell.delegate = self;
+        [cell setScrollView:model.coupons];
+        return cell;
+    }else{
+        
+        
+        //以前的优惠商品的cell
+        NSString *ConsultPharmacyIdentifier = @"CouponDrugTableViewCell";
+        CouponDrugTableViewCell *cell = (CouponDrugTableViewCell *)[tableView dequeueReusableCellWithIdentifier:ConsultPharmacyIdentifier];
+        if(cell == nil){
+            UINib *nib = [UINib nibWithNibName:@"CouponDrugTableViewCell" bundle:nil];
+            [tableView registerNib:nib forCellReuseIdentifier:ConsultPharmacyIdentifier];
+            cell = (CouponDrugTableViewCell *)[tableView dequeueReusableCellWithIdentifier:ConsultPharmacyIdentifier];
+            cell.selectedBackgroundView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, cell.frame.size.height - 9)];
+            cell.selectedBackgroundView.backgroundColor = RGBHex(qwColor10);
+        }
+        
+        [cell setCell:promotionArray[indexPath.row]];
+        
+        return cell;
+        //新的优惠商品的cell
+//        MutableActivityPromotionTableViewCell *cell = (MutableActivityPromotionTableViewCell *)[tableView cellForRowAtIndexPath:indexPath];
+//        if (!cell) {
+//            NSArray* nib = [[NSBundle mainBundle] loadNibNamed:@"MutableActivityPromotionTableViewCell" owner:self options:nil];
+//            cell = [nib objectAtIndex:0];
+//        }
+//        BranchPromotionProVO *vo = promotionArray[indexPath.row];
+//        cell.expandDele=self;
+//        cell.selectedCell=indexPath;
+//        [cell setstoreCell:vo];
+//        return cell;
+        
+        
+    }
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    //点击优惠商品
+    pharmacyCouponDrug *drug = promotionArray[indexPath.row];
+    WebDirectViewController *vcWebMedicine = [[UIStoryboard storyboardWithName:@"WebDirect" bundle:nil] instantiateViewControllerWithIdentifier:@"WebDirectViewController"];
+    [[QWGlobalManager sharedInstance] readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) {
+        WebDrugDetailModel *modelDrug = [WebDrugDetailModel new];
+        modelDrug.modelMap = mapInfoModel;
+        modelDrug.proDrugID = drug.proId;
+        modelDrug.promotionID = drug.promotionId;
+        WebDirectLocalModel *modelLocal = [WebDirectLocalModel new];
+        modelLocal.typeLocalWeb = WebPageToWebTypeMedicine;
+        modelLocal.modelDrug = modelDrug;
+        [vcWebMedicine setWVWithLocalModel:modelLocal];
+        [self.navigationController pushViewController:vcWebMedicine animated:YES];
+    }];
+}
+
+#pragma mark - AutoScrollDelegate点击优惠券
+- (void)didSelectedCouponView:(pharmacyCouponQuan *)obj{
+    if([obj.over boolValue]){//已领完
+        return;
+    }
+    
+    CenterCouponDetailViewController *vcDetail =[[CenterCouponDetailViewController alloc] initWithNibName:@"CenterCouponDetailViewController" bundle:nil];
+    vcDetail.couponId=obj.couponId;
+    [self.navigationController pushViewController:vcDetail animated:YES];
+}
+
+
+- (void)popVCAction:(id)sender{
+    [super popVCAction:sender];
+}
+@end

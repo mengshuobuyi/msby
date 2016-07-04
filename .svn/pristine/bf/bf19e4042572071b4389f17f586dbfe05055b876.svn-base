@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15F34" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="CouponSuccessViewController" customModule="swiftModule" customModuleProvider="target">
+            <connections>
+                <outlet property="nonDateLabel" destination="BgX-Ga-g6j" id="dNi-m7-63w"/>
+                <outlet property="noneLabel" destination="8Ok-cV-28n" id="7Pt-zp-uF0"/>
+                <outlet property="useButton" destination="k3v-BU-7jC" id="0p7-vS-aeu"/>
+                <outlet property="view" destination="yTT-BJ-7MG" id="ChF-Ge-Kwy"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="yTT-BJ-7MG">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <subviews>
+                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_img_success" translatesAutoresizingMaskIntoConstraints="NO" id="Gxd-AX-UcE">
+                    <rect key="frame" x="100" y="60" width="120" height="120"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="120" id="gGE-66-LY4"/>
+                        <constraint firstAttribute="width" constant="120" id="kt3-4f-W9D"/>
+                    </constraints>
+                </imageView>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="恭喜您,领取成功!" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="vux-g9-zxa">
+                    <rect key="frame" x="96" y="205" width="129" height="21"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <color key="textColor" red="0.99215686274509807" green="0.62745098039215685" blue="0.027450980392156862" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="k3v-BU-7jC">
+                    <rect key="frame" x="30" y="296" width="260" height="40"/>
+                    <color key="backgroundColor" red="0.99215686274509807" green="0.62745098039215685" blue="0.027450980392156862" alpha="1" colorSpace="calibratedRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="260" id="CpE-vg-hKC"/>
+                        <constraint firstAttribute="height" constant="40" id="bOB-Vr-o1o"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="boldSystem" pointSize="14"/>
+                    <state key="normal" title="去使用(到店消费)">
+                        <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <connections>
+                        <action selector="useMethod:" destination="-1" eventType="touchDown" id="77p-3Z-gW3"/>
+                    </connections>
+                </button>
+                <button hidden="YES" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ogG-FL-OWj">
+                    <rect key="frame" x="163" y="494" width="112" height="24"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="112" id="l2l-MR-Shg"/>
+                        <constraint firstAttribute="height" constant="24" id="vQ0-XX-0SB"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                    <state key="normal" title="查看我的优惠" backgroundImage="btn_img_oval">
+                        <color key="titleColor" red="0.99215686274509807" green="0.62745098039215685" blue="0.027450980392156862" alpha="1" colorSpace="calibratedRGB"/>
+                        <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <connections>
+                        <action selector="checkMyPriviledge:" destination="-1" eventType="touchDown" id="XNi-hy-YUB"/>
+                    </connections>
+                </button>
+                <label hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="使用时间：2015.11.02-2015.11.02" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="BgX-Ga-g6j">
+                    <rect key="frame" x="15" y="277" width="290" height="12"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="12" id="CdK-ha-sw4"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                    <color key="textColor" red="0.99607843139999996" green="0.38823529410000002" blue="0.4039215686" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="此券优惠为预领取券" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8Ok-cV-28n">
+                    <rect key="frame" x="94" y="260" width="131" height="12"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="131" id="YhD-ga-tC6"/>
+                        <constraint firstAttribute="height" constant="12" id="jLP-ZQ-atG"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                    <color key="textColor" red="0.99607843137254903" green="0.38823529411764707" blue="0.40392156862745099" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+            </subviews>
+            <color key="backgroundColor" red="0.96078431372549022" green="0.96078431372549022" blue="0.96078431372549022" alpha="1" colorSpace="calibratedRGB"/>
+            <constraints>
+                <constraint firstItem="k3v-BU-7jC" firstAttribute="top" secondItem="vux-g9-zxa" secondAttribute="bottom" constant="70" id="7HS-ay-oyk"/>
+                <constraint firstItem="ogG-FL-OWj" firstAttribute="top" secondItem="k3v-BU-7jC" secondAttribute="bottom" constant="55" id="Dda-xW-ygK"/>
+                <constraint firstItem="vux-g9-zxa" firstAttribute="top" secondItem="Gxd-AX-UcE" secondAttribute="bottom" constant="25" id="G7U-bp-yGD"/>
+                <constraint firstAttribute="bottom" secondItem="ogG-FL-OWj" secondAttribute="bottom" constant="50" id="MJ7-5m-3x8"/>
+                <constraint firstAttribute="centerX" secondItem="vux-g9-zxa" secondAttribute="centerX" id="OYg-5V-CZc"/>
+                <constraint firstAttribute="trailing" secondItem="ogG-FL-OWj" secondAttribute="trailing" constant="45" id="Q3P-Z8-Wq3"/>
+                <constraint firstItem="BgX-Ga-g6j" firstAttribute="leading" secondItem="yTT-BJ-7MG" secondAttribute="leading" constant="15" id="Rby-Jw-CO4"/>
+                <constraint firstItem="8Ok-cV-28n" firstAttribute="centerX" secondItem="BgX-Ga-g6j" secondAttribute="centerX" id="SGN-H5-ACp"/>
+                <constraint firstItem="k3v-BU-7jC" firstAttribute="top" secondItem="BgX-Ga-g6j" secondAttribute="bottom" constant="7" id="YpF-VM-kAL"/>
+                <constraint firstItem="Gxd-AX-UcE" firstAttribute="top" secondItem="yTT-BJ-7MG" secondAttribute="top" constant="60" id="ZZO-FZ-1la"/>
+                <constraint firstAttribute="centerX" secondItem="Gxd-AX-UcE" secondAttribute="centerX" id="e5a-Rh-rTG"/>
+                <constraint firstItem="BgX-Ga-g6j" firstAttribute="top" secondItem="8Ok-cV-28n" secondAttribute="bottom" constant="5" id="kIq-vP-I9i"/>
+                <constraint firstAttribute="centerX" secondItem="k3v-BU-7jC" secondAttribute="centerX" id="o2R-60-9O4"/>
+                <constraint firstAttribute="trailing" secondItem="BgX-Ga-g6j" secondAttribute="trailing" constant="15" id="yiU-hZ-Doo"/>
+            </constraints>
+            <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina4"/>
+            <variation key="default">
+                <mask key="constraints">
+                    <exclude reference="Dda-xW-ygK"/>
+                </mask>
+            </variation>
+            <point key="canvasLocation" x="-329" y="353"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="btn_img_oval" width="112" height="24"/>
+        <image name="ic_img_success" width="120" height="120"/>
+    </resources>
+</document>

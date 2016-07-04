@@ -1,0 +1,130 @@
+//
+//  StoreGoodTableViewCell.m
+//  APP
+//
+//  Created by 李坚 on 15/12/31.
+//  Copyright © 2015年 carret. All rights reserved.
+//
+
+#import "StoreGoodTableViewCell.h"
+#import "UIImageView+WebCache.h"
+#import "QWGlobalManager.h"
+
+@implementation StoreGoodTableViewCell
+
++ (CGFloat)getCellHeight:(id)data{
+    
+    if(data){
+        CartProductVoModel *VO = (CartProductVoModel *)data;
+        ;
+        if(VO.promotions.count > 0){
+            return 111.0f + [QWGLOBALMANAGER sizeText:VO.name font:fontSystem(kFontS3) limitWidth:APP_W - 164.0f].height;
+        }else{
+            return 74.0f + [QWGLOBALMANAGER sizeText:VO.name font:fontSystem(kFontS3) limitWidth:APP_W - 164.0f].height;
+        }
+    }else{
+        return 131.0f;
+    }
+}
+
+- (void)awakeFromNib {
+    // Initialization code
+    self.clipsToBounds = YES;
+    self.selectionStyle = UITableViewCellSelectionStyleNone;
+    _line = [[UIView alloc]initWithFrame:CGRectMake(0, [StoreGoodTableViewCell getCellHeight:nil] - 0.5, APP_W - 76.0f, 0.5f)];
+    _line.backgroundColor = RGBHex(qwColor10);
+    self.scoreLabel.textColor = RGBHex(qwColor3);
+    self.scoreLabel.layer.masksToBounds = YES;
+    self.scoreLabel.layer.borderColor = RGBHex(qwColor3).CGColor;
+    self.scoreLabel.layer.borderWidth = 0.5f;
+    self.scoreLabel.layer.cornerRadius = 0.5f;
+    [self addSubview:_line];
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+//店内药品普通商品setCell方法
+- (void)setCell:(CartProductVoModel *)data{
+
+    if(data.userScore && [data.userScore intValue] != 0){
+        self.scoreLabel.hidden = NO;
+        self.scoreLabel.text = [NSString stringWithFormat:@"送%d积分",[data.userScore intValue]];
+    }else{
+        self.scoreLabel.hidden = YES;
+    }
+    self.packageCountLabel.text = @"";
+    self.proName.text = [NSString stringWithFormat:@"%@",data.name];
+    self.proRule.text = [NSString stringWithFormat:@"%@",data.spec];
+    self.priceLabel.text = [NSString stringWithFormat:@"￥%.2f",[data.price floatValue]];
+    [self.imgUrl setImageWithURL:[NSURL URLWithString:data.imgUrl] placeholderImage:[UIImage imageNamed:@"药品默认图片"]];
+    if((data.stock + data.saleStock) == 0){
+        [self.addBtn setImage:[UIImage imageNamed:@"icon_shoppin_disable"] forState:UIControlStateNormal];
+    }else{
+        [self.addBtn setImage:[UIImage imageNamed:@"icon_addcar_shoppin"] forState:UIControlStateNormal];
+    }
+    if(data.promotions.count > 0){
+        self.ticketImage.hidden = NO;
+        self.couponImage.hidden = NO;
+        self.couponLabel.hidden = NO;
+        CartPromotionVoModel *VO = data.promotions[0];
+        //showType 展示活动类型:1.券 2.惠 3.抢 (普通商品只会有这三种)
+        switch (VO.showType) {
+            case 1://1.券
+                self.couponImage.image = [UIImage imageNamed:@"label_vouchers"];
+                break;
+            case 2://2.惠
+                self.couponImage.image = [UIImage imageNamed:@"iocn_kindness_detailssmall"];
+                break;
+            case 3://3.抢
+                self.couponImage.image = [UIImage imageNamed:@"iocn_rob_shoppingsmall"];
+                break;
+            default:
+                break;
+        }
+        self.couponLabel.text = VO.title;
+    }else{
+        self.couponImage.hidden = YES;
+        self.couponLabel.hidden = YES;
+        self.ticketImage.hidden = YES;
+    }
+    
+    _line.frame = CGRectMake(9, [StoreGoodTableViewCell getCellHeight:data] - 0.5, APP_W - 88.0f, 0.5f);
+    _line.hidden = NO;
+}
+
+//店内药品套餐商品setCell方法
+- (void)setPackageCell:(ComboProductVoModel *)data{
+    
+    self.scoreLabel.hidden = YES;
+    //规格
+    self.proRule.text = [NSString stringWithFormat:@"%@",data.spec];
+    //图片
+    [self.imgUrl setImageWithURL:[NSURL URLWithString:data.imgUrl] placeholderImage:[UIImage imageNamed:@"药品默认图片"]];
+    
+    self.proName.text = [NSString stringWithFormat:@"%@",data.name];
+    //药品名称、价格
+    //对count字段进行非空判断，接口回参不靠谱，保险起见
+    if(data.count == 0){
+        self.priceLabel.text = [NSString stringWithFormat:@"￥%.2f",data.price];
+        self.packageCountLabel.text = @"";
+    }else{
+        self.priceLabel.text = [NSString stringWithFormat:@"￥%.2f",data.price];
+        self.packageCountLabel.text = [NSString stringWithFormat:@"*%d",(int)data.count];
+    }
+    
+    
+    self.addBtn.hidden = YES;
+    _line.hidden = YES;
+}
+
+- (IBAction)addToGoodCar:(id)sender {
+    
+    if(self.delegate){
+        [self.delegate addGoodWitIndexPath:self.path];
+    }
+}
+@end

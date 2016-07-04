@@ -1,0 +1,17 @@
+//
+//  PharmacyGoodsListViewController.h
+//  APP
+//  微商药房详情-商品Tab
+//  Created by 李坚 on 15/12/31.
+//  Copyright © 2015年 carret. All rights reserved.
+//
+
+#import "QWBaseVC.h"
+
+@interface PharmacyGoodsListViewController : QWBaseVC
+
+@property (nonatomic, strong) UINavigationController *navigation;
+@property (nonatomic ,strong) NSString *branchId;//药房Id，传值
+@property (nonatomic, strong) NSString *branchTitle;//药房name
+
+@end

@@ -1,0 +1,267 @@
+//
+//  MallScanDrugViewController.m
+//  APP
+//  首页扫码搜索  V4.0重做，对应PRD文档内容如下：
+
+//  Created by 李坚 on 16/2/18.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+//9.点击首页搜索框的扫码按钮，跳转至扫码页面（如图j）
+//10.扫码商品如果首页门店有此商品，则扫码结果页面（如图k）,展示价格、商品品牌、名称、规格、主治功能（根据显示控制码展示不同的内容），点击进入商品详情页（如图l）。
+//11.扫码商品如果首页门店无售，首页所在城市下其他药房有售，则扫码结果（如图m）。如果该城市只有一家门店有售此商品，点击商品直接进入商品详情页；如果该城市有多家门店售此商品，点击进入比价页面（如图N）。
+//12.扫码商品如果首页药房没有此商品，该城市下其他药房也无此商品，普通商品库里有此商品，则扫码结果页面（如图o），点击商品进入普通商品详情页（如图p）
+//13.如果扫码没有结果，提示用户无结果（如图q）
+
+
+
+#import "MallScanDrugViewController.h"
+#import "Drug.h"
+#import "HomeSearchMedicineTableViewCell.h"
+#import "MedicineSearchResultViewController.h"
+#import "PromotionActivityDetailViewController.h"
+#import "WebDirectViewController.h"
+#import "MedicineDetailViewController.h"
+#import "SVProgressHUD.h"
+
+@interface MallScanDrugViewController ()
+@property (weak, nonatomic) IBOutlet UITableView *mainTableView;
+@property (strong, nonatomic) NSMutableArray *dataArray;
+@end
+
+@implementation MallScanDrugViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    self.title = @"商品列表";
+    _dataArray = [NSMutableArray array];
+    self.mainTableView.separatorColor = RGBHex(qwColor9);
+    [self.mainTableView setBackgroundColor:RGBHex(qwColor11)];
+    self.mainTableView.tableFooterView = [[UIView alloc]init];
+    
+    [QWGLOBALMANAGER checkEventId:@"首页扫码_结果页面" withLable:nil withParams:nil];
+
+    if(!StrIsEmpty(self.scanCode)){
+        [self mallScanInBranch:self.scanCode];
+    }
+}
+
+#pragma mark - 搜门店
+- (void)mallScanInBranch:(NSString *)scanCode{
+    
+    [QWGLOBALMANAGER readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) {
+        
+        HomeSearInBranchModelR *modelR = [HomeSearInBranchModelR new];
+        modelR.branchId = [QWGLOBALMANAGER getMapBranchId];
+        modelR.key = scanCode;
+        
+        [Search homeScanSearchInBranch:modelR success:^(MicroMallSearchProArrayVo *model) {
+            
+            if(model.products.count > 0){
+                
+                [_dataArray addObjectsFromArray:model.products];
+                [_mainTableView reloadData];
+            }else{
+                [self showInfoView:@"抱歉，没有为您找到相关商品" image:@"icon_no result_search"];
+            }
+        } failure:^(HttpException *e) {
+            [self showInfoView:@"抱歉，没有为您找到相关商品" image:@"icon_no result_search"];
+        }];
+    }];
+}
+
+//#pragma mark - 搜城市
+//- (void)mallScanInCity:(NSString *)scanCode{
+//    
+//    ScanSearchModelR *modelR = [ScanSearchModelR new];
+//    modelR.barCode = scanCode;
+//    
+//    [Search homeScanSearchInCity:modelR success:^(KeywordModel *model) {
+//        
+//        if(model.list.count > 0){
+//        
+//            [_dataArray addObjectsFromArray:model.list];
+//            [_mainTableView reloadData];
+//        }else{
+//            [self showInfoView:@"抱歉，没有为您找到相关商品" image:@"ic_img_fail"];
+//        }
+//    } failure:^(HttpException *e) {
+//        if(e.errorCode!=-999){
+//            if(e.errorCode == -1001){
+//                [self showInfoView:kWarning215N26 image:@"ic_img_fail"];
+//            }else{
+//                [self showInfoView:kWarning39 image:@"ic_img_fail"];
+//            }
+//        }
+//    }];
+//}
+//
+//
+//- (void)normalScan:(NSString *)scanCode andMapInfoModel:(MapInfoModel *)mapInfoModel
+//{
+//    NSMutableDictionary *param = [NSMutableDictionary dictionary];
+//    param[@"barCode"] = scanCode;
+//    if(mapInfoModel){
+//        if(!StrIsEmpty(mapInfoModel.city)){
+//            param[@"city"] = mapInfoModel.city;
+//        }
+//        if(!StrIsEmpty(mapInfoModel.province)){
+//            param[@"province"] = mapInfoModel.province;
+//        }
+//    }
+//    param[@"v"] = @"2.0";
+//    //扫码获取商品信息
+//    [Drug queryProductByBarCodeWithParam:param Success:^(id resultObj){
+//        
+//        DrugScanModel *modelScan = resultObj;
+//        
+//        if(modelScan.list.count > 0){
+//            
+//            [_dataArray addObjectsFromArray:modelScan.list];
+//            [_mainTableView reloadData];
+//            
+//        }else{
+//            [self showInfoView:@"抱歉，没有为您找到相关商品" image:@"ic_img_fail"];
+//        }
+//    }failure:^(HttpException *e){
+//        if(e.errorCode!=-999){
+//            if(e.errorCode == -1001){
+//                [self showInfoView:kWarning215N26 image:@"ic_img_fail"];
+//            }else{
+//                [self showInfoView:kWarning39 image:@"ic_img_fail"];
+//            }
+//        }
+//    }];
+//}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - UITableViewDataSource
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return [self.dataArray count];
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)atableView
+{
+    return 1;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *ScanDrugIdentifier = @"HomeSearchMedicineTableViewCell";
+    HomeSearchMedicineTableViewCell *cell = (HomeSearchMedicineTableViewCell *)[tableView dequeueReusableCellWithIdentifier:ScanDrugIdentifier];
+    if(cell == nil){
+        UINib *nib = [UINib nibWithNibName:@"HomeSearchMedicineTableViewCell" bundle:nil];
+        [tableView registerNib:nib forCellReuseIdentifier:ScanDrugIdentifier];
+        cell = (HomeSearchMedicineTableViewCell *)[tableView dequeueReusableCellWithIdentifier:ScanDrugIdentifier];
+    }
+    
+    MicroMallSearchProVo *model = self.dataArray[indexPath.row];
+    
+    cell.proName.text = model.proName;
+    cell.specLable.text = model.spec;
+    cell.purpose.text = model.content;
+    cell.priceLabel.text = [NSString stringWithFormat:@"￥%.1f",[model.showPrice floatValue]];
+    [cell.imgUrl setImageWithURL:[NSURL URLWithString:model.imgUrl] placeholderImage:[UIImage imageNamed:@"药品默认图片.png"]];
+    
+    return cell;
+}
+
+#pragma mark - UITableViewDelegate
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return [HomeSearchMedicineTableViewCell getCellHeight:nil];
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+  
+    MicroMallSearchProVo *vo = self.dataArray[indexPath.row];
+    
+    [QWGLOBALMANAGER checkEventId:@"首页扫码_结果页面_进入商品详情" withLable:nil withParams:nil];
+    //店内搜索，直接跳商品详情
+    if(!StrIsEmpty(vo.branchProId)){
+        
+        MedicineDetailViewController *VC = [[MedicineDetailViewController alloc]initWithNibName:@"MedicineDetailViewController" bundle:nil];
+        VC.lastPageName = @"首页搜索";
+        VC.proId = vo.branchProId;
+        [self.navigationController pushViewController:VC animated:YES];
+        return;
+    }
+    
+    //暂无门店销售此药，跳转H5
+    if(StrIsEmpty(vo.showPrice)){
+        [self pushH5Detail:vo.proId];
+        return;
+    }
+    
+    //请求，如果只有一家药房销售，直接跳转商品详情，如果不止一家则跳转比价页面
+    [QWGLOBALMANAGER readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) {
+        ProductByCodeModelR *modelR = [ProductByCodeModelR new];
+        modelR.city = mapInfoModel.city;
+        modelR.code = vo.proId;
+        modelR.longitude = @(mapInfoModel.location.coordinate.longitude);
+        modelR.latitude = @(mapInfoModel.location.coordinate.latitude);
+        
+        [ConsultStore MedicineDetailByCode:modelR success:^(BranchProductVo *model) {
+            if([model.apiStatus intValue] == 0){
+                if(model){
+                    if(model.branchs.count==1){
+                        //新药品详情界面
+                        MicroMallBranchVo *VO = model.branchs[0];
+                        if(StrIsEmpty(VO.branchProId)){
+                            return;
+                        }
+                        //跳商品详情
+                        MedicineDetailViewController *VC = [[MedicineDetailViewController alloc]initWithNibName:@"MedicineDetailViewController" bundle:nil];
+                        VC.lastPageName = @"首页搜索";
+                        VC.proId = VO.branchProId;
+                        [self.navigationController pushViewController:VC animated:YES];
+                    }else{
+                        //跳比价页面
+                        MedicineSearchResultViewController *VC = [[MedicineSearchResultViewController alloc]initWithNibName:@"MedicineSearchResultViewController" bundle:nil];
+                        VC.productCode = vo.proId;
+                        VC.lastPageName = @"首页搜索";
+                        [self.navigationController pushViewController:VC animated:YES];
+                    }
+                }else{
+                    return;
+                }
+                
+            }
+        } failure:^(HttpException *e) {
+            [SVProgressHUD showErrorWithStatus:kWarning12];
+            return;
+        }];
+    }];
+
+}
+
+#pragma mark - 跳转内容页H5药品详情
+- (void)pushH5Detail:(NSString *)proId{
+    
+    WebDirectViewController *vcWebMedicine = [[UIStoryboard storyboardWithName:@"WebDirect" bundle:nil] instantiateViewControllerWithIdentifier:@"WebDirectViewController"];
+    
+    [QWGLOBALMANAGER readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) {
+        WebDrugDetailModel *modelDrug = [WebDrugDetailModel new];
+        modelDrug.modelMap = mapInfoModel;
+        modelDrug.proDrugID = proId;
+        modelDrug.promotionID = proId;
+        WebDirectLocalModel *modelLocal = [WebDirectLocalModel new];
+        modelLocal.modelDrug = modelDrug;
+        modelLocal.typeLocalWeb = WebPageToWebTypeMedicine;
+        vcWebMedicine.NeedTwoTab = YES;
+        [vcWebMedicine setWVWithLocalModel:modelLocal];
+        [self.navigationController pushViewController:vcWebMedicine animated:YES];
+        
+    }];
+}
+
+
+@end

@@ -1,0 +1,101 @@
+//
+//  ConsultTableViewCell.m
+//  APP
+//
+//  Created by 李坚 on 15/8/18.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "ConsultTableViewCell.h"
+#import "UIImageView+WebCache.h"
+
+@implementation ConsultTableViewCell
+
++ (CGFloat)getCellHeight:(id)data{
+    
+    return 90.0f;
+}
+
+- (void)awakeFromNib {
+    // Initialization code
+    
+    [self.ratView setImagesDeselected:@"star_none" partlySelected:@"star_half" fullSelected:@"star_full" andDelegate:nil];
+    self.ratView.userInteractionEnabled = NO;
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+- (void)setNearbyStoreCell:(StoreNearByModel *)storeModel{
+    
+//    if([storeModel.active intValue] == -1){
+//        self.activeLabel.hidden = NO;
+//    }else{
+//        self.activeLabel.hidden = YES;
+//    }
+    
+    //if(storeModel.shortName && ![storeModel.shortName isEqualToString:@""]){
+    if (!StrIsEmpty(storeModel.shortName)) {
+        self.consultName.text = storeModel.shortName;
+    }else{
+        self.consultName.text = storeModel.name;
+    }
+    
+    if([storeModel.isStar isEqualToString:@"Y"]){
+        self.VImage.hidden = NO;
+    }else{
+        self.VImage.hidden = YES;
+    }
+    
+    float distance = [storeModel.distance floatValue];
+    NSString *distanceStr = nil;
+    if (distance == -1.0f){
+        distanceStr = @"未知";
+    }else if (distance < 0) {
+        distanceStr = @"超出20KM";
+    }else if (distance > 20) {
+        distanceStr = @"超出20KM";
+    }else{
+        distanceStr = [NSString stringWithFormat:@"%.2fKM",distance];
+    }
+    self.distance.text = distanceStr;
+    
+    
+    NSString *imgUrl = storeModel.imgUrl;
+    if(imgUrl && ![imgUrl isEqual:[NSNull null]]){
+        [self.logoImage setImageWithURL:[NSURL URLWithString:imgUrl] placeholderImage:[UIImage imageNamed:@"img_bg_pharmacy"]];
+    }else{
+        [self.logoImage setImage:[UIImage imageNamed:@"img_bg_pharmacy"]];
+    }
+    
+    float star = [storeModel.star floatValue];
+    float avgStar = [storeModel.avgStar floatValue];
+    star = MAX(star, avgStar);
+    [self.ratView displayRating:star / 2];
+    
+    if(storeModel.promotionType && [storeModel.promotionType intValue] != 0){
+        self.promotionLabel.hidden = NO;
+        NSString *str;
+        if([storeModel.promotionType intValue] == 1){
+            //优惠券
+            str = [NSString stringWithFormat:@"%@元代金券",storeModel.promotionDesc];
+        }
+        if([storeModel.promotionType intValue] == 2){
+            //优惠券
+            str = storeModel.promotionDesc;
+        }
+        if([storeModel.promotionType intValue] == 3){
+            //礼品券
+            str = @"赠礼品";
+        }
+        
+        self.promotionLabel.text = str;
+    }else{
+        self.promotionLabel.hidden = YES;
+    }
+}
+
+@end

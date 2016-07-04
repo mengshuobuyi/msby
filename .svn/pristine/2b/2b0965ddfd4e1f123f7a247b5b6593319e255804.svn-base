@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15F34" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" id="KGk-i7-Jjw" customClass="CircleSquareEmptyTableCell">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="175"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="174.5"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_quanzi_noattention" translatesAutoresizingMaskIntoConstraints="NO" id="bA9-ub-td9">
+                        <rect key="frame" x="124.5" y="30" width="71" height="70"/>
+                        <constraints>
+                            <constraint firstAttribute="height" priority="300" constant="70" id="Hhh-YT-ma1"/>
+                        </constraints>
+                    </imageView>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="暂无关注圈子" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YeE-Ue-TN1">
+                        <rect key="frame" x="85" y="120" width="150" height="30"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="25"/>
+                        <color key="textColor" red="0.80000000000000004" green="0.80000000000000004" blue="0.80000000000000004" alpha="1" colorSpace="calibratedRGB"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="YeE-Ue-TN1" firstAttribute="top" relation="greaterThanOrEqual" secondItem="H2p-sc-9uM" secondAttribute="top" constant="20" id="1Jt-og-hrT"/>
+                    <constraint firstItem="YeE-Ue-TN1" firstAttribute="centerX" secondItem="H2p-sc-9uM" secondAttribute="centerX" id="TCF-e0-FDw"/>
+                    <constraint firstAttribute="bottom" secondItem="YeE-Ue-TN1" secondAttribute="bottom" constant="24.5" id="dNJ-AT-7hZ"/>
+                    <constraint firstItem="YeE-Ue-TN1" firstAttribute="top" secondItem="bA9-ub-td9" secondAttribute="bottom" constant="20" id="eAj-lY-ybE"/>
+                    <constraint firstItem="bA9-ub-td9" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="30" id="hRs-YW-NeB"/>
+                    <constraint firstAttribute="bottom" secondItem="YeE-Ue-TN1" secondAttribute="bottom" constant="24" id="o6I-Pc-PfU"/>
+                    <constraint firstItem="YeE-Ue-TN1" firstAttribute="top" secondItem="bA9-ub-td9" secondAttribute="bottom" constant="24" id="pXN-gB-10k"/>
+                    <constraint firstItem="bA9-ub-td9" firstAttribute="centerX" secondItem="H2p-sc-9uM" secondAttribute="centerX" id="srl-7I-pYX"/>
+                </constraints>
+                <variation key="default">
+                    <mask key="constraints">
+                        <exclude reference="dNJ-AT-7hZ"/>
+                        <exclude reference="pXN-gB-10k"/>
+                    </mask>
+                </variation>
+            </tableViewCellContentView>
+            <connections>
+                <outlet property="constraint_imageTop" destination="hRs-YW-NeB" id="YZ5-Gf-S7B"/>
+                <outlet property="emptyTipLabel" destination="YeE-Ue-TN1" id="6wu-hc-1Ao"/>
+            </connections>
+            <point key="canvasLocation" x="201" y="327.5"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="ic_quanzi_noattention" width="71" height="71"/>
+    </resources>
+</document>

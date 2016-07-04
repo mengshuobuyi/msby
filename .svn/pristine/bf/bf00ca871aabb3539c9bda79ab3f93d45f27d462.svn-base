@@ -1,0 +1,165 @@
+//
+//  MbrModel.h
+//  APP
+//
+//  Created by Yan Qingyang on 15/2/14.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "BaseAPIModel.h"
+
+@interface mbrLogin : BaseAPIModel
+@property (nonatomic,strong) NSString *account;
+@property (nonatomic,strong) NSString *password;
+@property (nonatomic,strong) NSString *deviceCode;
+@property (nonatomic,strong) NSString *device;
+@property (nonatomic,strong) NSString *pushDeviceCode;
+@property (nonatomic,strong) NSString *version;        // 当前版本号 可有可无
+@end
+
+@interface mbrTPALogin : BaseAPIModel
+@property (nonatomic,strong) NSString *unionId;         // 第三方用户唯一id，微信的unionid，QQ的openid
+@property (nonatomic,strong) NSString *nickName;        // 昵称
+@property (nonatomic,strong) NSString *headImgUrl;      // 头像
+@property (nonatomic,strong) NSString *channel;         // 渠道（1.微信，2.QQ）
+@property (nonatomic,strong) NSString *pushDeviceCode;  // 推送设备编号
+@property (nonatomic,strong) NSString *deviceCode;      // 设备号
+@property (nonatomic,strong) NSString *device;          // 设备类型：1.安卓，2.IOS
+@property (nonatomic,strong) NSString *city;            // 当前定位城市名称
+@property (nonatomic,strong) NSString *branchId;        // 来源药房id
+
+@end
+
+@interface mbrValidCodeLogin : BaseAPIModel
+@property (nonatomic,strong) NSString *mobile;          // 手机号
+@property (nonatomic,strong) NSString *validCode;       // 验证码
+@property (nonatomic,strong) NSString *pushDeviceCode;  // 推送设备编号
+@property (nonatomic,strong) NSString *deviceCode;      // 设备号
+@property (nonatomic,strong) NSString *device;          // 设备类型：1.安卓，2.IOS
+@property (nonatomic,strong) NSString *city;            // 当前定位城市名称
+@property (nonatomic,strong) NSString *branchId;        // 来源药房id
+@end
+
+// 2.2.4 增加
+@interface mbrBaseInfo : BaseAPIModel
+@property (nonatomic,strong) NSString *inviteCode;        // 邀请码
+@property (nonatomic) BOOL full;                          // 资料是否完善
+@property (nonatomic) BOOL qq;                            // 是否绑定qq
+@property (nonatomic) BOOL weChat;                        // 是否绑定微信
+@property (nonatomic) BOOL setPwd;                        // 是否设置密码
+@property (assign, nonatomic) BOOL flagSilenced;          //是否已禁言
+@end
+
+@interface mbrUser : BaseAPIModel
+@property (nonatomic,strong) NSString *avatarUrl;
+@property (nonatomic,strong) NSString *mobile;
+@property (nonatomic,strong) NSString *nickName;
+@property (nonatomic,strong) NSString *passportId;
+@property (nonatomic,strong) NSString *token;
+// 2.2.3
+@property (nonatomic,strong) NSString *welcome;
+@property (nonatomic) BOOL setPwd;
+@property (nonatomic) BOOL firstTPAL;
+@property (nonatomic,strong) NSString *userName;
+// 2.2.4
+@property (nonatomic) BOOL full;                        // 完善资料的标识 ， 用于密码登录和验证码登录
+@property (nonatomic,strong) NSString* inviteCode;      // 邀请码
+@property (nonatomic) BOOL qq;                          // 绑定qq的标识
+@property (nonatomic) BOOL weChat;                      // 绑定微信的标识
+
+
+@property (nonatomic) BOOL reg;//是否来自注册
+/**
+ *  3.1.0 新增新人专享礼包提示需求 by martin
+ */
+@property (nonatomic) BOOL giftBag;                        // giftBag
+@end
+
+@interface mbrMemberInfo : BaseAPIModel
+@property (nonatomic,strong) NSString *userToken;               
+@property (nonatomic,strong) NSString *availableScore;
+@property (nonatomic,strong) NSString *birthday;
+@property (nonatomic,strong) NSString *email;
+@property (nonatomic,strong) NSString *headImageUrl;
+@property (nonatomic,strong) NSString *mobile;
+@property (nonatomic,strong) NSString *name;
+@property (nonatomic,strong) NSString *nickName;
+@property (nonatomic,strong) NSString *passportId;
+@property (nonatomic,strong) NSString *sex;
+//2.2.4
+@property (nonatomic,strong) NSString *score;
+@property (nonatomic,strong) NSString *level;
+@property (nonatomic,assign) BOOL sign;           //今日是否签到
+@property (nonatomic,strong) NSNumber *signDays; //连续签到天数
+@property (nonatomic,assign) BOOL upgrade;
+@property (nonatomic,assign) BOOL taskChanged;
+//3.1.1
+@property (nonatomic,assign) NSInteger unCompleteOrdCounts;//未完成订单数
+@property (nonatomic,assign) NSInteger unEvaluateOrdCounts;//待评价订单数
+@end
+
+@interface msgModel : BaseAPIModel
+
+@property (nonatomic,strong) NSString *msg;
+
+@end
+
+@interface MyInviterModel : BaseAPIModel
+
+@end
+
+//用户收藏药房、历史咨询、快过期优惠券等信息 add by lijian 2.2.0
+@interface UserInfoTagModel : BaseAPIModel
+
+@property (nonatomic,strong) NSString *cousultUnreadCounts;//历史咨询（咨询总数量）,
+@property (nonatomic,strong) NSString *attentionUnreadCounts;//关注的药房（关注药房的总数量）,
+@property (nonatomic,strong) NSString *couponUnreadCounts;//优惠券（要过期优惠券张数提醒）,
+@property (nonatomic,strong) NSString *promotionUnreadCounts;//优惠商品（要过期优惠商品数量提醒）,
+@property (nonatomic,strong) NSString *collectUnreadCounts;//我的收藏
+
+@end
+
+@interface HasNewVO : BaseAPIModel
+
+@property (nonatomic,strong) NSString *hasNew;//Y/N是否显示new 图标
+
+@end
+
+@interface InviterInfoModel : BaseAPIModel
+@property (nonatomic, strong) NSString *title;
+@property (nonatomic, strong) NSString *desc;
+@property (nonatomic, strong) NSString *imgUrl;
+@end
+
+@interface ServiceTelModel : BaseAPIModel
+@property (nonatomic,strong) NSArray *list;
+@end
+
+
+/**
+ *  V3.2.0 我的推荐人列表ListVO
+ */
+@interface MyRecommendListVo : BaseAPIModel
+
+@property (nonatomic,strong) NSArray *myRecommends;//推荐人列表
+
+@end
+
+/**
+ *  V3.2.0 我的推荐人列表ListVO
+ */
+@interface MyRecommendVo : BaseAPIModel
+
+@property (nonatomic,strong) NSString *avatar;  //头像
+@property (nonatomic,strong) NSString *mobile;  //号码
+@property (nonatomic,strong) NSString *nick;    //昵称
+@property (nonatomic,strong) NSString *userName;//用户名
+
+@end
+
+/**
+ *  3.2.1 短信验证码发送开关
+ */
+@interface VerifyCodeSwitchModel : BaseAPIModel
+@property (nonatomic,assign) NSInteger status;          // 开关状态：1.图形验证码以及老的验证码都可用 2.强制图形验证码
+@end

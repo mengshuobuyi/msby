@@ -1,0 +1,16 @@
+//
+//  SearchLocationViewController.h
+//  APP
+//
+//  Created by qw_imac on 15/12/30.
+//  Copyright © 2015年 carret. All rights reserved.
+//
+
+#import "QWBaseVC.h"
+#import "ReceiveAddressR.h"
+#import "ReceiverAddressTableViewController.h"
+@interface SearchLocationViewController : QWBaseVC
+@property (nonatomic,copy) void(^selectAddress)(UpdateAddressR *address);
+@property (nonatomic,assign) PageComeFrom pagetype;
+@property (nonatomic,strong) AddressVo              *vo;
+@end

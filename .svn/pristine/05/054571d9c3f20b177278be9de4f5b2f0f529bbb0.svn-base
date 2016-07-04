@@ -1,0 +1,17 @@
+//
+//  StoreSearchResultViewController.h
+//  APP
+//
+//  Created by 李坚 on 16/1/18.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "QWBaseVC.h"
+
+@interface StoreSearchResultViewController : QWBaseVC
+
+@property (nonatomic, strong) NSString *productCode;
+
+@property (nonatomic, strong) NSMutableArray *branchArray;
+
+@end

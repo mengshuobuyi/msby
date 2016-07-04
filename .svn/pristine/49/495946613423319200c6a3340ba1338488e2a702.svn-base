@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="7706" systemVersion="14E46" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7703"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="61" id="KGk-i7-Jjw" customClass="PromotionBranchTableViewCell">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="61"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="43"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="东沙湖大药房" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="kVO-ob-U1Y">
+                        <rect key="frame" x="15" y="4" width="297" height="21"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="21" id="4od-rO-8zp"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                        <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="50家药房通用" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8kG-FZ-kWM">
+                        <rect key="frame" x="15" y="34" width="158" height="21"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="21" id="q9Y-eI-edr"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                        <color key="textColor" red="0.59999999999999998" green="0.59999999999999998" blue="0.59999999999999998" alpha="1" colorSpace="calibratedRGB"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="8折" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="phn-ru-ERU">
+                        <rect key="frame" x="192" y="31" width="113" height="21"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="21" id="6Ef-tO-NXB"/>
+                            <constraint firstAttribute="width" constant="113" id="epJ-cu-hXu"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                        <color key="textColor" red="1" green="0.61568627450980395" blue="0.035294117647058823" alpha="1" colorSpace="calibratedRGB"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="8kG-FZ-kWM" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="15" id="17W-lj-A6x"/>
+                    <constraint firstAttribute="trailing" secondItem="kVO-ob-U1Y" secondAttribute="trailing" constant="8" id="Eq8-Gf-8tD"/>
+                    <constraint firstAttribute="bottom" secondItem="phn-ru-ERU" secondAttribute="bottom" constant="8" id="MAY-z5-r1Q"/>
+                    <constraint firstItem="phn-ru-ERU" firstAttribute="leading" secondItem="8kG-FZ-kWM" secondAttribute="trailing" constant="19" id="Mzb-oU-hMi"/>
+                    <constraint firstItem="8kG-FZ-kWM" firstAttribute="top" secondItem="kVO-ob-U1Y" secondAttribute="bottom" constant="9" id="hah-Hx-FPL"/>
+                    <constraint firstAttribute="trailing" secondItem="phn-ru-ERU" secondAttribute="trailing" constant="15" id="jZF-fU-kfz"/>
+                    <constraint firstItem="kVO-ob-U1Y" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="15" id="o6r-OQ-nOT"/>
+                    <constraint firstItem="kVO-ob-U1Y" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="4" id="viU-8k-dGH"/>
+                </constraints>
+            </tableViewCellContentView>
+            <connections>
+                <outlet property="branchCount" destination="8kG-FZ-kWM" id="vxR-ed-ca3"/>
+                <outlet property="branchName" destination="kVO-ob-U1Y" id="ee1-eK-Ery"/>
+                <outlet property="label" destination="phn-ru-ERU" id="MT3-qe-RZo"/>
+            </connections>
+            <point key="canvasLocation" x="285" y="257"/>
+        </tableViewCell>
+    </objects>
+</document>

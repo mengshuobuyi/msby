@@ -1,0 +1,15 @@
+//
+//  PharmacyEvaluateListCell.h
+//  APP
+//
+//  Created by PerryChen on 1/7/16.
+//  Copyright © 2016 carret. All rights reserved.
+//
+
+#import "QWBaseCell.h"
+
+@interface PharmacyEvaluateListCell : QWBaseCell
+@property (weak, nonatomic) IBOutlet UILabel *lblName;
+@property (weak, nonatomic) IBOutlet UILabel *lblContent;
+
+@end

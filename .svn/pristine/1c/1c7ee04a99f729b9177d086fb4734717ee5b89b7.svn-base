@@ -1,0 +1,17 @@
+//
+//  StoreNormalDetailViewController.h
+//  APP
+//
+//  Created by 李坚 on 16/5/5.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "QWBaseVC.h"
+
+@interface StoreNormalDetailViewController : QWBaseVC
+
+@property (nonatomic, strong) NSString *branchId;//药房Id，传值
+
+
+@end

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15F34" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+        <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="OnlinePayTikTableViewCell" id="KGk-i7-Jjw" customClass="OnlinePayTikTableViewCell">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="43"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_nearby" translatesAutoresizingMaskIntoConstraints="NO" id="C7Q-Es-cZ9">
+                        <rect key="frame" x="15" y="10" width="23" height="23"/>
+                        <constraints>
+                            <constraint firstAttribute="width" secondItem="C7Q-Es-cZ9" secondAttribute="height" multiplier="1:1" id="e2X-Kl-FaN"/>
+                        </constraints>
+                    </imageView>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="该药房支持在线支付" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="d0w-pp-qYv">
+                        <rect key="frame" x="41" y="11" width="200" height="21"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="200" id="Ul9-Td-7U9"/>
+                            <constraint firstAttribute="height" constant="21" id="sCV-I9-Uyz"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                        <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_btn_arrow_right" translatesAutoresizingMaskIntoConstraints="NO" id="Uay-yW-vBa">
+                        <rect key="frame" x="290" y="14" width="15" height="15"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="15" id="6Fs-Dl-1lB"/>
+                            <constraint firstAttribute="height" constant="15" id="JcS-QH-x45"/>
+                        </constraints>
+                    </imageView>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="C7Q-Es-cZ9" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="10" id="D2H-Uz-ykR"/>
+                    <constraint firstItem="C7Q-Es-cZ9" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="15" id="Em2-VO-V8R"/>
+                    <constraint firstAttribute="bottom" secondItem="C7Q-Es-cZ9" secondAttribute="bottom" constant="10" id="NR5-LT-MC5"/>
+                    <constraint firstItem="d0w-pp-qYv" firstAttribute="centerY" secondItem="H2p-sc-9uM" secondAttribute="centerY" id="OZS-fb-Fnx"/>
+                    <constraint firstItem="Uay-yW-vBa" firstAttribute="centerY" secondItem="H2p-sc-9uM" secondAttribute="centerY" id="lW2-qB-02O"/>
+                    <constraint firstAttribute="trailing" secondItem="Uay-yW-vBa" secondAttribute="trailing" constant="15" id="pmm-lD-Lss"/>
+                </constraints>
+            </tableViewCellContentView>
+            <constraints>
+                <constraint firstItem="d0w-pp-qYv" firstAttribute="leading" secondItem="KGk-i7-Jjw" secondAttribute="leading" constant="41" id="zGS-9W-bdG"/>
+            </constraints>
+            <connections>
+                <outlet property="LabelLeftConstant" destination="zGS-9W-bdG" id="Oqd-Zi-xP1"/>
+                <outlet property="leftImageView" destination="C7Q-Es-cZ9" id="RKh-Z1-Tel"/>
+                <outlet property="mainLabel" destination="d0w-pp-qYv" id="eLE-KC-fq8"/>
+                <outlet property="rightArrowImageView" destination="Uay-yW-vBa" id="cvp-so-hfb"/>
+            </connections>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="ic_btn_arrow_right" width="15" height="15"/>
+        <image name="ic_nearby" width="25" height="25"/>
+    </resources>
+</document>

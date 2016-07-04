@@ -1,0 +1,18 @@
+//
+//  ActivityDetailTableViewCell.h
+//  wenyao
+//
+//  Created by xiezhenghong on 14-10-15.
+//  Copyright (c) 2014年 xiezhenghong. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "QWBaseTableCell.h"
+#import "ActivityModel.h"
+@interface ActivityDetailTableViewCell : QWBaseTableCell
+
+@property (nonatomic, weak) IBOutlet QWLabel        *title;
+@property (weak, nonatomic) IBOutlet QWLabel        *publishTime;
+@property (nonatomic, weak) IBOutlet QWLabel        *content;
+
+@end

@@ -1,0 +1,78 @@
+//
+//  ChaterChooseTableViewCell.m
+//  APP
+//
+//  Created by 李坚 on 16/5/9.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "ChaterChooseTableViewCell.h"
+#import "UIImageView+WebCache.h"
+
+@implementation ChaterChooseTableViewCell
+
+- (void)awakeFromNib {
+    // Initialization code
+    self.selectionStyle = UITableViewCellSelectionStyleNone;
+
+    self.imageUrl.layer.masksToBounds = YES;
+    self.imageUrl.layer.cornerRadius = 27.5f;
+    
+    self.chatBtn.layer.masksToBounds = YES;
+    self.chatBtn.layer.cornerRadius = 2.5f;
+    
+    self.onlineLabel.layer.masksToBounds = YES;
+    self.onlineLabel.layer.cornerRadius = 10.0f;
+    
+    self.line = [[UIView alloc]initWithFrame:CGRectMake(0, 84.5, APP_W, 0.5)];
+    self.line.backgroundColor = RGBHex(qwColor10);
+    [self addSubview:self.line];
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
++ (CGFloat)getCellHeight:(id)data{
+    
+    return 85.0f;
+}
+
+- (void)setCell:(MbrInfoVo *)data{
+    
+    self.nameLabel.text = data.nickName;
+    
+    
+    switch ([data.expertType intValue]) {
+        case 1:
+            self.branchLabel.text = @"药师";
+            break;
+        case 2:
+            self.branchLabel.text = @"营养师";
+            break;
+        default:
+            self.branchLabel.text = @"";
+            break;
+    }
+    
+    NSString *goodStr = [data.expertise stringByReplacingOccurrencesOfString:@"_#QZSP#_" withString:@"/"];
+    
+    if(goodStr.length > 9){
+        self.goodLabel.text = [goodStr substringToIndex:9];
+    }else{
+        self.goodLabel.text = goodStr;
+    }
+    
+    [self.imageUrl setImageWithURL:[NSURL URLWithString:data.headImageUrl] placeholderImage:[UIImage imageNamed:@"expert_ic_people"]];
+    if(data.onlineFlag){
+        self.onlineLabel.text = @"在线";
+        self.onlineLabel.backgroundColor = RGBHex(qwColor1);
+    }else{
+        self.onlineLabel.text = @"离线";
+        self.onlineLabel.backgroundColor = RGBHex(qwColor9);
+    }
+}
+
+@end

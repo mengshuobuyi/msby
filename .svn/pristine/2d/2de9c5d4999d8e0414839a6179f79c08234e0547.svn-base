@@ -1,0 +1,580 @@
+//
+//  MessageBoxListViewController.m
+//  APP
+//
+//  Created by PerryChen on 6/16/15.
+//  Copyright (c) 2015 carret. All rights reserved.
+//
+
+#import "MessageBoxListViewController.h"
+#import "MsgListCell.h"
+#import "MsgBoxListCell.h"
+#import "ConsultPTP.h"
+#import "ConsultPTPR.h"
+#import "ConsultPTPModel.h"
+#import "SVProgressHUD.h"
+#import "QWGlobalManager.h"
+#import "QWUnreadCountModel.h"
+#import "MsgNotiListViewController.h"
+#import "ReturnIndexView.h"
+#import "ChatViewController.h"
+#import "PrivateChatViewController.h"
+
+#import "QWYSViewController.h"
+#import "MGSwipeButton.h"
+
+#import "QWMessage.h"
+#import "ExpertInfoViewController.h"
+#import "HealthViewController.h"
+#import "NoticeViewController.h"
+
+@interface MessageBoxListViewController ()<UITableViewDataSource, UITableViewDelegate,MGSwipeTableCellDelegate, ExpertInfoHiddenRedPointDelegate>
+@property (weak, nonatomic) IBOutlet UITableView *tbViewContent;
+@property (strong, nonatomic) NSMutableArray *arrMsgList;
+@property (strong, nonatomic) NSMutableArray *arrServer;
+@property (assign, nonatomic) BOOL isScrolling;
+@property (strong, nonatomic) ReturnIndexView *indexView;
+@property (strong, nonatomic) NSMutableDictionary *controllerArr;
+@property (assign, nonatomic) CGPoint scrollPointOffset;
+@end
+
+@implementation MessageBoxListViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.navigationItem.title = @"消息";
+    self.controllerArr = [NSMutableDictionary dictionary];
+    [self setUpRightItem];
+    self.scrollPointOffset = CGPointZero;
+    self.tbViewContent.allowsMultipleSelection = NO;
+    __weak typeof (self) weakSelf = self;
+    [self enableSimpleRefresh:self.tbViewContent block:^(SRRefreshView *sender) {
+        [weakSelf.tbViewContent headerEndRefreshing];
+        if(QWGLOBALMANAGER.currentNetWork == NotReachable)
+        {
+            [SVProgressHUD showErrorWithStatus:@"网络未连接，请稍后再试" duration:0.8f];
+            return;
+        }
+        [weakSelf refreshConsultList];
+    }];
+    [self getAllCachedP2PList];
+    [self.tbViewContent reloadData];
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    [self refreshConsultList];
+    // 获取全部的缓存点对点消息列表
+    //    [self getAllCachedP2PList];
+    //    [self.tbViewContent reloadData];
+    //    [self.tbViewContent scrollRectToVisible:CGRectMake(self.scrollPointOffset.x, self.scrollPointOffset.y, 0, 0) animated:NO];
+}
+
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+//    HealthViewController *demoViewController = [HealthViewController new];
+//    //            QWYSViewController *demoViewController = [[UIStoryboard storyboardWithName:@"QWYSViewController" bundle:nil] instantiateViewControllerWithIdentifier:@"QWYSViewController"];
+//    demoViewController.hidesBottomBarWhenPushed = YES;
+//    [self.navigationController pushViewController:demoViewController animated:YES];
+}
+
+- (void)viewInfoClickAction:(id)sender
+{
+    [self refreshConsultList];
+}
+
+#pragma mark - Data Process
+
+- (void)getAllCachedP2PList
+{
+    self.arrMsgList = [NSMutableArray arrayWithArray:[MsgBoxListItemModel getArrayFromDBWithWhere:nil WithorderBy:@"time desc"]];
+    [self fixMsgIfNeeded:self.arrMsgList];
+}
+
+- (void)setAllMsgReaded
+{
+    if (!QWGLOBALMANAGER.loginStatus) {
+        return;
+    }
+    ConsultModelR *modelR = [ConsultModelR new];
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    [Consult setAllReadMsgBoxListWithParam:modelR success:^(ConsultModel *responModel) {
+        NSArray *array =  [OfficialMessages getArrayFromDBWithWhere:nil];
+        for (OfficialMessages *msg in array) {
+            msg.issend = @"1";
+            [OfficialMessages updateObjToDB:msg WithKey:msg.UUID];
+        }
+        NSArray *arrConsultList = [HistoryMessages getArrayFromDBWithWhere:nil];
+        for (HistoryMessages *modelMsg in arrConsultList) {
+            modelMsg.unreadCounts = @"0";
+            modelMsg.systemUnreadCounts = @"0";
+            if ([modelMsg.isShowRedPoint isEqualToString:@"1"]) {
+                modelMsg.isShowRedPoint = @"0";
+            }
+            [HistoryMessages updateObjToDB:modelMsg WithKey:modelMsg.relatedid];
+        }
+        
+        NSArray *arrNotiList = [MsgNotifyListModel getArrayFromDBWithWhere:nil];
+        for (MsgNotifyListModel *modelNoti in arrNotiList) {
+            modelNoti.unreadCounts = @"0";
+            modelNoti.systemUnreadCounts = @"0";
+            modelNoti.showRedPoint = @"0";
+            [MsgNotifyListModel updateObjToDB:modelNoti WithKey:modelNoti.relatedid];
+        }
+        
+        NSArray *arrCouponList = [CouponNotiModel getArrayFromDBWithWhere:nil];
+        for (CouponNotiModel *modelCoupon in arrCouponList) {
+            modelCoupon.unreadCounts = @"0";
+            modelCoupon.showRedPoint = @"0";
+            [CouponNotiModel updateObjToDB:modelCoupon WithKey:modelCoupon.messageId];
+        }
+        
+        NSArray *arrP2PList = [PharMsgModel getArrayFromDBWithWhere:nil];
+        for (PharMsgModel *modelPhar in arrP2PList) {
+            modelPhar.unreadCounts = @"0";
+            modelPhar.systemUnreadCounts = @"0";
+            [PharMsgModel updateObjToDB:modelPhar WithKey:modelPhar.branchId];
+        }
+        
+        NSArray *arrOrderList = [OrderNotiModel getArrayFromDBWithWhere:nil];
+        for (OrderNotiModel *modelOrder in arrOrderList) {
+            modelOrder.unreadCounts = @"0";
+            [OrderNotiModel updateObjToDB:modelOrder WithKey:modelOrder.messageId];
+        }
+        
+        //TODO: 更新缓存 comment by perry
+        
+        [self getAllCachedP2PList];
+        [self.tbViewContent reloadData];
+        QWUnreadFlagModel *modelUnread = [QWGLOBALMANAGER getUnreadModel];
+        modelUnread.orderMsgUnread = NO;
+        modelUnread.healthMsgUnread = NO;
+        modelUnread.circleMsgUnread = NO;
+        modelUnread.noticeMsgUnread = NO;
+        modelUnread.shopConsultUnread = NO;
+        modelUnread.expertPTPMsgUnread = NO;
+        modelUnread.shopConsultUnreadCount = 0;
+        modelUnread.expertPTPMsgUnreadCount = 0;
+        [QWUnreadFlagModel updateObjToDB:modelUnread WithKey:modelUnread.passport];
+        [QWGLOBALMANAGER updateRedPoint];
+    } failure:^(HttpException *e) {
+        [SVProgressHUD showErrorWithStatus:@"网络错误，请稍后再试" duration:0.8f];
+    }];
+}
+
+#pragma mark - Right Item Methods
+- (void)setUpRightItem
+{
+    UIBarButtonItem *fixed = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
+    fixed.width = -6;
+    
+    UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"icon-unfold.PNG"] style:UIBarButtonItemStylePlain target:self action:@selector(returnIndex)];
+    self.navigationItem.rightBarButtonItems = @[fixed,rightItem];
+}
+
+- (void)returnIndex
+{
+    self.indexView = [[ReturnIndexView alloc] initWithImage:@[@"icon_check all_news"] title:@[@"全部已读"]];
+    //    self.indexView = [ReturnIndexView sharedManagerWithImage:@[@"icon mark.PNG"] title:@[@"全部已读"] passValue:-1];
+    self.indexView.delegate = self;
+    [self.indexView show];
+}
+- (void)RetunIndexView:(ReturnIndexView *)ReturnIndexView didSelectedIndex:(NSIndexPath *)indexPath
+{
+    [self.indexView hide];
+    if (indexPath.row == 0) {
+        
+        [self setAllMsgReaded];
+        
+    } else if (indexPath.row == 1) {
+        
+        [self.navigationController popToRootViewControllerAnimated:YES];
+        [self performSelector:@selector(delayPopToHome) withObject:nil afterDelay:0.01];
+    }
+}
+
+- (void)delayPopToHome
+{
+    [QWGLOBALMANAGER.tabBar setSelectedIndex:0];
+}
+
+- (void)jumoToCircleMessage
+{
+    ExpertInfoViewController *vc = [[ExpertInfoViewController alloc] init];
+    vc.hidesBottomBarWhenPushed = YES;
+    //    vc.delegate = self;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+- (void)showInfoVIewIfNeeded
+{
+    if (self.arrMsgList.count) {
+        self.tbViewContent.hidden = NO;
+        [self removeInfoView];
+    } else {
+        self.tbViewContent.hidden = YES;
+        [self showInfoView:@"服务器吃药去啦！请稍后重试" image:@"ic_img_fail"];
+    }
+}
+
+#pragma mark - Http service
+- (void)refreshConsultList
+{
+    MsgBoxListModelR *modelR = [MsgBoxListModelR new];
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    [Consult getMsgBoxIndexListWithParam:modelR success:^(MsgBoxListModel *responModel) {
+        self.arrMsgList = [responModel.notices mutableCopy];
+        [self fixMsgIfNeeded:self.arrMsgList];
+        [self.tbViewContent reloadData];
+        [self syncDBtoLatest:responModel.notices];
+        [self updateUnreadFlagWithIndex:responModel.notices];
+        [QWGLOBALMANAGER updateRedPoint];
+        [self showInfoVIewIfNeeded];
+    } failure:^(HttpException *e) {
+        [SVProgressHUD showErrorWithStatus:@"网络错误，请稍后再试" duration:0.8f];
+    }];
+}
+
+- (void)syncDBtoLatest:(NSArray *)modelArr
+{
+    [MsgBoxListItemModel deleteAllObjFromDB];
+    [MsgBoxListItemModel insertToDBWithArray:modelArr filter:^(id model, BOOL inseted, BOOL *rollback) {
+        if (!inseted) {
+            *rollback = YES;
+            DDLogError(@"[%@ %s]:%d. Roll back due to insert MsgBoxListItemModel failed. Model:%@", NSStringFromClass(self.class), __func__, __LINE__, model);
+        }
+    }];
+}
+
+- (void)updateUnreadFlagWithIndex:(NSArray *)modelArr
+{
+    QWUnreadFlagModel *model = [QWUnreadFlagModel new];
+    model.passport = QWGLOBALMANAGER.configure.passPort;
+    for (MsgBoxListItemModel *item in modelArr) {
+        MsgBoxListMsgType type = item.type.integerValue;
+        BOOL unread = item.unread.boolValue;
+        if (type == MsgBoxListMsgTypeNotice) {
+            model.noticeMsgUnread = unread;
+        } else if (type == MsgBoxListMsgTypeOrder) {
+            model.orderMsgUnread = unread;
+        } else if (type == MsgBoxListMsgTypeCredit) {
+            model.creditUnread = unread;
+        } else if (type == MsgBoxListMsgTypeHealth) {
+            model.healthMsgUnread = unread;
+        } else if (type == MsgBoxListMsgTypeCircle) {
+            model.circleMsgUnread = unread;
+        } else if (type == MsgBoxListMsgTypeShopConsult) {
+            model.shopConsultUnread = model.shopConsultUnread || unread;
+        } else if (type == MsgBoxListMsgTypeExpertPTP) {
+            model.expertPTPMsgUnread = model.expertPTPMsgUnread || unread;
+        }
+    }
+    [model updateToDB];
+}
+
+- (void)fixMsgIfNeeded:(NSArray <MsgBoxListItemModel *> *)msgArr
+{
+    for (MsgBoxListItemModel *model in msgArr) {
+        [model getAdditionInfo];
+    }
+}
+
+#pragma mark - UITableView methods
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    MsgBoxListCell *cell = [tableView dequeueReusableCellWithIdentifier:@"MsgBoxListCell"];
+    MsgBoxListItemModel *msgModel = self.arrMsgList[indexPath.row];
+    cell.swipeDelegate = self;
+    [cell setCell:msgModel];
+    return cell;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 60.0f;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return self.arrMsgList.count;
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 1;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    self.scrollPointOffset = self.tbViewContent.contentOffset;
+    if (QWGLOBALMANAGER.loginStatus) {
+        MsgBoxListItemModel* msg = self.arrMsgList[indexPath.row];
+        NSMutableDictionary *tdParams = [NSMutableDictionary dictionary];
+        [QWGLOBALMANAGER statisticsEventId:@"x_xx_dj" withLable:@"消息" withParams:tdParams];
+        
+        // 消息类型：1全维药事 2咨询 3即时聊天 4消息通知 5系统通知 6订单通知列表
+        if (msg.type.integerValue == MsgBoxListMsgTypeShopConsult) {          // p2p 详情
+            [self pushToChatVCWithMsgModel:msg];
+        } else if (msg.type.integerValue == MsgBoxListMsgTypeHealth) {
+            [self pushToHealthVC];
+        } /*else if (msg.type.integerValue == NSNotFound){
+            [self performSegueWithIdentifier:@"seguePushToNoti" sender:indexPath];
+        }*/ else if (msg.type.integerValue == MsgBoxListMsgTypeNotice){//消息通知
+            [self performSegueWithIdentifier:@"seguePushToCoupon" sender:indexPath];
+        } /*else if (msg.type.integerValue == NSNotFound){
+            [self performSegueWithIdentifier:@"seguePushToSys" sender:indexPath];
+        } */else if (msg.type.integerValue == MsgBoxListMsgTypeOrder){    // 订单通知列表
+            [self performSegueWithIdentifier:@"seguePushToOrderList" sender:indexPath];
+        } else if (msg.type.integerValue == MsgBoxListMsgTypeCircle){    // 圈子消息
+            [self jumoToCircleMessage];
+        } else if (msg.type.integerValue == MsgBoxListMsgTypeExpertPTP) {
+            [self pushToExpertChatVCWithMsgModel:msg];
+        }
+    }
+}
+
+#pragma mark - Notification
+
+- (void)getNotifType:(Enum_Notification_Type)type data:(id)data target:(id)obj
+{
+    if (type == NotifMessageOfficial) {
+//        [self updateOfficialMessage];
+    } else if (type == NotiMessagePTPUpdateList) { // 轮询
+        [self getAllCachedP2PList];
+        [self.tbViewContent reloadData];
+    } else if (type == NotiMessageUpdateMsgNotiList) {
+//        [self getAllCachedP2PList];
+//        [self.tbViewContent reloadData];
+    } else if (type == NotiMessagePTPNeedUpdate) { // 发送状态变更
+        [self getAllCachedP2PList];
+        [self.tbViewContent reloadData];
+    }  else if (type == NotiMessageExpertPTPNeedUpdate) { // 发送状态变更
+        [self getAllCachedP2PList];
+        [self.tbViewContent reloadData];
+    } else if (type == NotiReleaseTimer) {
+        [self.controllerArr removeAllObjects];
+    } else if (type == NotiMessageBoxUpdateList) {
+        [self getAllCachedP2PList];
+        [self.tbViewContent reloadData];
+    } else if (type == NotifIMCenterSended) { // 发送线程结束
+        NSDictionary *dicData = (NSDictionary *)data;
+        NSString *indexStr = [NSString stringWithFormat:@"%@",dicData[@"sessionID"]];
+        if ([self.controllerArr objectForKey:indexStr] != nil) {
+            [self.controllerArr removeObjectForKey:indexStr];
+        }
+    }
+}
+
+#pragma mark - Navigation
+
+- (void)pushToExpertChatVCWithMsgModel:(MsgBoxListItemModel *)msg
+{
+    if (!msg.id.length) {
+        DDLogError(@"[%@ %s]:%d. \nINVALID session in model:%@", NSStringFromClass(self.class), __func__, __LINE__, msg);
+        [SVProgressHUD showErrorWithStatus:@"无法找到该会话记录" duration:0.3];
+        return;
+    }
+    CircleChatPointModel *localSession = [CircleChatPointModel getObjFromDBWithWhere:[NSString stringWithFormat:@"sessionId = %@", msg.id]];
+    if (!localSession) {
+        [SVProgressHUD showErrorWithStatus:@"无法找到缓存会话记录" duration:0.3];
+        return;
+    }
+    
+    NSString *sessionID = msg.id;
+    PrivateChatViewController *privateChatVC = nil;
+    if ([self.controllerArr objectForKey:sessionID]) {
+        privateChatVC = [self.controllerArr objectForKey:sessionID];
+    }else
+    {
+        privateChatVC = [[UIStoryboard storyboardWithName:@"PrivateChatViewController" bundle:nil] instantiateViewControllerWithIdentifier:@"PrivateChatViewController"];
+        privateChatVC.sessionID = localSession.sessionId;
+        privateChatVC.userId = localSession.recipientId;
+        privateChatVC.nickName = localSession.nickName;
+        privateChatVC.expertType = localSession.userType.integerValue;
+        privateChatVC.fromList = NO;
+        privateChatVC.hidesBottomBarWhenPushed = YES;
+        [self.controllerArr setValue:privateChatVC forKey:sessionID];
+    }
+    [self.navigationController pushViewController:privateChatVC animated:YES];
+    
+    // 置为已读
+    msg.unread = @"0";
+    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:[self.arrMsgList indexOfObject:msg] inSection:0];
+    [self.tbViewContent reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+    [MsgBoxListItemModel updateToDB:msg where:[NSString stringWithFormat:@"id = %@", msg.id]];
+    
+    // TODO: flag is Boolean
+    NSInteger unreadCount = localSession.readFlag;
+    QWUnreadFlagModel *modelUnread = [QWGLOBALMANAGER getUnreadModel];
+    modelUnread.shopConsultUnreadCount -= unreadCount;
+    modelUnread.shopConsultUnreadCount = modelUnread > 0 ? :0;
+    modelUnread.shopConsultUnread = modelUnread.shopConsultUnreadCount > 0;
+    [modelUnread updateToDB];
+    [QWGLOBALMANAGER updateRedPoint];
+
+}
+
+- (void)pushToHealthVC
+{
+    HealthViewController *demoViewController = [HealthViewController new];
+    //            QWYSViewController *demoViewController = [[UIStoryboard storyboardWithName:@"QWYSViewController" bundle:nil] instantiateViewControllerWithIdentifier:@"QWYSViewController"];
+    demoViewController.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:demoViewController animated:YES];
+}
+
+- (void)pushToChatVCWithMsgModel:(MsgBoxListItemModel *)msg
+{
+    if (!msg.id.length) {
+        DDLogError(@"[%@ %s]:%d. \nINVALID session in model:%@", NSStringFromClass(self.class), __func__, __LINE__, msg);
+        [SVProgressHUD showErrorWithStatus:@"无法找到该会话记录" duration:0.3];
+        return;
+    }
+    PharMsgModel *localSession = [PharMsgModel getObjFromDBWithWhere:[NSString stringWithFormat:@"sessionId = %@", msg.id]];
+    if (!localSession) {
+        [SVProgressHUD showErrorWithStatus:@"无法找到缓存会话记录" duration:0.3];
+        return;
+    }
+    
+    NSString *sessionID = [NSString stringWithFormat:@"%@",msg.id];
+    ChatViewController *chatVC = nil;
+    if ([self.controllerArr objectForKey:sessionID]) {
+        chatVC = [self.controllerArr objectForKey:sessionID];
+    }else
+    {
+        chatVC = [[UIStoryboard storyboardWithName:@"ChatViewController" bundle:[NSBundle mainBundle]] instantiateViewControllerWithIdentifier:@"ChatViewController"];
+        chatVC.sendConsultType = Enum_SendConsult_Common;
+        [self.controllerArr setValue:chatVC forKey:sessionID];
+        chatVC.sendConsultType = Enum_SendConsult_Common;
+        chatVC.sessionID = localSession.sessionId;
+        chatVC.branchName = localSession.branchName;
+        chatVC.avatarUrl = localSession.imgUrl;
+        chatVC.branchId = localSession.branchId;
+        chatVC.hidesBottomBarWhenPushed = YES;
+    }
+    [self.navigationController pushViewController:chatVC animated:YES];
+    
+    
+    // 置为已读
+    msg.unread = @"0";
+    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:[self.arrMsgList indexOfObject:msg] inSection:0];
+    [self.tbViewContent reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+    [MsgBoxListItemModel updateToDB:msg where:[NSString stringWithFormat:@"id = %@", msg.id]];
+    
+    NSInteger unreadCount = localSession.unreadCounts.integerValue;
+    QWUnreadFlagModel *modelUnread = [QWGLOBALMANAGER getUnreadModel];
+    modelUnread.shopConsultUnreadCount -= unreadCount;
+    modelUnread.shopConsultUnreadCount = modelUnread > 0 ? :0;
+    modelUnread.shopConsultUnread = modelUnread.shopConsultUnreadCount > 0;
+    [modelUnread updateToDB];
+    [QWGLOBALMANAGER updateRedPoint];
+}
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+    if ([segue.identifier isEqualToString:@"seguePushToNoti"]) {
+        
+    }
+}
+//  add by  shen
+
+-(NSArray *) createRightButtons: (int) number
+{
+    NSMutableArray * result = [NSMutableArray array];
+    NSString* titles[2] = {@"删除"};
+    UIColor * colors[2] = {RGBHex(qwColor3)};
+    for (int i = 0; i < number; ++i)
+    {
+        MGSwipeButton * button = [MGSwipeButton buttonWithTitle:titles[i] backgroundColor:colors[i] callback:^BOOL(MGSwipeTableCell * sender){
+            return YES;
+        }];
+        if(i == 1) {
+            [button setTitleColor:RGBHex(qwColor5) forState:UIControlStateNormal];
+        }
+        [result addObject:button];
+    }
+    return result;
+}
+
+
+
+#pragma mark -
+#pragma mark MGSwipeTableCellDelegate
+-(NSArray*) swipeTableCell:(MGSwipeTableCell*)cell
+  swipeButtonsForDirection:(MGSwipeDirection)direction
+             swipeSettings:(MGSwipeSettings*)swipeSettings
+         expansionSettings:(MGSwipeExpansionSettings*)expansionSettings;
+{
+    
+    if (direction == MGSwipeDirectionRightToLeft)
+    {
+        
+        return [self createRightButtons:1];
+        
+    }
+    return nil;
+}
+
+-(BOOL) swipeTableCell:(MGSwipeTableCell*)cell tappedButtonAtIndex:(NSInteger)index direction:(MGSwipeDirection)direction fromExpansion:(BOOL)fromExpansion
+{
+    NSIndexPath *  indexPath = [self.tbViewContent indexPathForCell:cell];
+    //删除事件
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+        [SVProgressHUD showErrorWithStatus:@"网络未连接，请重试" duration:0.8f];
+        return NO;
+    }
+    MsgBoxListItemModel *msgModel = self.arrMsgList[indexPath.row];
+    [self.arrMsgList removeObject:msgModel];
+    [self.tbViewContent reloadData];
+    RemoveByTypeR * model = [RemoveByTypeR new];
+    model.type = msgModel.type;
+    model.token = QWGLOBALMANAGER.configure.userToken;
+    model.sessionId = msgModel.sessionId;
+    [ConsultPTP removeByType:model success:^(ApiBody *responModel) {
+        
+    } failure:^(HttpException *e) {
+        
+    }];
+    QWUnreadFlagModel *modelUnread = [QWGLOBALMANAGER getUnreadModel];
+    
+    if ([model.type integerValue] ==1) {
+        [MsgBoxHealthItemModel deleteAllObjFromDB];
+        modelUnread.healthMsgUnread = NO;
+    }else if([model.type integerValue] ==2)
+    {
+    }else if([model.type integerValue] ==3)
+    {
+        modelUnread.shopConsultUnread = NO;
+        modelUnread.shopConsultUnreadCount = 0;
+        NSString *  where=[NSString stringWithFormat:@"sendname = '%@' ", msgModel.sessionId];
+        [QWPTPMessage deleteObjFromDBWithWhere:where];
+    }else if([model.type integerValue] ==4)     // 优惠通知列表
+    {
+        [MsgBoxNoticeItemModel deleteAllObjFromDB];
+        modelUnread.noticeMsgUnread = NO;
+        
+    }else if([model.type integerValue] ==6) // 订单通知列表
+    {
+        [OrderNotiModel deleteAllObjFromDB];
+        modelUnread.orderMsgUnread = NO;
+    }
+    [QWUnreadFlagModel updateObjToDB:modelUnread WithKey:QWGLOBALMANAGER.configure.passPort];
+//    [QWGLOBALMANAGER updateUnreadCount:[NSString stringWithFormat:@"%ld",(long)[QWGLOBALMANAGER getAllUnreadCount]]];
+    [QWGLOBALMANAGER updateRedPoint];
+    
+    
+    //    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"确定要删除该记录？" message:nil delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
+    //    alertView.delegate = self;
+    //    alertView.tag = indexPath.row;
+    //    [alertView show];
+    
+    return YES;
+}
+
+
+
+@end

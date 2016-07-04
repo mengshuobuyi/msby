@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="8191" systemVersion="15C50" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="8154"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="CouponPharmacyDeailViewController">
+            <connections>
+                <outlet property="mainTableView" destination="Vp6-Yp-Pgk" id="b1p-6F-kfH"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="Vp6-Yp-Pgk">
+                    <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                    <animations/>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                </tableView>
+            </subviews>
+            <animations/>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstAttribute="bottom" secondItem="Vp6-Yp-Pgk" secondAttribute="bottom" id="1y9-1w-BKG"/>
+                <constraint firstItem="Vp6-Yp-Pgk" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="adB-bV-g0U"/>
+                <constraint firstItem="Vp6-Yp-Pgk" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="hea-51-Gg3"/>
+                <constraint firstAttribute="trailing" secondItem="Vp6-Yp-Pgk" secondAttribute="trailing" id="y2s-Ag-FDf"/>
+            </constraints>
+            <variation key="default">
+                <mask key="subviews">
+                    <exclude reference="Vp6-Yp-Pgk"/>
+                </mask>
+                <mask key="constraints">
+                    <exclude reference="1y9-1w-BKG"/>
+                    <exclude reference="adB-bV-g0U"/>
+                    <exclude reference="hea-51-Gg3"/>
+                    <exclude reference="y2s-Ag-FDf"/>
+                </mask>
+            </variation>
+            <variation key="heightClass=regular-widthClass=compact">
+                <mask key="subviews">
+                    <include reference="Vp6-Yp-Pgk"/>
+                </mask>
+                <mask key="constraints">
+                    <include reference="1y9-1w-BKG"/>
+                    <include reference="adB-bV-g0U"/>
+                    <include reference="hea-51-Gg3"/>
+                    <include reference="y2s-Ag-FDf"/>
+                </mask>
+            </variation>
+        </view>
+    </objects>
+</document>

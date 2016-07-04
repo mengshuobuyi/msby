@@ -1,0 +1,28 @@
+//
+//  ActivityDetailTableViewCell.m
+//  wenyao
+//
+//  Created by xiezhenghong on 14-10-15.
+//  Copyright (c) 2014年 xiezhenghong. All rights reserved.
+//
+
+#import "ActivityDetailTableViewCell.h"
+
+@implementation ActivityDetailTableViewCell
+-(void)UIGlobal{
+    [super UIGlobal];
+}
+
+- (void)setCell:(id)data{
+    [super setCell:data];
+    ActivityDataModel *dataModel = (ActivityDataModel *)data;
+    if(dataModel.publishTime&&dataModel.publishTime.length>9){
+    self.publishTime.text = [dataModel.publishTime substringToIndex:10];
+    }
+    
+}
+
+
+
+
+@end

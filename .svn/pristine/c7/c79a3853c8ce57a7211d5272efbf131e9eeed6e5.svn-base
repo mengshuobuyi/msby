@@ -1,0 +1,60 @@
+//
+//  ProjectTemplateOneTableViewCell.m
+//  APP
+//
+//  Created by garfield on 15/8/25.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "ProjectTemplateOneTableViewCell.h"
+#import "ConfigInfo.h"
+#import "UIButton+WebCache.h"
+
+
+@implementation ProjectTemplateOneTableViewCell
+
+- (void)awakeFromNib
+{
+    [super awakeFromNib];
+    _buttonWidth.constant = APP_W / 2.0;
+    _buttonWidth2.constant = APP_W / 2.0;
+}
+
+- (void)setCell:(id)data withTarget:(id)target
+{
+    TemplateVoModel *area = (TemplateVoModel *)data;
+    for(NSInteger index = 0; index < area.pos.count ; ++index) {
+        TemplatePosVoModel *model = area.pos[index];
+        if(index == 0) {
+            [self.button1 setBackgroundImageWithURL:[NSURL URLWithString:model.imgUrl] forState:UIControlStateNormal placeholderImage:nil];
+            self.button1.obj = model;
+        }else if (index == 1) {
+            [self.button2 setBackgroundImageWithURL:[NSURL URLWithString:model.imgUrl] forState:UIControlStateNormal     placeholderImage:nil];
+            self.button2.obj = model;
+        }else if (index == 2) {
+            [self.button3 setBackgroundImageWithURL:[NSURL URLWithString:model.imgUrl] forState:UIControlStateNormal     placeholderImage:nil];
+            self.button3.obj = model;
+        }
+    }
+    self.button1.tag = 0 + 100;
+    self.button2.tag = 1 + 100;
+    self.button3.tag = 2 + 100;
+    [self.button1 addTarget:target action:@selector(buttonAction:) forControlEvents:UIControlEventTouchUpInside];
+    [self.button2 addTarget:target action:@selector(buttonAction:) forControlEvents:UIControlEventTouchUpInside];
+    [self.button3 addTarget:target action:@selector(buttonAction:) forControlEvents:UIControlEventTouchUpInside];
+}
+
+- (void)prepareForReuse
+{
+    [self.button1 setBackgroundImage:nil forState:UIControlStateNormal];
+    [self.button2 setBackgroundImage:nil forState:UIControlStateNormal];
+    [self.button3 setBackgroundImage:nil forState:UIControlStateNormal];
+}
+
+- (void)layoutSubviews
+{
+    [super layoutSubviews];
+    _buttonHeight.constant = self.frame.size.height/ 2.0;
+}
+
+@end

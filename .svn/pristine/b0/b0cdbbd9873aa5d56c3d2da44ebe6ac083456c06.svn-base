@@ -1,0 +1,80 @@
+//
+//  PharmacyGoodsListViewController.m
+//  APP
+//
+//  Created by 李坚 on 15/12/31.
+//  Copyright © 2015年 carret. All rights reserved.
+//
+
+#import "PharmacyGoodsListViewController.h"
+#import "StoreGoodTableViewCell.h"
+
+static NSString *const storeGoodCellIdentifier = @"StoreGoodTableViewCell";
+static NSString *const CellIdentifier = @"UITableViewCell";
+
+@interface PharmacyGoodsListViewController ()<UITableViewDelegate,UITableViewDataSource>
+@property (weak, nonatomic) IBOutlet UITableView *leftTableView;
+@property (weak, nonatomic) IBOutlet UITableView *rightTableView;
+
+@property (nonatomic, strong) NSMutableArray *rightDataList;
+@property (nonatomic, strong) NSMutableArray *leftDataList;
+
+@end
+
+@implementation PharmacyGoodsListViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    _leftDataList = [NSMutableArray arrayWithArray:@[@"优惠药品",@"肠胃用药",@"心脑血管",@"妇科用药",@"皮肤用药",@"减肥瘦身",@"肝胆用药",@"五官用药",@"儿童用药"]];
+    _rightDataList = [NSMutableArray arrayWithArray:@[@"优惠药品1",@"肠胃用药1",@"心脑血管1",@"妇科用药1",@"皮肤用药1",@"减肥瘦身1",@"肝胆用药1",@"五官用药1",@"儿童用药1"]];
+    
+    [_rightTableView registerNib:[UINib nibWithNibName:storeGoodCellIdentifier bundle:nil] forCellReuseIdentifier:storeGoodCellIdentifier];
+    [_leftTableView registerClass:[UITableViewCell class] forCellReuseIdentifier:CellIdentifier];
+    
+    _rightTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    _leftTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    if([tableView isEqual:_leftTableView]){
+        return 44.0f;
+    }else{
+        return [StoreGoodTableViewCell getCellHeight:nil];
+    }
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    
+    if([tableView isEqual:_leftTableView]){
+        return _leftDataList.count;
+    }else{
+        return _rightDataList.count;
+    }
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    if([tableView isEqual:_leftTableView]){
+        UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+        cell.textLabel.text = _leftDataList[indexPath.row];
+        return cell;
+    }else{
+        StoreGoodTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:storeGoodCellIdentifier];
+        
+        cell.proName.text = _leftDataList[indexPath.row];
+        
+        return cell;
+    }
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+}
+
+@end

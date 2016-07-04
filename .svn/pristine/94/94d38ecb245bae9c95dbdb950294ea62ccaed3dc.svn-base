@@ -1,0 +1,259 @@
+//
+//  SubmitOrderSuccessViewController.m
+//  APP
+//
+//
+//  GetOrderResult      @"h5/maicromall/order/getOrderResult"  获取提交成功后订单状态
+//
+//  Created by garfield on 16/1/4.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "SubmitOrderSuccessViewController.h"
+#import "IndentDetailListViewController.h"
+#import "XLCycleScrollView.h"
+#import "MainViewController.h"
+#import "TipView.h"
+#import "SVProgressHUD.h"
+#import "ChangePhoneNumberViewController.h"
+@interface SubmitOrderSuccessViewController ()<XLCycleScrollViewDatasource,XLCycleScrollViewDelegate>
+
+@property (weak, nonatomic) IBOutlet UIButton *backToHomeButton;
+@property (weak, nonatomic) IBOutlet UIButton *checkDetailButton;
+@property (weak, nonatomic) IBOutlet UILabel *confirmCodeLabel;
+@property (weak, nonatomic) IBOutlet UILabel *deliverStatusLabel;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *scrollerWidth;
+
+@property (weak, nonatomic) IBOutlet UIImageView *tipTitleImageView;
+@property (weak, nonatomic) IBOutlet UILabel *tipTitle;
+@property (nonatomic, strong) IBOutlet XLCycleScrollView *cycleScrollView;
+@property (nonatomic, strong) TipView                    *calculateView;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *bottomViewHeight;
+@property (weak, nonatomic) IBOutlet UILabel *tipTitleLabel;
+@property (weak, nonatomic) IBOutlet UIImageView *tipBackGroundImage;
+@property (weak, nonatomic) IBOutlet UIView *tipView;
+@property (nonatomic, strong) NSArray               *tips;
+@property (strong, nonatomic) IBOutlet UIView *headerview;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *topSpace;
+@property (nonatomic,assign) BOOL showHead;
+
+@end
+
+@implementation SubmitOrderSuccessViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.title = @"提交成功";
+    _showHead = NO;
+    [SVProgressHUD showSuccessWithStatus:@"订单提交成功" duration:0.8];
+    [self initializeUI];
+    [self queryOrderResult];
+}
+
+//初始化UI样式
+- (void)initializeUI
+{
+    self.view.backgroundColor = RGBHex(qwColor4);
+    self.backToHomeButton.layer.borderColor = RGBHex(qwColor8).CGColor;
+    self.checkDetailButton.layer.borderColor = RGBHex(qwColor8).CGColor;
+    self.backToHomeButton.layer.borderWidth = 1.0f;
+    self.checkDetailButton.layer.borderWidth = 1.0f;
+    self.backToHomeButton.layer.cornerRadius = 3.0f;
+    self.checkDetailButton.layer.cornerRadius = 3.0;
+    
+    self.backToHomeButton.layer.masksToBounds = YES;
+    self.checkDetailButton.layer.masksToBounds = YES;
+    UIImage *image = [UIImage imageNamed:@"img_discount_two"];
+    image = [image resizableImageWithCapInsets:UIEdgeInsetsMake(100, 100, 100, 100)];
+    self.tipBackGroundImage.image = image;
+    self.calculateView = (TipView *)[[NSBundle mainBundle] loadNibNamed:@"TipView" owner:self options:nil][0];
+    CGRect rect = self.cycleScrollView.frame;
+    rect.size.width = APP_W - 25;
+    //循环滚动空控件
+    self.cycleScrollView.frame = rect;
+    [self.cycleScrollView setupUIControl];
+    self.cycleScrollView.delegate = self;
+    self.cycleScrollView.datasource = self;
+    self.cycleScrollView.scrollView.alwaysBounceHorizontal = YES;
+    self.cycleScrollView.scrollView.alwaysBounceVertical = NO;
+    self.cycleScrollView.tag = 1019;
+    [self.cycleScrollView stopAutoScroll];
+    //一开始隐藏小贴士,待确定有数据返回才显示
+    self.tipView.hidden = YES;
+
+    [QWGLOBALMANAGER statisticsEventId:@"x_qrdd_cg_xq" withLable:@"确认订单-成功页面_出现" withParams:nil];
+    [QWGLOBALMANAGER statisticsEventId:@"提交成功页出现" withLable:nil withParams:nil];
+    _scrollerWidth.constant = APP_W;
+    
+    self.tipTitleLabel.text = [NSString stringWithFormat:@"用药小贴士(%d/%ld)",1,_tips.count];
+}
+
+//获取订单状态
+- (void)queryOrderResult
+{
+    GetOrderResultModelR *modelR = [GetOrderResultModelR new];
+    modelR.orderId = self.orderId;
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    [MallCart getOrderResult:modelR success:^(MicroMallCartCompleteVoModel *responseModel) {
+        if([responseModel.apiStatus integerValue] == 0) {
+            _tips = responseModel.tips;
+            self.confirmCodeLabel.text = responseModel.confirmCode;
+//            self.branchName.text = [NSString stringWithFormat:@"已提交到%@",responseModel.branchName];
+            switch (responseModel.deliveryType) {
+                case 1:
+                    _deliverStatusLabel.text = @"已提交成功，请尽快到店取货";
+                    break;
+                case 2:
+                    _deliverStatusLabel.text = @"已提交成功，配送时间08:00 - 21:00";
+                    break;
+                case 3:
+                    _deliverStatusLabel.text = @"已提交成功，发货时间08:00 - 21:00";
+                    break;
+            }
+            
+            //如果有用药禁忌列表,则展示
+            if(_tips && [_tips count] > 0) {
+                self.tipView.hidden = NO;
+            }else{
+                self.tipView.hidden = YES;
+            }
+            [self.cycleScrollView reloadData];
+        }
+    } failure:NULL];
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    if (StrIsEmpty(QWGLOBALMANAGER.configure.mobile)) {
+        self.showHead = YES;
+    }else {
+        self.showHead = NO;
+    }
+    ((QWBaseNavigationController *)self.navigationController).canDragBack = NO;
+}
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    ((QWBaseNavigationController *)self.navigationController).canDragBack = YES;
+}
+
+-(void)setShowHead:(BOOL)showHead {
+    _showHead = showHead;
+    self.headerview.hidden = !_showHead;
+    self.topSpace.constant = _showHead?31:0;
+}
+#pragma mark -
+#pragma mark XLCycleScrollViewDelegate
+- (NSInteger)numberOfPages
+{
+    return _tips.count;
+}
+
+- (UIView *)pageAtIndex:(NSInteger)index
+{
+    TipView *tipView = (TipView *)[[NSBundle mainBundle] loadNibNamed:@"TipView" owner:self options:nil][0];
+
+    tipView.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+    CGRect rect = self.cycleScrollView.frame;
+    rect.size.width = APP_W - 25;
+    rect.origin.y = 0;
+    rect.origin.x = 0;
+    tipView.frame = rect;
+    ProductTabooVoModel *tabooVoModel = _tips[index];
+    tipView.tipTitleLabel.text = tabooVoModel.proName;
+    tipView.contentTwoLabel.text = tabooVoModel.taboo;
+    self.cycleScrollView.pageControl.hidden = YES;
+    self.cycleScrollView.scrollView.alwaysBounceVertical = NO;
+    return tipView;
+}
+
+- (void)didClickPage:(XLCycleScrollView *)csView atIndex:(NSInteger)index
+{
+    
+}
+
+- (void)didScrolltoPage:(XLCycleScrollView *)csView atIndex:(NSUInteger)index
+{;
+}
+
+- (void)scollerToindex:(NSUInteger)index
+{
+    self.tipTitleLabel.text = [NSString stringWithFormat:@"用药小贴士(%ld/%ld)",index + 1,_tips.count];
+    CGRect rect = self.cycleScrollView.frame;
+    rect.size.width = APP_W - 25;
+    
+    ProductTabooVoModel *tabooVoModel = _tips[index];
+    self.calculateView.frame = rect;
+    self.calculateView.tipTitleLabel.text = tabooVoModel.proName;
+    self.calculateView.contentTwoLabel.text = tabooVoModel.taboo;
+    //根据约束,填充的数据自动算取当前高度
+    CGSize properSize = [self.calculateView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
+    properSize.width = APP_W - 25;
+    rect.size = properSize;
+    CGFloat offset = properSize.height - 190;
+    if(offset > 0) {
+        self.bottomViewHeight.constant = 325 + offset;
+    }else{
+        self.bottomViewHeight.constant = 325;
+    }
+    if(rect.size.height < 200) {
+        rect.size.height = 200;
+    }
+    self.cycleScrollView.frame = rect;
+    rect.origin = CGPointMake(0, 0);
+    self.cycleScrollView.scrollView.frame = rect;
+    self.cycleScrollView.scrollView.contentSize = CGSizeMake(self.cycleScrollView.scrollView.contentSize.width, rect.size.height);
+    [QWGLOBALMANAGER statisticsEventId:@"x_tjcg_tj" withLable:@"提交成功-食物禁忌翻页事件统计" withParams:nil];
+    [QWGLOBALMANAGER statisticsEventId:@"提交预定_用药小贴士" withLable:nil withParams:nil];
+}
+
+- (void)popVCAction:(id)sender
+{
+    [QWGLOBALMANAGER statisticsEventId:@"x_qrdd_cg_sy" withLable:@"确认订单-成功-返回首页" withParams:nil];
+    [self pushIntoIdentDetailList];
+}
+
+//继续购物,返回营销屏首页
+- (IBAction)backToHomePage:(id)sender
+{
+    [self.navigationController popToRootViewControllerAnimated:NO];
+    [QWGLOBALMANAGER statisticsEventId:@"提交预定_继续购物" withLable:nil withParams:nil];
+    [QWGLOBALMANAGER statisticsEventId:@"x_tjcg_gw" withLable:@"提交成功-继续购物" withParams:nil];
+    [(UINavigationController *)QWGLOBALMANAGER.tabBar.viewControllers[0] popToRootViewControllerAnimated:NO];
+    QWGLOBALMANAGER.tabBar.selectedIndex = 0;
+}
+
+//查看详情
+- (IBAction)checkDetail:(id)sender
+{
+    [QWGLOBALMANAGER statisticsEventId:@"提交预定_查看详情" withLable:nil withParams:nil];
+    [QWGLOBALMANAGER statisticsEventId:@"x_tjcg_ck" withLable:@"提交成功-查看详情" withParams:nil];
+    [self pushIntoIdentDetailList];
+}
+
+- (void)pushIntoIdentDetailList
+{
+    IndentDetailListViewController *detailListViewController = [[IndentDetailListViewController alloc] init];
+    detailListViewController.orderId = self.orderId;
+    detailListViewController.payType = self.payType;
+    detailListViewController.isComeFromCode = YES;
+    [self.navigationController pushViewController:detailListViewController animated:YES];
+}
+
+- (IBAction)gotoFillInTelNum:(UIButton *)sender {
+    [QWGLOBALMANAGER statisticsEventId:@"提交成功_去完善" withLable:nil withParams:nil];
+    ChangePhoneNumberViewController * changeNumber = [[ChangePhoneNumberViewController alloc] initWithNibName:@"ChangePhoneNumberViewController" bundle:nil];
+    changeNumber.changePhoneType = ChangePhoneType_BindPhoneNumber;
+    changeNumber.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:changeNumber animated:YES];
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+@end

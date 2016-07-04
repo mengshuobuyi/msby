@@ -1,0 +1,182 @@
+//
+//  CityListViewController.m
+//  wenyao
+//
+//  Created by xiezhenghong on 14-10-7.
+//  Copyright (c) 2014年 xiezhenghong. All rights reserved.
+//
+
+#import "CityListViewController.h"
+#import "CityTableViewCell.h"
+#import "SVProgressHUD.h"
+
+#import "QWGlobalManager.h"
+
+@interface CityListViewController ()<UITableViewDataSource,UITableViewDelegate>
+
+@property (nonatomic, strong) UITableView       *tableView;
+@property (nonatomic, strong) NSDictionary      *cityMap;
+@property (nonatomic, strong) NSArray           *cityList;
+@property (nonatomic, strong) NSArray           *indexArray;
+
+@end
+
+@implementation CityListViewController
+
+@synthesize tableView;
+
+- (void)setupTableView
+{
+    CGRect rect = self.view.frame;
+    rect.size.width = APP_W;
+    rect.size.height -= 64;
+    self.tableView = [[UITableView alloc] initWithFrame:rect style:UITableViewStylePlain];
+    self.tableView.delegate = self;
+    self.tableView.dataSource = self;
+    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    [self.tableView setBackgroundColor:[UIColor clearColor]];
+    [self.view addSubview:self.tableView];
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    self.title = @"切换城市";
+    [self naviLeftBottonImage:[UIImage imageNamed:@"nav_btn_back"] highlighted:[UIImage imageNamed:@"nav_btn_back_sel"] action:@selector(popVCAction:)];
+    [self setupTableView];
+    [self queryOpenCity];
+
+}
+
+- (void)popVCAction:(id)sender
+{
+    [self.navigationController dismissViewControllerAnimated:YES completion:NULL];
+}
+
+- (void)queryOpenCity
+{
+    [Search searchOpenCity:[BaseModel new] success:^(id cityModel) {
+        if([cityModel[@"apiStatus"] integerValue] == 0) {
+            self.cityMap = cityModel[@"openCitys"];
+            self.indexArray = [self.cityMap allKeys];
+            self.indexArray = [_indexArray sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+                return [obj1 compare:obj2];
+            }];
+            [self.tableView reloadData];
+        }
+    } failure:^(HttpException *error) {
+        
+    }];
+}
+
+#pragma mark -
+#pragma mark UITableViewDelegate
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    if(section == 0) {
+        return 0;
+    }else{
+        return 30.0f;
+    }
+}
+
+- (UIView *)tableView:(UITableView *)atableView viewForHeaderInSection:(NSInteger)section
+{
+    if(section == 0) {
+        return nil;
+    }else{
+        UIView *headerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, tableView.frame.size.width, 30)];
+        [headerView setBackgroundColor:RGBHex(qwColor11)];
+        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(10, 5, 200, 20)];
+        label.textColor = [UIColor blackColor];
+
+        NSMutableArray *marr = [NSMutableArray arrayWithArray:_indexArray];
+
+        NSString *cityName = marr[section - 1];
+        
+        label.text = cityName;
+        label.font = [UIFont systemFontOfSize:13.5];
+        [headerView addSubview:label];
+        UIView *separator = [[UIView alloc] initWithFrame:CGRectMake(0, 29, 320, 1)];
+        [separator setBackgroundColor:RGBHex(qwColor10)];
+        [headerView addSubview:separator];
+        return headerView;
+    }
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 44.0f;
+}
+
+- (NSInteger)tableView:(UITableView *)atableView numberOfRowsInSection:(NSInteger)section
+{
+    if(section == 0)
+        return 1;
+    else{
+        NSArray *citys = self.cityMap[_indexArray[section - 1]];
+        return [citys count];
+    }
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)atableView
+{
+    return _indexArray.count + 1;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)atableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *CityCellIdentifier = @"CityCellIdentifier";
+    CityTableViewCell *cell = (CityTableViewCell *)[atableView dequeueReusableCellWithIdentifier:CityCellIdentifier];
+    if(cell == nil){
+        UINib *nib = [UINib nibWithNibName:@"CityTableViewCell" bundle:nil];
+        [atableView registerNib:nib forCellReuseIdentifier:CityCellIdentifier];
+        cell = (CityTableViewCell *)[atableView dequeueReusableCellWithIdentifier:CityCellIdentifier];
+    }
+    if(indexPath.section == 0) {
+        cell.dredgeLabel.hidden = YES;
+        cell.cityNameLabel.text = @"当前位置";
+    }else{
+        NSDictionary *dict = self.cityMap[_indexArray[indexPath.section - 1]][indexPath.row];
+        cell.cityNameLabel.text = dict[@"cityName"];
+        
+        if([dict[@"cityName"] isEqualToString:self.currentCity])
+        {
+            cell.dredgeLabel.hidden = NO;
+        
+        }else{
+            cell.dredgeLabel.hidden = YES;
+        }
+    }
+    return cell;
+}
+
+- (void)tableView:(UITableView *)atableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [atableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+        [SVProgressHUD showErrorWithStatus:@"网络未连接，请重试" duration:0.8f];
+        return;
+    }
+    if(indexPath.section == 0) {
+        self.selectBlock(nil);
+    }else{
+        NSDictionary *dict = self.cityMap[_indexArray[indexPath.section - 1]][indexPath.row];
+        if(self.selectBlock)
+        {
+            OpenCityModel *cityModel = [OpenCityModel parse:dict];
+            self.selectBlock(cityModel);
+        }
+        
+    }
+    [self.navigationController dismissViewControllerAnimated:YES completion:NULL];
+}
+
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+}
+
+
+@end

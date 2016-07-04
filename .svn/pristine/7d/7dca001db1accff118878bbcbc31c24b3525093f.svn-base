@@ -1,0 +1,288 @@
+        //
+//  CouponDrugListViewController.m
+//  APP
+//
+//  Created by 李坚 on 15/8/23.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "MyCouponDrugListViewController.h"
+#import "Coupon.h"
+#import "SVProgressHUD.h"
+#import "MyCouponDrugDetailViewController.h"
+#import "CouponMyDrugTableViewCell.h"
+
+@interface MyCouponDrugListViewController ()<UITableViewDataSource,UITableViewDelegate>{
+    
+    int currPage;
+}
+
+@property (nonatomic, strong) UITableView *mainTableView;
+
+@property (nonatomic, strong) NSMutableArray *dataArray;
+
+@end
+
+@implementation MyCouponDrugListViewController
+
+- (instancetype)init{
+    
+    if(self = [super init]){
+        currPage = 1;
+        self.dataArray = [NSMutableArray new];
+        
+        self.mainTableView = [[UITableView alloc]initWithFrame:CGRectMake(0, 0, APP_W, APP_H - NAV_H - 35.5)];
+        self.mainTableView.dataSource = self;
+        self.mainTableView.delegate = self;
+        self.mainTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+        self.mainTableView.tableFooterView = [[UIView alloc]init];
+        UIView *header = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, 14.0f)];
+        self.mainTableView.backgroundColor = RGBHex(qwColor11);
+        UIView *footerView = [[UIView alloc]init];
+        footerView.backgroundColor = RGBHex(qwColor11);
+        self.mainTableView.tableFooterView = footerView;
+        header.backgroundColor = RGBHex(qwColor11);
+        self.mainTableView.tableHeaderView = header;
+        [self.mainTableView addFooterWithTarget:self action:@selector(footRefresh)];
+
+        
+//        [self enableSimpleRefresh:self.mainTableView block:^(SRRefreshView *sender) {
+//            [self restData];
+//        }];
+        
+        [self.view addSubview:self.mainTableView];
+    }
+    return self;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    
+    [self.mainTableView.footer setCanLoadMore:YES];
+}
+
+- (void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    
+    
+}
+
+#pragma mark - 加载更多
+- (void)footRefresh{
+    
+    if(currPage != -1){
+        currPage +=1;
+    }else{
+        [self.mainTableView.footer setCanLoadMore:NO];
+        [self.mainTableView.footer endRefreshing];
+        return;
+    }
+    HttpClientMgr.progressEnabled = NO;
+    [self loadCouponDrugData];
+}
+
+#pragma mark - 重新加载新数据，用于SliderView切换Tab或下拉刷新数据
+- (void)restData{
+    
+    currPage =1;
+    [self removeInfoView];
+    if(QWGLOBALMANAGER.currentNetWork == kNotReachable){
+        [self loadHistoryData];
+    }else{
+        [self loadCouponDrugData];
+    }
+}
+
+#pragma mark - 读取历史数据
+- (void)loadHistoryData{
+    
+    NSArray *historyArray = [NSArray array];
+    if(self.type == Enum_CouponQuan_HasPicked){
+        historyArray = [MyDrugVo getArrayFromDBWithWhere:@"status=1"];
+    }
+    if(self.type == Enum_CouponQuan_HasUsed){
+        historyArray = [MyDrugVo getArrayFromDBWithWhere:@"status=2"];
+    }
+    if(self.type == Enum_CouponQuan_HasOverdDate){
+        historyArray = [MyDrugVo getArrayFromDBWithWhere:@"status=3"];
+    }
+    
+    self.dataArray = [NSMutableArray arrayWithArray:historyArray];
+    if(self.dataArray.count == 0){
+        
+//        NSString *str;
+//        if(self.type == Enum_CouponQuan_HasPicked){
+//            str = @"可以使用的优惠商品会出现在这里";
+//        }
+//        if(self.type == Enum_CouponQuan_HasUsed){
+//            str = @"暂无已使用优惠";
+//        }
+//        if(self.type == Enum_CouponQuan_HasOverdDate){
+//            str = @"暂无已过期优惠";
+//        }
+        [self showInfoView:kWarning29 image:@"网络信号icon"];
+    }else{
+        [self.mainTableView reloadData];
+
+    }
+}
+
+#pragma mark - 请求
+- (void)loadCouponDrugData{
+
+    myCouponDrugModelR *modelR = [myCouponDrugModelR new];
+    if(self.type == Enum_CouponQuan_HasPicked){
+        modelR.status = @1;
+    }
+    if(self.type == Enum_CouponQuan_HasUsed){
+        modelR.status = @2;
+    }
+    if(self.type == Enum_CouponQuan_HasOverdDate){
+        modelR.status = @3;
+    }
+    modelR.page = @(currPage);
+    modelR.pageSize = @10;
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    
+    
+    [Coupon myCouponDrug:modelR success:^(id obj) {
+        
+        MyDrugVoList *couponList = obj;
+        
+        if(currPage == 1 && couponList.list.count == 0){
+            
+            NSString *str;
+            if(self.type == Enum_CouponQuan_HasPicked){
+                str = @"可以使用的优惠商品会出现在这里";
+            }
+            if(self.type == Enum_CouponQuan_HasUsed){
+                str = @"暂无已使用优惠";
+            }
+            if(self.type == Enum_CouponQuan_HasOverdDate){
+                str = @"暂无已过期优惠";
+            }
+            [self showInfoView:str image:@"ic_img_fail"];
+        }else if(couponList.list.count == 0){
+            
+       
+        }else{
+            if(currPage == 1){
+                self.dataArray = [NSMutableArray arrayWithArray:couponList.list];
+                
+                if(self.type == Enum_CouponQuan_HasPicked){
+                    [MyDrugVo deleteWithWhere:@"status=1"];
+                }
+                if(self.type == Enum_CouponQuan_HasUsed){
+                    [MyDrugVo deleteWithWhere:@"status=2"];
+                }
+                if(self.type == Enum_CouponQuan_HasOverdDate){
+                    [MyDrugVo deleteWithWhere:@"status=3"];
+                }
+                [MyDrugVo insertToDBWithArray:couponList.list filter:^(id model, BOOL inseted, BOOL *rollback) {
+                    
+                }];
+                
+            }else{
+                [self.dataArray addObjectsFromArray:couponList.list];
+            }
+            [self.mainTableView reloadData];
+            
+            
+        }
+        [self.mainTableView footerEndRefreshing];
+        [self.mainTableView headerEndRefreshing];
+        NSString *hasContent;
+        if(_dataArray > 0){
+            hasContent = @"有内容";
+        }else {
+            hasContent = @"无内容";
+        }
+        NSMutableDictionary *tdParams = [NSMutableDictionary dictionary];
+        tdParams[@"有无内容"]=hasContent;
+        [QWGLOBALMANAGER statisticsEventId:@"x_wd_yhsp" withLable:@"优惠商品" withParams:tdParams];
+        if(couponList.list.count < 10){
+            currPage = -1;
+        }
+    } failure:^(HttpException *e) {
+        [self.mainTableView footerEndRefreshing];
+        [self.mainTableView headerEndRefreshing];
+        [SVProgressHUD showErrorWithStatus:e.Edescription];
+    }];
+}
+
+#pragma mark - TableViewDelegate
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+
+    MyDrugVo *model = self.dataArray[indexPath.row];
+    return [CouponMyDrugTableViewCell getCellHeight:model];
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    
+    return self.dataArray.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+
+    CouponMyDrugTableViewCell *myCell = (CouponMyDrugTableViewCell *)[tableView cellForRowAtIndexPath:indexPath];
+    if (!myCell) {
+        NSArray* nib = [[NSBundle mainBundle] loadNibNamed:@"CouponMyDrugTableViewCell" owner:self options:nil];
+        myCell = [nib objectAtIndex:0];
+    }
+    
+    MyDrugVo *vo = self.dataArray[indexPath.row];
+    myCell.drugStatus = [vo.status integerValue];
+    
+    [myCell setCell:vo];
+    
+    return myCell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    if(QWGLOBALMANAGER.currentNetWork == kNotReachable){
+        
+        [SVProgressHUD showErrorWithStatus:kWarning12];
+        return;
+    }
+    MyDrugVo *model = self.dataArray[indexPath.row];
+    
+    if([model.frozen intValue] == 1 && self.type != Enum_CouponQuan_HasUsed && [model.status intValue] != 3){
+        
+        [SVProgressHUD showErrorWithStatus:kWarning48];
+        
+        if(self.type != Enum_CouponQuan_HasOverdDate){
+
+            [self.dataArray removeObject:model];
+            [self.mainTableView reloadData];
+            //注意调删除接口//
+            [self removeDrug:model.proDrugId];
+            return;
+        }
+    }
+    
+    MyCouponDrugDetailViewController *drugDetail = [[MyCouponDrugDetailViewController alloc]init];
+    //优惠商品状态(1：已领取 2：已使用 3：已过期)
+    drugDetail.proDrugId = model.proDrugId;
+    drugDetail.pid = model.pid;
+    
+    [self.navigationController pushViewController:drugDetail animated:YES];
+}
+
+
+#pragma mark - 删除被冻结商品
+- (void)removeDrug:(NSString *)proDrugId{
+    
+    DeleteDrugModelR *modelR = [DeleteDrugModelR new];
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    modelR.proDrugId = proDrugId;
+    
+    [Coupon removeDrug:modelR success:^(id obj) {
+        
+    
+    } failure:^(HttpException *e) {
+        
+    }];
+}
+@end

@@ -1,0 +1,385 @@
+//
+//  MsgOrderListViewController.m
+//  APP
+//
+//  Created by PerryChen on 1/19/16.
+//  Copyright © 2016 carret. All rights reserved.
+//
+
+#import "MsgOrderListViewController.h"
+#import "MsgNotifyOrderCell.h"
+#import "SysNotiBaseModel.h"
+#import "SysNotiListModelR.h"
+#import "SysNotiListRequest.h"
+#import "SVProgressHUD.h"
+#import "QWGlobalManager.h"
+#import "QWUnreadCountModel.h"
+#import "ReturnIndexView.h"
+#import "MGSwipeButton.h"
+#import "MGSwipeTableCell.h"
+#import "IndentDetailListViewController.h"
+@interface MsgOrderListViewController ()<MGSwipeTableCellDelegate>
+@property (weak, nonatomic) IBOutlet UITableView *tbViewContent;
+@property (strong, nonatomic) NSMutableArray *arrOrderList;
+@property (strong, nonatomic) NSMutableArray *arrServer;
+@property (nonatomic, assign) BOOL isScrolling;
+@property (nonatomic, strong) ReturnIndexView *indexView;
+@property (nonatomic, assign) BOOL isClickedCell;
+@end
+
+@implementation MsgOrderListViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    __weak typeof (self) weakSelf = self;
+    self.arrOrderList = [@[] mutableCopy];
+//    [self setUpRightItem];
+    [self enableSimpleRefresh:self.tbViewContent block:^(SRRefreshView *sender) {
+        if(QWGLOBALMANAGER.currentNetWork == NotReachable)
+        {
+            [SVProgressHUD showErrorWithStatus:@"网络未连接，请稍后再试" duration:0.8f];
+            return;
+        }
+        [weakSelf refreshConsultList];
+    }];
+    
+    [self getCachedMessages];
+    [self.tbViewContent reloadData];
+    self.navigationItem.title = @"订单通知列表";
+    // Do any additional setup after loading the view.
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    [self.tbViewContent reloadData];
+    [self refreshConsultList];
+    self.isClickedCell = NO;
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+- (void)setUpRightItem
+{
+    UIBarButtonItem *fixed = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
+    fixed.width = -6;
+    
+    UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"icon-unfold.PNG"] style:UIBarButtonItemStylePlain target:self action:@selector(returnIndex)];
+    self.navigationItem.rightBarButtonItems = @[fixed,rightItem];
+}
+
+- (void)returnIndex
+{
+    self.indexView = [[ReturnIndexView alloc] initWithImage:@[@"icon_check all_news",@"icon_homepage_news"] title:@[@"全部已读",@"首页"]];
+    self.indexView.delegate = self;
+    [self.indexView show];
+}
+- (void)RetunIndexView:(ReturnIndexView *)ReturnIndexView didSelectedIndex:(NSIndexPath *)indexPath
+{
+    [self.indexView hide];
+    if (indexPath.row == 1) {
+        [self.navigationController popToRootViewControllerAnimated:YES];
+        [self performSelector:@selector(delayPopToHome) withObject:nil afterDelay:0.01];
+    } else {
+        [self setReadAllMsg];
+    }
+}
+
+- (void)delayPopToHome
+{
+    [QWGLOBALMANAGER.tabBar setSelectedIndex:0];
+}
+
+- (void)setReadAllMsg
+{
+    MsgBoxListSetReadTypeModelR *modelR = [MsgBoxListSetReadTypeModelR new];
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    modelR.type = @"2";
+    [Consult setReadMsgBoxListByTypeWithParam:modelR success:^(BaseAPIModel *responModel) {
+        for (OrderNotiModel *model in self.arrOrderList) {
+            model.unreadCounts = @"0";
+            model.showRedPoint = @"0";
+        }
+        [self.tbViewContent reloadData];
+        [OrderNotiModel syncDBWithObjArray:self.arrOrderList];
+        [QWGLOBALMANAGER noticeUnreadLocalWithType:MsgBoxListMsgTypeOrder sessionID:nil isRead:YES];
+    } failure:^(HttpException *e) {
+        
+    }];
+}
+
+- (void)showinfoViewIfNeeded
+{
+    if (!self.arrServer.count) {
+        [self showInfoView:@"暂无订单通知~" image:@"ic_img_fail"];
+    } else {
+        [self removeInfoView];
+    }
+}
+
+- (void)viewInfoClickAction:(id)sender
+{
+    [self refreshConsultList];
+}
+
+#pragma mark - cache methods
+- (void)getCachedMessages
+{
+    self.arrOrderList = [NSMutableArray arrayWithArray:[OrderNotiModel getArrayFromDBWithWhere:nil WithorderBy:@" createTime desc"]];
+}
+
+#pragma mark - Http service
+- (void)refreshConsultList
+{
+    //全量拉取消息盒子数据
+    OrderNotiListModelR *modelR = [OrderNotiListModelR new];
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    modelR.view = @"100";
+    [SysNotiListRequest getAllOrderNotiList:modelR success:^(OrderMessageArrayVo *responModel) {
+        [self.tbViewContent headerEndRefreshing];
+        OrderMessageArrayVo *listModel = (OrderMessageArrayVo *)responModel;
+        [self removeInfoView];
+        if (listModel.messages.count > 0) {
+            [self.arrServer removeAllObjects];
+            self.arrServer = [listModel.messages mutableCopy];
+            [self syncDBtoLatest:listModel];
+        } else {
+            [self.arrServer removeAllObjects];
+        }
+        [self showinfoViewIfNeeded];
+    } failure:^(HttpException *e) {
+        [self.tbViewContent headerEndRefreshing];
+    }];
+}
+
+- (void)syncDBtoLatest:(OrderMessageArrayVo *)listModel
+{
+    __weak typeof (self) weakSelf = self;
+    NSMutableArray *arrLoaded = [NSMutableArray arrayWithArray:listModel.messages];
+    NSMutableArray *arrCached = [NSMutableArray arrayWithArray:[OrderNotiModel getArrayFromDBWithWhere:nil]];
+    NSMutableArray *arrNeedAdded = [@[] mutableCopy];
+    NSMutableArray *arrNeedDeleted = [@[] mutableCopy];
+    // 删除服务器上没有，本地有的缓存数据
+    [arrCached enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        OrderNotiModel *modelHis = (OrderNotiModel *)obj;
+        BOOL isExist = NO;
+        for (OrderMessageVo *modelConsult in arrLoaded) {
+            if ([modelConsult.messageId intValue] == [modelHis.messageId intValue]) {
+                isExist = YES;
+                break;
+            }
+        }
+        if (!isExist) {
+            [arrNeedDeleted addObject:modelHis];
+        }
+    }];
+    for (OrderNotiModel *modelHis in arrNeedDeleted) {
+        [OrderNotiModel deleteObjFromDBWithKey:[NSString stringWithFormat:@"%@",modelHis.messageId]];
+    }
+    // 更新数据问题
+    arrCached = [NSMutableArray arrayWithArray:[OrderNotiModel getArrayFromDBWithWhere:nil WithorderBy:@" createTime desc"]];
+    __block NSInteger count = 0;
+    [arrLoaded enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        OrderMessageVo *modelOrder = (OrderMessageVo *)obj;
+        NSUInteger indexFound = [weakSelf valueExists:@"messageId" withValue:[NSString stringWithFormat:@"%@",modelOrder.messageId] withArr:arrCached];
+        if (indexFound != NSNotFound) {
+            // 更新Model
+            OrderNotiModel *modelL = [arrCached objectAtIndex:indexFound];
+            [QWGLOBALMANAGER convertOrderModel:modelOrder withModelOrderLocal:&modelL];
+        } else {
+            OrderNotiModel *modelL = [QWGLOBALMANAGER createOrderNotiModel:modelOrder];
+            [arrNeedAdded addObject:modelL];
+        }
+    }];
+    [arrCached addObjectsFromArray:arrNeedAdded];
+    for (int i = 0; i < arrCached.count; i++) {
+        OrderNotiModel *model = (OrderNotiModel *)arrCached[i];
+        if ([model.unreadCounts intValue]>0) {
+            model.showRedPoint = @"1";
+            count++;
+        }
+        [OrderNotiModel updateObjToDB:model WithKey:model.messageId];
+    }
+    
+    [self getCachedMessages];
+    [self.tbViewContent reloadData];
+}
+
+#pragma mark - UITableView methods
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    MsgNotifyOrderCell *cell = [tableView dequeueReusableCellWithIdentifier:@"MsgNotifyOrderCell"];
+    OrderNotiModel *msgModel = self.arrOrderList[indexPath.row];
+    [cell setCell:msgModel];
+    cell.swipeDelegate = self;
+    return cell;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 100.0f;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static MsgNotifyOrderCell *sizingCell = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sizingCell = [tableView dequeueReusableCellWithIdentifier:@"MsgNotifyOrderCell"];
+    });
+    OrderNotiModel *model = [self.arrOrderList objectAtIndex:indexPath.row];
+    [sizingCell setCell:model];
+    sizingCell.bounds = CGRectMake(0.0f, 0.0f, CGRectGetWidth(tableView.bounds), CGRectGetHeight(sizingCell.bounds));
+    [sizingCell setNeedsLayout];
+    [sizingCell layoutIfNeeded];
+    CGSize sizeFinal = [sizingCell.contentView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
+    return sizeFinal.height+1.0f;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return self.arrOrderList.count;
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 1;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    //消息通知列表
+    if (self.isClickedCell) {
+        return;
+    }//防止多次点击
+    if (QWGLOBALMANAGER.loginStatus) {
+        OrderNotiModel* msg = self.arrOrderList[indexPath.row];
+        if(msg) {
+            // 更新红点逻辑
+            if (msg.messageId.length > 0) {
+                [SysNotiListRequest setOrderNotiReadWithMessageId:msg.messageId success:^(id responModel) {
+                    msg.showRedPoint = @"0";
+                    msg.unreadCounts = @"0";
+                    [OrderNotiModel updateObjToDB:msg WithKey:msg.messageId];
+                    NSInteger unreadCout = [[OrderNotiModel getUsingLKDBHelper] rowCount:[OrderNotiModel class] where:@"read = 0"];
+                    if (unreadCout == 0) {
+                        [QWGLOBALMANAGER noticeUnreadLocalWithType:MsgBoxListMsgTypeOrder sessionID:nil isRead:YES];
+                    }
+                } failure:^(HttpException *e) {
+                    [SVProgressHUD showErrorWithStatus:@"网络错误" duration:0.4];
+                }];
+            }
+            //QWGLOBALMANAGER.unReadCount = QWGLOBALMANAGER.unReadCount - [msg.showRedPoint intValue];
+            
+            IndentDetailListViewController *vcIndent = [IndentDetailListViewController new];
+            //TODO: need fix
+            vcIndent.orderId = msg.orderId;
+            [self.navigationController pushViewController:vcIndent animated:YES];
+        }
+        self.isClickedCell = YES;
+    }
+}
+
+- (void)getNotifType:(Enum_Notification_Type)type data:(id)data target:(id)obj
+{
+//    if (type == NotiMessageUpdateMsgCouponList) {
+//        [self getCachedMessages];
+//        [self.tbViewContent reloadData];
+//    } else if (type == NotiReleaseTimer) {
+//    }
+    if (type == NotiMsgBoxNeedFetchNewData) { // 有新消息，拉数据
+        NSArray *type = data[@"types"];
+        if ([type containsObject:@(MsgBoxListMsgTypeOrder)]) {
+            [self refreshConsultList];
+        }
+    }
+}
+
+
+
+-(NSArray *) createRightButtons: (int) number
+{
+    NSMutableArray * result = [NSMutableArray array];
+    NSString* titles[2] = {@"删除"};
+    UIColor * colors[2] = {[UIColor redColor]};
+    for (int i = 0; i < number; ++i)
+    {
+        MGSwipeButton * button = [MGSwipeButton buttonWithTitle:titles[i] backgroundColor:colors[i] callback:^BOOL(MGSwipeTableCell * sender){
+            return YES;
+        }];
+        if(i == 1) {
+            [button setTitleColor:RGBHex(qwColor5) forState:UIControlStateNormal];
+        }
+        [result addObject:button];
+    }
+    return result;
+}
+
+
+
+#pragma mark -
+#pragma mark MGSwipeTableCellDelegate
+-(NSArray*) swipeTableCell:(MGSwipeTableCell*)cell
+  swipeButtonsForDirection:(MGSwipeDirection)direction
+             swipeSettings:(MGSwipeSettings*)swipeSettings
+         expansionSettings:(MGSwipeExpansionSettings*)expansionSettings;
+{
+    
+    if (direction == MGSwipeDirectionRightToLeft)
+    {
+        
+        return [self createRightButtons:1];
+        
+    }
+    return nil;
+}
+
+-(BOOL) swipeTableCell:(MGSwipeTableCell*)cell tappedButtonAtIndex:(NSInteger)index direction:(MGSwipeDirection)direction fromExpansion:(BOOL)fromExpansion
+{
+    //TODO: need update
+    NSIndexPath *  indexPath = [self.tbViewContent indexPathForCell:cell];
+    //删除事件
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+        
+        [SVProgressHUD showErrorWithStatus:@"网络未连接，请重试" duration:0.8f];
+        
+        return NO;
+    }
+    
+    OrderNotiModel* boxModel = self.arrOrderList[indexPath.row];
+    
+    RemoveByCustomerOrderR *model = [RemoveByCustomerOrderR new];
+    model.messageId = boxModel.messageId;
+    [SysNotiListRequest removeByCustomer:model success:^(id responModel) {
+        [OrderNotiModel deleteObjFromDBWithKey:[NSString stringWithFormat:@"%@",boxModel.messageId]];
+        [self.arrOrderList removeObject:boxModel];
+        [self.tbViewContent reloadData];
+        [self showinfoViewIfNeeded];
+        NSInteger unreadCout = [[OrderNotiModel getUsingLKDBHelper] rowCount:[OrderNotiModel class] where:@"read = 0"];
+        if (unreadCout == 0) {
+            [QWGLOBALMANAGER noticeUnreadLocalWithType:MsgBoxListMsgTypeOrder sessionID:nil isRead:YES];
+        }
+    } failure:^(HttpException *e) {
+        
+    }];
+    
+
+    return YES;
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

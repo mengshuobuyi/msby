@@ -1,0 +1,93 @@
+//
+//  Store.h
+//  APP
+//
+//  Created by qw on 15/3/6.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import "HttpClient.h"
+#import "ProblemModel.h"
+#import "StoreModelR.h"
+#import "StoreModel.h"
+
+@interface Store : NSObject
+
+//根据药店账号获取机构信息
++ (void)queryBranhGroupByStoreAccWithParams:(NSDictionary *)param
+                            success:(void(^)(id))success
+                            failure:(void(^)(HttpException * e))failure;
+// 获取附近药店信息
++ (void)getPharmacyNearbyWithPara:(StoreOfferNameModelR *)para
+                          success:(void(^)(id result))success
+                          failure:(void(^)(HttpException *err))failure;
+
+/**
+ *  @brief 开通城市检查
+ *
+ *  add by Meng
+ */
++ (void)storeSearchOpenCityCheckWithPara:(StoreSearchOpenCityCheckModelR *)param
+                                 success:(void (^)(id DFModel))success
+                                 failure:(void(^)(HttpException *e))failure;
+
+/**
+ *  @brief 附近药房
+ *
+ *  fixed by lijian
+ */
++ (void)getNearByStoreWithParam:(StoreSearchRegionModelR *)param withPromotion:(BOOL)promotion
+                           success:(void (^)(id))success
+                           failure:(void(^)(HttpException *e))failure;
+
+
+/**
+ *  @brief 搜索药房
+ *
+ *  add by lijian 2.2.0
+ */
++ (void)searchStoreWithParam:(StoreSearchRegionModelR *)param
+                     success:(void (^)(id))success
+                     failure:(void(^)(HttpException *e))failure;
+
+/**
+ *  @brief 3.11.8	查询药店简要信息
+ */
++ (void)storeSearchWithParams:(id)param
+                      success:(void(^)(id resultObj))success
+                      failure:(void(^)(HttpException * e))failure;
+
+//药房详情活动轮播 add by lijian 2.2.0
++ (void)queryBranchActivitiesWithParams:(id)param
+                    success:(void(^)(id resultObj))success
+                    failure:(void(^)(HttpException * e))failure;
+
+/**
+ *  @brief 3.6.6	新营销活动列表
+ */
++ (void)queryBranchActivityWithParams:(id)param
+                              success:(void(^)(id resultObj))success
+                              failure:(void(^)(HttpException * e))failure;
+
+/**
+ *  投诉药店类型的查询
+ */
++ (void)QueryComplaintTypeWithParams:(StoreComplaintTypeModelR *)param
+                             success:(void(^)(id resultObj))success
+                             failure:(void(^)(HttpException * e))failure;
+
+//投诉药店 StoreComplaint
++ (void)complaintWithParams:(StoreComplainModelR *)param
+                    success:(void(^)(id))success
+                    failure:(void(^)(HttpException * e))failure;
+
+/**
+ *  查询有优惠活动的门店
+ */
+
++ (void)branchSearchPromotionWithParams:(NSDictionary *)param
+                    success:(void(^)(id))success
+                    failure:(void(^)(HttpException * e))failure;
+
+@end

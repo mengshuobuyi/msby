@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="8191" systemVersion="14F27" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="8154"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="ChannelActivityDetialViewController">
+            <connections>
+                <outlet property="drugImg" destination="Gwz-dX-1j2" id="OMB-lg-1oS"/>
+                <outlet property="drugSource" destination="VVO-mo-Aw5" id="MLa-ZT-9RJ"/>
+                <outlet property="drugTitle" destination="M72-Lv-5dI" id="MPu-kd-EhN"/>
+                <outlet property="headView" destination="l0F-HY-i2k" id="yK3-h8-PD0"/>
+                <outlet property="spec" destination="hiX-3V-D0Q" id="yIf-vN-kgb"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <point key="canvasLocation" x="341" y="315"/>
+        </view>
+        <view contentMode="scaleToFill" id="l0F-HY-i2k">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="100"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <subviews>
+                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Gwz-dX-1j2">
+                    <rect key="frame" x="13" y="16" width="75" height="68"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="75" id="RZb-WI-RSQ"/>
+                        <constraint firstAttribute="height" constant="68" id="xVV-hs-AiP"/>
+                    </constraints>
+                </imageView>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="牛黄解毒片颗粒" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="M72-Lv-5dI">
+                    <rect key="frame" x="106" y="16" width="173" height="21"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="259" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="hiX-3V-D0Q">
+                    <rect key="frame" x="106" y="39" width="31" height="21"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="南京同仁堂药业有限公司" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="VVO-mo-Aw5">
+                    <rect key="frame" x="106" y="63" width="194" height="21"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="hiX-3V-D0Q" firstAttribute="leading" secondItem="Gwz-dX-1j2" secondAttribute="trailing" constant="18" id="0L4-Uf-ebc"/>
+                <constraint firstAttribute="bottom" secondItem="VVO-mo-Aw5" secondAttribute="bottom" constant="16" id="AFC-mo-Noc"/>
+                <constraint firstAttribute="trailing" secondItem="M72-Lv-5dI" secondAttribute="trailing" constant="41" id="Gia-wr-a16"/>
+                <constraint firstAttribute="trailing" secondItem="VVO-mo-Aw5" secondAttribute="trailing" constant="20" id="IKf-PK-ICO"/>
+                <constraint firstItem="VVO-mo-Aw5" firstAttribute="leading" secondItem="Gwz-dX-1j2" secondAttribute="trailing" constant="18" id="Icj-PV-x35"/>
+                <constraint firstItem="M72-Lv-5dI" firstAttribute="top" secondItem="l0F-HY-i2k" secondAttribute="top" constant="16" id="Pto-af-QiN"/>
+                <constraint firstItem="M72-Lv-5dI" firstAttribute="leading" secondItem="Gwz-dX-1j2" secondAttribute="trailing" constant="18" id="Z6h-Ea-NeP"/>
+                <constraint firstItem="hiX-3V-D0Q" firstAttribute="top" secondItem="M72-Lv-5dI" secondAttribute="bottom" constant="2" id="an0-O3-hX0"/>
+                <constraint firstItem="Gwz-dX-1j2" firstAttribute="leading" secondItem="l0F-HY-i2k" secondAttribute="leading" constant="13" id="uAV-Of-uo7"/>
+                <constraint firstItem="Gwz-dX-1j2" firstAttribute="top" secondItem="l0F-HY-i2k" secondAttribute="top" constant="16" id="yrF-Zm-vIs"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <point key="canvasLocation" x="234" y="100"/>
+        </view>
+    </objects>
+</document>

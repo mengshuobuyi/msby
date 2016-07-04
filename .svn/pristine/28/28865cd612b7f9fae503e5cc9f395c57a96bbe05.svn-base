@@ -1,0 +1,183 @@
+    //
+//  PharmacySotreSearchViewController.m
+//  APP
+//  新的药房搜索  3.0.0
+//  Created by 李坚 on 16/1/5.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "PharmacySotreSearchViewController.h"
+#import "NSString+AbandonStringBlank.h"
+#import "PharmacySotreSearchTableViewCell.h"
+#import "ConsultStore.h"
+#import "KeyWordSearchTableViewCell.h"
+#import "PharmacyStoreDetailViewController.h"
+
+static NSString *const SearchCellIdentifier = @"PharmacySotreSearchTableViewCell";
+static NSString *const SearchCell = @"KeyWordSearchTableViewCell";
+
+@interface PharmacySotreSearchViewController ()<UISearchBarDelegate,UITableViewDataSource,UITableViewDelegate>{
+    
+    NSInteger currPage;
+    UIView      *vInfo;
+    NSString *keyWord;
+    UIButton *clearBtn;
+}
+@property (weak, nonatomic) IBOutlet UITableView *mainTableView;
+@property (nonatomic, strong) NSMutableArray *dataArray;
+
+@end
+
+@implementation PharmacySotreSearchViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    self.searchBarView.placeholder = @"搜索药房";
+    currPage = 1;
+    _dataArray = [[NSMutableArray alloc]init];
+    self.searchBarView.delegate = self;
+
+    _mainTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    _mainTableView.tableFooterView = [[UIView alloc]init];
+    _mainTableView.backgroundColor = RGBHex(qwColor11);
+
+    [_mainTableView registerNib:[UINib nibWithNibName:SearchCellIdentifier bundle:nil] forCellReuseIdentifier:SearchCellIdentifier];
+    [_mainTableView registerNib:[UINib nibWithNibName:SearchCell bundle:nil] forCellReuseIdentifier:SearchCell];
+
+    //搜索输入框置为焦点
+    [self.searchBarView becomeFirstResponder];
+}
+
+
+#pragma mark -UISearchBarDelegate
+
+- (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText
+{
+    if (searchBar.text.length == 0) {
+        [self removeInfoView];
+        [_dataArray removeAllObjects];
+        [_mainTableView reloadData];
+    }
+    keyWord = [NSString abandonStringBlank:searchText];//去除字符串空格
+    if (keyWord.length == 0) {
+ 
+    }else{
+        if (QWGLOBALMANAGER.currentNetWork != kNotReachable) {
+            //进行请求
+            currPage = 1;
+            [self loadDataWithKeyword:keyWord];
+        }else{
+            [self showInfoView:kWarning34 image:@"ic_img_fail"];
+        }
+    }
+}
+
+#pragma mark - 分页加载跟多
+- (void)refreshMoreData{
+    
+    [self loadDataWithKeyword:keyWord];
+}
+
+#pragma mark - 搜索药房HTTP请求
+- (void)loadDataWithKeyword:(NSString *)word{
+    
+    [QWGLOBALMANAGER readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) { //add by jxb
+    
+        MallSearchModelR *modelR = [MallSearchModelR new];
+        modelR.key = [QWGLOBALMANAGER replaceSymbolStringWith:word];
+        modelR.page = @(currPage);
+        modelR.pageSize = @(10);
+        modelR.city = mapInfoModel.city;
+        modelR.longitude = @(mapInfoModel.location.coordinate.longitude);
+        modelR.latitude = @(mapInfoModel.location.coordinate.latitude);
+        
+        [ConsultStore MallSearch:modelR success:^(MicroMallBranchListVo *model) {
+            if(currPage == 1){
+                [_dataArray removeAllObjects];
+                if(model.branchs.count == 0){
+                    [self showInfoView:kWarning34 image:@"没有搜索结果icon.png"];
+                }else{
+                    [self removeInfoView];
+                    [_dataArray addObjectsFromArray:model.branchs];
+                    currPage ++;
+                    [_mainTableView reloadData];
+                }
+            }else{
+                if(model.branchs.count == 0){
+                    [_mainTableView.footer setCanLoadMore:NO];
+                }else{
+                    [_dataArray addObjectsFromArray:model.branchs];
+                    currPage ++;
+                    [_mainTableView reloadData];
+                }
+            }
+            [_mainTableView.footer endRefreshing];
+        } failure:^(HttpException *e) {
+            [_mainTableView.footer endRefreshing];
+            if(e.errorCode!=-999){
+                if(e.errorCode == -1001){
+                    [self showInfoView:kWarning215N26 image:@"ic_img_fail"];
+                }else{
+                    [self showInfoView:kWarning39 image:@"ic_img_fail"];
+                }
+            }
+        }];
+
+    }];
+}
+
+#pragma mark - UITableViewDelegate
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView{
+    [self.searchBarView resignFirstResponder];
+    
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+
+    return _dataArray.count;
+    
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    return [PharmacySotreSearchTableViewCell getCellHeight:nil];
+
+    
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    PharmacySotreSearchTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:SearchCellIdentifier];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    
+    MicroMallBranchVo *model = _dataArray[indexPath.row];
+    
+    [cell setCell:model];
+    
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    MicroMallBranchVo *VO = _dataArray[indexPath.row];
+    //跳转药房详情
+    NSMutableDictionary *param = [[NSMutableDictionary alloc]init];
+    param[@"关键词"] = VO.branchName;
+    [QWGLOBALMANAGER statisticsEventId:@"x_yflb_ss_gjc" withLable:@"药房列表-搜索-点击某个关键词" withParams:param];
+    
+    [QWGLOBALMANAGER pushBranchDetail:VO.branchId withType:[NSString stringWithFormat:@"%@",VO.type] navigation:self.navigationController];
+}
+
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+- (void)popAction:(id)sender{
+    [super popAction:sender];
+    [QWGLOBALMANAGER statisticsEventId:@"x_yflb_ss_qx" withLable:@"药房搜索" withParams:nil];
+}
+
+@end

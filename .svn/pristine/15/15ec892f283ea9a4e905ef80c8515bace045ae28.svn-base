@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="3oV-zA-aCu" customClass="LevelUpAlertView">
+            <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <subviews>
+                <view alpha="0.40000000000000002" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="W7F-Hm-761">
+                    <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                    <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                </view>
+                <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="xMa-OU-dWy">
+                    <rect key="frame" x="30" y="190" width="540" height="220"/>
+                    <subviews>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="hLz-u4-vzR">
+                            <rect key="frame" x="211" y="160" width="118" height="40"/>
+                            <color key="backgroundColor" red="0.99215686270000003" green="0.62745098040000002" blue="0.027450980390000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="118" id="Sbf-zr-gnp"/>
+                                <constraint firstAttribute="height" constant="40" id="bnP-sh-JDg"/>
+                            </constraints>
+                            <state key="normal" title="我知道了">
+                                <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            </state>
+                            <connections>
+                                <action selector="dismissFromView:" destination="3oV-zA-aCu" eventType="touchUpInside" id="cjC-qP-t4Y"/>
+                            </connections>
+                        </button>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="恭喜升级" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KBF-R2-Pzo">
+                            <rect key="frame" x="236" y="30" width="68" height="21"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                            <color key="textColor" red="0.41568627450000001" green="0.7725490196" blue="0.71372549019999998" alpha="1" colorSpace="calibratedRGB"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="恭喜你从v1升至v2，系统会奖励你每月30积分，升级至v3奖励更多哦，赶快升级吧~、" lineBreakMode="tailTruncation" numberOfLines="4" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2JB-kx-f6Q">
+                            <rect key="frame" x="30" y="69" width="480" height="33.5"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                            <color key="textColor" red="0.59999999999999998" green="0.59999999999999998" blue="0.59999999999999998" alpha="1" colorSpace="calibratedRGB"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                    </subviews>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstItem="2JB-kx-f6Q" firstAttribute="centerX" secondItem="xMa-OU-dWy" secondAttribute="centerX" id="000-lT-x4m"/>
+                        <constraint firstAttribute="height" constant="220" id="1sZ-ex-PbY"/>
+                        <constraint firstAttribute="trailing" secondItem="2JB-kx-f6Q" secondAttribute="trailing" constant="30" id="MAi-Qo-KFT"/>
+                        <constraint firstAttribute="bottom" secondItem="hLz-u4-vzR" secondAttribute="bottom" constant="20" id="SAg-cv-RM1"/>
+                        <constraint firstItem="2JB-kx-f6Q" firstAttribute="leading" secondItem="xMa-OU-dWy" secondAttribute="leading" constant="30" id="VvO-WS-bXE"/>
+                        <constraint firstItem="KBF-R2-Pzo" firstAttribute="top" secondItem="xMa-OU-dWy" secondAttribute="top" constant="30" id="Wbx-Ze-cEn"/>
+                        <constraint firstItem="hLz-u4-vzR" firstAttribute="centerX" secondItem="xMa-OU-dWy" secondAttribute="centerX" id="cgz-jj-iu0"/>
+                        <constraint firstItem="2JB-kx-f6Q" firstAttribute="top" secondItem="KBF-R2-Pzo" secondAttribute="bottom" constant="18" id="ing-se-yw6"/>
+                        <constraint firstItem="KBF-R2-Pzo" firstAttribute="centerX" secondItem="xMa-OU-dWy" secondAttribute="centerX" id="pGe-kO-bZD"/>
+                    </constraints>
+                </view>
+            </subviews>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstAttribute="bottom" secondItem="W7F-Hm-761" secondAttribute="bottom" id="8H4-gb-Fvm"/>
+                <constraint firstItem="xMa-OU-dWy" firstAttribute="centerY" secondItem="3oV-zA-aCu" secondAttribute="centerY" id="DJb-XH-Eb7"/>
+                <constraint firstAttribute="trailing" secondItem="xMa-OU-dWy" secondAttribute="trailing" constant="30" id="Rkv-vs-7F2"/>
+                <constraint firstItem="W7F-Hm-761" firstAttribute="top" secondItem="3oV-zA-aCu" secondAttribute="top" id="Uj1-cY-zfR"/>
+                <constraint firstItem="xMa-OU-dWy" firstAttribute="leading" secondItem="3oV-zA-aCu" secondAttribute="leading" constant="30" id="bLc-LQ-ke0"/>
+                <constraint firstItem="W7F-Hm-761" firstAttribute="leading" secondItem="3oV-zA-aCu" secondAttribute="leading" id="ogV-ky-K9B"/>
+                <constraint firstAttribute="trailing" secondItem="W7F-Hm-761" secondAttribute="trailing" id="qJX-rU-5TX"/>
+                <constraint firstItem="xMa-OU-dWy" firstAttribute="centerX" secondItem="3oV-zA-aCu" secondAttribute="centerX" id="uKb-UG-Ebc"/>
+            </constraints>
+            <connections>
+                <outlet property="alertView" destination="xMa-OU-dWy" id="heb-Ay-gu7"/>
+                <outlet property="bkView" destination="W7F-Hm-761" id="jcO-vv-wcl"/>
+                <outlet property="btn" destination="hLz-u4-vzR" id="fJ5-cc-XeA"/>
+                <outlet property="messageLabel" destination="2JB-kx-f6Q" id="Y2I-vo-l2J"/>
+            </connections>
+            <point key="canvasLocation" x="288" y="244"/>
+        </view>
+    </objects>
+</document>

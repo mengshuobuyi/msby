@@ -1,0 +1,243 @@
+//
+//  ChatChooserViewController.m
+//  APP
+//  咨询中间页面，显示药房和砖家列表
+
+//  跳转逻辑:无店长无砖家时，tosat提示
+//          有店长无砖家时，直接进入点对点聊天
+//          只要有砖家，均跳转进入本界面
+
+//  显示逻辑:1、有店长有砖家，显示HeaderView + List
+//          2、无店长有砖家，显示List
+
+//  使用接口如下:
+//  h5/mbr/expert/queryExpertByBranchId 药房砖家列表
+
+//  Created by 李坚 on 16/5/9.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "ChatChooserViewController.h"
+#import "ChaterChooseTableViewCell.h"
+#import "ChatViewController.h"
+#import "PrivateChatViewController.h"
+#import "ConsultStore.h"
+
+static NSString *const chatCellIdentifier = @"ChaterChooseTableViewCell";
+
+@interface ChatChooserViewController ()<UITableViewDelegate,UITableViewDataSource>{
+    ChatHeaderView *headView;
+    UIView *sectionHeadView;
+}
+@property (weak, nonatomic) IBOutlet UITableView *mainTableView;
+@property (nonatomic, strong) NSMutableArray *expertArray;
+
+@end
+
+@implementation ChatChooserViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    self.title = @"咨询";
+    _expertArray = [NSMutableArray array];
+    self.mainTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    self.mainTableView.backgroundColor = RGBHex(qwColor11);
+    self.mainTableView.tableFooterView = [[UIView alloc]init];
+    
+    [_mainTableView registerNib:[UINib nibWithNibName:chatCellIdentifier bundle:nil] forCellReuseIdentifier:chatCellIdentifier];
+    
+    [self loadExpertList];
+}
+
+#pragma mark - 获取当下药房的砖家列表
+- (void)loadExpertList{
+    
+    GroupModelR *modelR = [GroupModelR new];
+    modelR.branchId = _branchId;
+    
+    [ConsultStore branchExpertList:modelR success:^(ExpertListVo *obj) {
+        
+        //这里需要获取药房名称和药房Logo，用于填充TableHeaderView
+        [self setupSectionHeadView:obj.groupName];
+        if(_online){//根据online字段判断是否有店长
+            [self setupHeadView];
+        }
+        self.expertArray = [NSMutableArray arrayWithArray:obj.expertList];
+        [_mainTableView reloadData];
+    } failure:^(HttpException *e) {
+        
+    }];
+}
+
+#pragma mark - TableHeaderView构造，显示药房信息并可以点击聊天
+- (void)setupHeadView{
+    
+    headView = [ChatHeaderView getView];
+    headView.frame = CGRectMake(0, 0, APP_W, [ChatHeaderView getHeight]);
+    [headView.chatBtn addTarget:self action:@selector(chatAction:) forControlEvents:UIControlEventTouchUpInside];
+
+    headView.branchNameLabel.text = _branchName;
+//    headView.specLabel.text = @"";
+    [headView.branchImage setImageWithURL:[NSURL URLWithString:_branchLogo] placeholderImage:[UIImage imageNamed:@"ic_yaofang_pepole"]];
+    
+    
+    _mainTableView.tableHeaderView = headView;
+}
+
+#pragma mark - sectionHeadView构造
+- (void)setupSectionHeadView:(NSString *)groupName{
+    
+    sectionHeadView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, 44.0f)];
+    sectionHeadView.backgroundColor = RGBHex(qwColor4);
+    UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(15, 0, APP_W, 44.0f)];
+    label.font = fontSystem(kFontS1);
+    label.textColor = RGBHex(qwColor6);
+    label.text = [NSString stringWithFormat:@"[ %@ ]专家提供专业指导服务",groupName];
+    [sectionHeadView addSubview:label];
+    
+    UIView *line = [[UIView alloc]initWithFrame:CGRectMake(0, 43.5, APP_W, 0.5)];
+    line.backgroundColor = RGBHex(qwColor10);
+    [sectionHeadView addSubview:line];
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - UITableViewDataSource
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    
+    return _expertArray.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    ChaterChooseTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:chatCellIdentifier];
+
+    MbrInfoVo *model = _expertArray[indexPath.row];
+    
+    cell.chatBtn.tag = indexPath.row;
+    [cell setCell:model];
+    
+    [cell.chatBtn addTarget:self action:@selector(privateChatAction:) forControlEvents:UIControlEventTouchUpInside];
+    
+    return cell;
+}
+
+#pragma mark - UITableViewDelegate
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
+    
+    if(_expertArray.count > 0){
+        return 44.0f;
+    }else{
+        return 0.0f;
+    }
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
+    
+    if(_expertArray.count > 0){
+        return sectionHeadView;
+    }else{
+        return nil;
+    }
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    return [ChaterChooseTableViewCell getCellHeight:nil];
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    [QWGLOBALMANAGER statisticsEventId:@"x_zx_yydj" withLable:@"咨询-用药咨询点击" withParams:nil];
+    
+    MbrInfoVo *model = _expertArray[indexPath.row];
+    
+    PrivateChatViewController* privateChatVC = [[UIStoryboard storyboardWithName:@"PrivateChatViewController" bundle:nil] instantiateViewControllerWithIdentifier:@"PrivateChatViewController"];
+    privateChatVC.hidesBottomBarWhenPushed = YES;
+    privateChatVC.product = _product;
+    privateChatVC.userId = model.id;
+    privateChatVC.nickName = model.nickName;
+    privateChatVC.fromList = NO;
+    [self.navigationController pushViewController:privateChatVC animated:YES];
+}
+
+#pragma mark - Cell用药咨询按钮点击Action(与砖家聊天)
+- (void)privateChatAction:(UIButton *)sender{
+    
+    [QWGLOBALMANAGER statisticsEventId:@"x_zx_yydj" withLable:@"咨询-用药咨询点击" withParams:nil];
+    
+    MbrInfoVo *model = _expertArray[sender.tag];
+    
+    PrivateChatViewController* privateChatVC = [[UIStoryboard storyboardWithName:@"PrivateChatViewController" bundle:nil] instantiateViewControllerWithIdentifier:@"PrivateChatViewController"];
+    privateChatVC.hidesBottomBarWhenPushed = YES;
+    privateChatVC.product = _product;
+    privateChatVC.userId = model.id;
+    privateChatVC.nickName = model.nickName;
+    privateChatVC.fromList = NO;
+    [self.navigationController pushViewController:privateChatVC animated:YES];
+}
+
+#pragma mark - 购药咨询按钮点击Action(与药房点对点聊天)
+- (void)chatAction:(id)sender{
+    
+    [QWGLOBALMANAGER statisticsEventId:@"x_zx_gyan" withLable:@"咨询-购药咨询按钮" withParams:nil];
+    
+    if(self.product){
+        
+        ChatViewController *chatVC = [[UIStoryboard storyboardWithName:@"ChatViewController" bundle:[NSBundle mainBundle]] instantiateViewControllerWithIdentifier:@"ChatViewController"];
+        chatVC.sendConsultType = Enum_SendConsult_Drug;
+        chatVC.title = _branchName;
+        chatVC.product = self.product;
+        chatVC.branchId = _branchId;
+        chatVC.branchName = _branchName;
+        [self.navigationController pushViewController:chatVC animated:YES];
+    }else{
+        ChatViewController *chatVC = [[UIStoryboard storyboardWithName:@"ChatViewController" bundle:[NSBundle mainBundle]] instantiateViewControllerWithIdentifier:@"ChatViewController"];
+        chatVC.title = _branchName;
+        chatVC.sendConsultType = Enum_SendConsult_Common;
+        chatVC.branchId = _branchId;
+        chatVC.branchName = _branchName;
+        [self.navigationController pushViewController:chatVC animated:YES];
+    }
+    
+    
+}
+
+@end
+
+@implementation ChatHeaderView
+
++ (ChatHeaderView *)getView{
+    
+    NSBundle *bundle = [NSBundle mainBundle];
+    NSArray *xibArray = [bundle loadNibNamed:@"ChatChooserViewController" owner:nil options:nil];
+    for(UIView *view in xibArray){
+        if([view isKindOfClass:[ChatHeaderView class]]){
+            
+            return (ChatHeaderView *)view;
+        }
+    }
+    return nil;
+}
+
++ (CGFloat)getHeight{
+    
+    return 158.0f;
+}
+
+- (void)awakeFromNib{
+    [super awakeFromNib];
+    
+    self.branchImage.layer.masksToBounds = YES;
+    self.branchImage.layer.cornerRadius = 27.5;
+    
+    self.chatBtn.layer.masksToBounds = YES;
+    self.chatBtn.layer.cornerRadius = 5.0f;
+}
+
+@end

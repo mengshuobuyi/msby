@@ -1,0 +1,18 @@
+//
+//  ComboxRightViewTableViewCell.h
+//  APP
+//
+//  Created by 李坚 on 15/8/17.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "QWBaseTableCell.h"
+
+@interface ComboxRightViewTableViewCell : QWBaseTableCell
+@property (weak, nonatomic) IBOutlet UILabel *titleLabel;
+@property (weak, nonatomic) IBOutlet UISwitch *switchButton;
+
+- (void)setCellWithContent:(NSString *)content withSwitch:(BOOL)status;
+
+@end

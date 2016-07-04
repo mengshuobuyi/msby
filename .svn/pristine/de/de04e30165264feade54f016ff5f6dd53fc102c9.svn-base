@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="6250" systemVersion="14E46" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6244"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="327" id="KGk-i7-Jjw" customClass="AddressCell">
+            <rect key="frame" x="0.0" y="0.0" width="699" height="327"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="43"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="免费用药_定位icon" translatesAutoresizingMaskIntoConstraints="NO" id="1so-9V-nZN">
+                        <rect key="frame" x="8" y="156" width="10" height="15"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="10" id="byt-K8-3MO"/>
+                            <constraint firstAttribute="height" constant="15" id="ciJ-WV-AEJ"/>
+                        </constraints>
+                    </imageView>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="CVj-hu-SfI" userLabel="AddressLabel">
+                        <rect key="frame" x="26" y="153" width="567" height="21"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="21" id="cxx-1x-AJY"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                        <color key="textColor" red="0.59999999999999998" green="0.59999999999999998" blue="0.59999999999999998" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fzX-UD-srz">
+                        <rect key="frame" x="593" y="133" width="104" height="60"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="NrG-TE-gm8" userLabel="lineView">
+                                <rect key="frame" x="60" y="15" width="1" height="30"/>
+                                <color key="backgroundColor" red="0.85882352939999995" green="0.85882352939999995" blue="0.85882352939999995" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="1" id="DR3-Ge-bHb"/>
+                                    <constraint firstAttribute="height" constant="30" id="HyD-bm-orH"/>
+                                </constraints>
+                                <variation key="default">
+                                    <mask key="constraints">
+                                        <exclude reference="HyD-bm-orH"/>
+                                    </mask>
+                                </variation>
+                            </view>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_btn_advisory_store" translatesAutoresizingMaskIntoConstraints="NO" id="y1g-v0-8ES">
+                                <rect key="frame" x="7" y="10" width="40" height="40"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="C7J-EL-sSv"/>
+                                    <constraint firstAttribute="width" constant="40" id="qta-wJ-1qV"/>
+                                </constraints>
+                            </imageView>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="ic_btn_phone_store" translatesAutoresizingMaskIntoConstraints="NO" id="Noe-4L-qgV">
+                                <rect key="frame" x="63" y="8" width="44" height="44"/>
+                            </imageView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XpG-4E-UqH" userLabel="phoneButton">
+                                <rect key="frame" x="56" y="0.0" width="48" height="59"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="59" id="MIs-sX-fNR"/>
+                                    <constraint firstAttribute="width" constant="48" id="OVt-tg-PYG"/>
+                                </constraints>
+                                <state key="normal">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="jLb-Hl-QmN" userLabel="consultButton">
+                                <rect key="frame" x="0.0" y="0.0" width="55" height="59"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="55" id="MDa-J7-twT"/>
+                                    <constraint firstAttribute="height" constant="59" id="NoG-7m-Sjn"/>
+                                </constraints>
+                                <state key="normal">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                            </button>
+                        </subviews>
+                        <constraints>
+                            <constraint firstAttribute="bottom" secondItem="NrG-TE-gm8" secondAttribute="bottom" constant="15" id="3yJ-bE-SvO"/>
+                            <constraint firstItem="NrG-TE-gm8" firstAttribute="leading" secondItem="jLb-Hl-QmN" secondAttribute="trailing" constant="5" id="4Gm-x4-uEV"/>
+                            <constraint firstItem="NrG-TE-gm8" firstAttribute="centerY" secondItem="Noe-4L-qgV" secondAttribute="centerY" id="6VO-cD-eyv"/>
+                            <constraint firstItem="y1g-v0-8ES" firstAttribute="leading" secondItem="fzX-UD-srz" secondAttribute="leading" constant="7" id="DFQ-uX-TeJ"/>
+                            <constraint firstItem="XpG-4E-UqH" firstAttribute="top" secondItem="fzX-UD-srz" secondAttribute="top" id="NeA-Y7-V5b"/>
+                            <constraint firstItem="NrG-TE-gm8" firstAttribute="centerY" secondItem="fzX-UD-srz" secondAttribute="centerY" id="OKa-VF-N73"/>
+                            <constraint firstItem="NrG-TE-gm8" firstAttribute="top" secondItem="fzX-UD-srz" secondAttribute="top" constant="15" id="Vkm-JV-M9m"/>
+                            <constraint firstAttribute="height" constant="59" id="Xbu-XH-nnB"/>
+                            <constraint firstAttribute="width" constant="104" id="ZK2-9U-LEu"/>
+                            <constraint firstItem="NrG-TE-gm8" firstAttribute="top" secondItem="fzX-UD-srz" secondAttribute="top" constant="15" id="aff-ak-bcW"/>
+                            <constraint firstAttribute="trailing" secondItem="XpG-4E-UqH" secondAttribute="trailing" id="aue-T9-G9q"/>
+                            <constraint firstItem="NrG-TE-gm8" firstAttribute="centerY" secondItem="y1g-v0-8ES" secondAttribute="centerY" id="bb8-aP-Utt"/>
+                            <constraint firstItem="jLb-Hl-QmN" firstAttribute="leading" secondItem="fzX-UD-srz" secondAttribute="leading" id="caX-4X-P8J"/>
+                            <constraint firstItem="jLb-Hl-QmN" firstAttribute="top" secondItem="fzX-UD-srz" secondAttribute="top" id="hZC-4i-vZy"/>
+                            <constraint firstItem="y1g-v0-8ES" firstAttribute="top" secondItem="fzX-UD-srz" secondAttribute="top" constant="10" id="iUE-KB-fWY"/>
+                            <constraint firstItem="Noe-4L-qgV" firstAttribute="leading" secondItem="NrG-TE-gm8" secondAttribute="trailing" constant="2" id="l8i-Kn-rC1"/>
+                        </constraints>
+                        <variation key="default">
+                            <mask key="constraints">
+                                <exclude reference="Xbu-XH-nnB"/>
+                                <exclude reference="3yJ-bE-SvO"/>
+                                <exclude reference="Vkm-JV-M9m"/>
+                            </mask>
+                        </variation>
+                    </view>
+                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="9Uu-IJ-iWh" userLabel="addressButton">
+                        <rect key="frame" x="26" y="138" width="567" height="51"/>
+                        <state key="normal">
+                            <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                        </state>
+                    </button>
+                </subviews>
+                <constraints>
+                    <constraint firstAttribute="centerY" secondItem="1so-9V-nZN" secondAttribute="centerY" id="03n-U1-EWD"/>
+                    <constraint firstAttribute="centerY" secondItem="CVj-hu-SfI" secondAttribute="centerY" id="24q-Xb-Yji"/>
+                    <constraint firstItem="9Uu-IJ-iWh" firstAttribute="width" secondItem="CVj-hu-SfI" secondAttribute="width" id="3wG-Lq-eVh"/>
+                    <constraint firstItem="fzX-UD-srz" firstAttribute="leading" secondItem="CVj-hu-SfI" secondAttribute="trailing" id="Hy9-sP-2Bz"/>
+                    <constraint firstItem="fzX-UD-srz" firstAttribute="leading" secondItem="9Uu-IJ-iWh" secondAttribute="trailing" id="JXc-rt-25e"/>
+                    <constraint firstAttribute="centerY" secondItem="fzX-UD-srz" secondAttribute="centerY" id="ODX-x9-BxS"/>
+                    <constraint firstItem="9Uu-IJ-iWh" firstAttribute="trailing" secondItem="CVj-hu-SfI" secondAttribute="trailing" id="OUE-Ot-jHi"/>
+                    <constraint firstItem="9Uu-IJ-iWh" firstAttribute="centerY" secondItem="CVj-hu-SfI" secondAttribute="centerY" id="RC3-7q-xqH"/>
+                    <constraint firstItem="CVj-hu-SfI" firstAttribute="leading" secondItem="1so-9V-nZN" secondAttribute="trailing" constant="8" id="XnL-Nl-z8b"/>
+                    <constraint firstItem="9Uu-IJ-iWh" firstAttribute="height" secondItem="CVj-hu-SfI" secondAttribute="height" constant="30" id="a2V-kh-v8c"/>
+                    <constraint firstItem="1so-9V-nZN" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leadingMargin" id="ncS-VE-EwC"/>
+                    <constraint firstItem="fzX-UD-srz" firstAttribute="leading" secondItem="9Uu-IJ-iWh" secondAttribute="trailing" id="oot-RI-mgU"/>
+                    <constraint firstAttribute="trailing" secondItem="fzX-UD-srz" secondAttribute="trailing" constant="2" id="ta8-bT-H0B"/>
+                    <constraint firstItem="9Uu-IJ-iWh" firstAttribute="centerX" secondItem="CVj-hu-SfI" secondAttribute="centerX" constant="-4" id="vUB-FP-eZE"/>
+                    <constraint firstItem="9Uu-IJ-iWh" firstAttribute="leading" secondItem="CVj-hu-SfI" secondAttribute="leading" id="w21-Qe-Tk6"/>
+                </constraints>
+                <variation key="default">
+                    <mask key="constraints">
+                        <exclude reference="3wG-Lq-eVh"/>
+                        <exclude reference="vUB-FP-eZE"/>
+                        <exclude reference="Hy9-sP-2Bz"/>
+                        <exclude reference="oot-RI-mgU"/>
+                    </mask>
+                </variation>
+            </tableViewCellContentView>
+            <connections>
+                <outlet property="addressButton" destination="9Uu-IJ-iWh" id="Pv1-Zf-VQn"/>
+                <outlet property="addressLabel" destination="CVj-hu-SfI" id="3El-HE-88O"/>
+                <outlet property="consultButton" destination="jLb-Hl-QmN" id="fNB-eQ-rke"/>
+                <outlet property="consultImageView" destination="y1g-v0-8ES" id="MvY-ka-Qa6"/>
+                <outlet property="lineView" destination="NrG-TE-gm8" id="LTJ-4N-rML"/>
+                <outlet property="phoneButton" destination="XpG-4E-UqH" id="mAh-4W-MzH"/>
+                <outlet property="phoneImageView" destination="Noe-4L-qgV" id="Fi1-9V-abe"/>
+            </connections>
+            <point key="canvasLocation" x="508.5" y="292.5"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="ic_btn_advisory_store" width="44" height="44"/>
+        <image name="ic_btn_phone_store" width="44" height="44"/>
+        <image name="免费用药_定位icon" width="10" height="14"/>
+    </resources>
+</document>

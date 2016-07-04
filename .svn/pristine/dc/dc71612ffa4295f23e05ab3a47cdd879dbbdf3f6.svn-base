@@ -1,0 +1,191 @@
+/*!
+ @header Constant.h
+ @abstract 记录所有的常量
+ @author .
+ @version 1.00 2015/03/06  (1.00)
+ */
+
+
+//  https://www.flinto.com/p/65f3c28f  //产品Web原型图
+//  m.myquanwei.com/                   //web版本的参考app
+//测试账号  手机号18675535684，密码：123456  9a960552303f3306800aa95ee6bf0a19
+//#define appTalkingDataID  @"65E46A777526C0FE5CE36D38670553D0"//cj测试用
+//uta环境测试账号13861318715   840319
+//sit环境下           13915531876  111111
+//jira
+
+/*
+ xmppserver   im.qw.com
+ webapi  http://m.api.qw.com
+ */
+
+
+
+#ifndef quanzhi_Constant_h
+#define quanzhi_Constant_h
+
+//delegate
+#define APPDelegate     ((AppDelegate *)[UIApplication sharedApplication].delegate)
+
+#define kTablePageSize  @"32"
+
+#define appTalkingDataID  @"37249FA2677B8CAA45A1D818CC6EBC8A"//65E46A777526C0FE5CE36D38670553D0
+#define ADTackingID       @"d29ce0739b8c48879a354c895b3aa76b"
+#define appZhugeID        @"e7646895ea024f57ac802c2f8f71e246"
+#define appWXID           @"wx5228263599e39eb9"
+
+
+#define APP_LAUNCH_IMAGE            @"APP_LAUNCH_IMAGE"
+#define APP_LAUNCH_DURATION         @"APP_LAUNCH_DURATION"
+#define APP_LAUNCH_URL              @"APP_LAUNCH_URL"
+#define APP_LAUNCH_TITLE            @"APP_LAUNCH_TITLE"
+#define APP_BADGE_COUNT             @"APP_BADGE_COUNT"
+#define TEMPLATE_MODEL_KEY          @"TEMPLATE_MODEL_KEY"
+#define CONFIGINFO_MODEL_KEY        @"CONFIGINFO_MODEL_KEY"
+#define APP_RECEIVE_INBACKGROUND    @"APP_RECEIVE_INBACKGROUND"
+#define SERVER_TIME                 @"SERVER_TIME"
+#define APP_ALARM_NATIONWIDE        @"APP_ALARM_NATIONWIDE"
+#define CHRONIC_DISEASE             @"CHRONIC_DISEASE"
+#define KICK_OFF                    @"KICK_OFF"
+
+#define NW_favoriteProductCollectList    @"favorite/queryProductCollectList"
+
+#define DEFAULT_LONGITUDE               120.730435
+#define DEFAULT_LATITUDE                31.273391
+#define DEFAULT_CITY               @"苏州市"
+#define DEFAULT_PROVINCE                @"江苏省"
+
+//分页请求服务器,每页10个
+#define PAGE_ROW_NUM                       10
+
+#define DATE_FORMAT            @"yyyy-MM-dd"
+#define TIME_FORMAT            @"HH:mm:ss"
+#define DATE_TIME_FORMAT       @"yyyy-MM-dd HH:mm:ss"
+//Method
+#define NoNullStr(x)        (  ( x && (![x isEqual:[NSNull null]]) ) ? x : @"" )
+//panadd end
+/*****************************************************************************************************/
+
+#define SeparateStr             @"_#QZSP#_"
+//#define AMAP_KEY                    @"20ccb734f4f9312fbdc94088916ab26c"     //高德地图key  //新版本mapKey
+#define AMAP_KEY                    @"dc272bb9feb04d7ecea183ace4eac7a3" //旧版本mapKey
+
+#define APP_SELECT_INDEX_DISEASE    @"APP_SELECT_INDEX_DISEASE"
+
+#define CIRCLE_DETAIL_BYSEND            [[QWUserDefault getObjectBy:@"sendPostToCircleDetail"] isEqualToString:@"OK"]
+#define DELETE_POSTTOPIC_SUCCESS        [[QWUserDefault getObjectBy:@"deletePostTopicSuccess"] isEqualToString:@"OK"]
+#define DRUG_GUIDE_1_UPDATE     @"DRUG_GUIDE_1_UPDATE"
+#define DRUG_GUIDE_2_UPDATE     @"DRUG_GUIDE_2_UPDATE"
+#define IMG_VIEW(x)         [[UIImageView alloc] initWithImage:[UIImage imageNamed:x]]
+
+#define BTN_NEW     512
+#define BTN_EDIT    1024
+
+
+
+#define AttributedImageNameKey      @"ImageName"
+#define EmotionItemPattern          @"\\[\\w{2}\\]"
+#define PlaceHolder                 @"[0|]"
+#define kHyperlinkKey               @"khyperlinkkey"
+
+#define IS_IPAD (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+#define IS_IPHONE (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone)
+#define IS_RETINA ([[UIScreen mainScreen] scale] >= 2.0)
+
+#define AdaptiveScale               (SCREEN_WIDTH / 375.0)
+
+#define SCREEN_WIDTH ([[UIScreen mainScreen] bounds].size.width)
+#define SCREEN_HEIGHT ([[UIScreen mainScreen] bounds].size.height)
+#define SCREEN_MAX_LENGTH (MAX(SCREEN_WIDTH, SCREEN_HEIGHT))
+#define SCREEN_MIN_LENGTH (MIN(SCREEN_WIDTH, SCREEN_HEIGHT))
+
+#define IS_IPHONE_4_OR_LESS (IS_IPHONE && SCREEN_MAX_LENGTH < 568.0)
+#define IS_IPHONE_5 (IS_IPHONE && SCREEN_MAX_LENGTH == 568.0)
+#define IS_IPHONE_6 (IS_IPHONE && SCREEN_MAX_LENGTH == 667.0)
+#define IS_IPHONE_6P (IS_IPHONE && SCREEN_MAX_LENGTH == 736.0)
+
+/**
+ 消息盒子
+ */
+#define FreeConsultListTitle        @"免费咨询通知"
+#define CouponNotiListTitle         @"优惠券通知列表"
+#define SystemNotiListTitle         @"系统通知列表"
+#define MsgBoxListOfficialType      @"1"
+#define MsgBoxListConsultListType   @"2"
+#define MsgBoxListPTPType           @"3"
+#define MsgBoxListCouponList        @"4"
+#define MsgBoxListSysList           @"5"
+#define MsgBoxListOrderList         @"6"
+/**
+ 弹框时间
+ */
+#define DURATION_SHORT                0.8f
+#define DURATION_LONG                 1.5f
+#define DURATION_CREDITREWORD         2.0f  // 积分奖励弹框延时
+
+#define HomePageEleVoModelKey         @"HomePageEleVoModelKey"
+
+#define ConfigInfoListVoModelKey                @"ConfigInfoListVoModelKey"
+#define ConfigInfoWeBusinessListVoModelKey      @"ConfigInfoWeBusinessListVoModelKey"
+
+
+#define WRITE_RESOURCES @"/write-resources"
+#define OFFLINE_RESOURCES @"/offline-resources"
+#define PLUG_IN_RESOURCES @"/plug-in-resources"
+
+//阿里合作伙伴PartedId
+#define ALIPAY_PARTNER          @"2088911379781448"
+//收款方 支付宝ID
+#define ALIPAY_SELLID           @"suzhou_quanzhi@126.com"
+//商户私钥，pkcs8格式
+#define ALIPAY_RSA_PRIVATE      @"MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAN2jhV33c3iUQYOxIVrp+xqRgBaWqA4MkTE2K0Aeubf7yAY3vvhxUFeTW6toIKPkKySksjgHfZ56/7pXnt17bjqnF3btI68Nn2V9Bjy0UCPb9kEKMk+GIz6J/exGQT/+PKL3K/JKbVmuViI1EIBvYXEzhMKZcjmmFz4FpM5RHRLZAgMBAAECgYA5Hr1uXCmcN8kyoWHRRl/6lukF6UniZQa+QhGfcsu2SONiBtfmu31TNJz5bdqLonAj/3YWzodnYpepdI9y0S604DTELU+o7ii2dW0FwVOPg0KqswT+LbeLeYhUgEbRNh04wzxZ17EYOtqDf8zIXBDMGIx4dyyb/aBBG+0qkN5IyQJBAPGc0LWzi98jmW1Jb9bLsgDY0TJmP0dRXH1S7ihy9Ta2cWBzBALGCUMruUPa8Po+6TGQG+hkETTSFwx7155G428CQQDq1jixDzh28F/mVjNSFZMRQLFDz1G2YbQy3cSKlQG9RYVmQ5mc4brhpqksIo0cTEVbhjug8UBTf45Hqydpjio3AkBcJeXH1vF6qhYjA0YfUtLR1d97bFmn9pTiy1U/ohB5zH1TPqqB8EuqDav8AC22E3ZWy9KJAFk7nwDhZv4mRH0LAkBMSa89Bb7IFKpyv0oIvm16S1PKvYzD/NV3OMfiZSmdfPorEIbUihgVufh3F/pTWQunAeJZFEZbWbK04Yr6JW7dAkEArfvoMEEK+BXG1VQ2eRyTrjjHQnxOfIMPldN70DJD6gvghSO0pl+44HjB988z655Z9UThG5Q0Fv+xD7bbKY686Q=="
+
+#define ALIPAY_RSA_PUBLIC       @"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCnxj/9qwVfgoUh/y2W89L6BkRAFljhNhgPdyPuBV64bfQNN1PjbCzkIM6qRdKBoLPXmKKMiFYnkd6rAoprih3/PrQEB/VsW8OoM8fxn67UDYuyBTqA23MML9q1+ilIZwBC2AQ2UBVOrFXfFl75p6/B5KsiNG9zpgmLCUYuLkxpLQIDAQAB"
+
+#define WECHAT_APPID            @"wx5228263599e39eb9"
+#define WECHAT_MCHID            @"1246104901"
+#define WECHAT_PRIVATE_KEY      @"c4aa182e914c9a23bb9f740ae3e46dd5"
+#define COMBO_CATEGROY_ID       @"COMBO_CATEGROY_ID"
+
+//告诉服务器 我是ios设备
+#define IOS_DEVICE                  @"2"
+
+//聊天的消息类型
+typedef enum messageType
+{
+    TextMessage = 1,
+    ImageMessage,
+    AudioMessage,
+    VideoMessage,
+    LocationMessage,
+    FileMessage,
+    SystemMessage = 1000
+}MessageType;
+
+typedef enum consultStatus
+{
+    ConsultWaitResponding = 1,
+    ConsultResponded = 2,
+    ConsultOutOfDate = 3,
+    ConsultClosed = 4,
+    ConsultGrabWithoutAnswer = 5,          //抢而未答
+    ConsultRobAndAbandon = 6               //抢而放弃
+}ConsultStatus;
+
+typedef NS_ENUM(NSInteger, MessageShowType) {
+    MessageShowTypeNewCreate,
+    MessageShowTypeClosed,
+    MessageShowTypeClosedWithoutEvaluate,
+    MessageShowTypeAnswering,
+    MessageShowTypeTimeout,
+    MessageShowTypeDiffusion,
+    MessageShowTypeP2PDiffusion,
+    MessageShowTypeP2PChat,
+    MessageShowTypeDisease
+};
+
+
+
+#endif
+
+

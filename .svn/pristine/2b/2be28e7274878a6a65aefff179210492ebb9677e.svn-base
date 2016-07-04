@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="o9u-i1-zaL" customClass="SwitchPharmactAnimationView">
+            <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <subviews>
+                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="bg_ditu_disable" translatesAutoresizingMaskIntoConstraints="NO" id="DhC-0A-CSP">
+                    <rect key="frame" x="235" y="191" width="129" height="158"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="158" id="TnP-Nj-eAG"/>
+                        <constraint firstAttribute="width" constant="129" id="f0k-r7-1nL"/>
+                    </constraints>
+                </imageView>
+                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="bg_huojian_disable" translatesAutoresizingMaskIntoConstraints="NO" id="6Kr-yC-QXt">
+                    <rect key="frame" x="257" y="221" width="59" height="64"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="59" id="bfY-Ci-oAv"/>
+                        <constraint firstAttribute="height" constant="64" id="bje-xb-IWH"/>
+                    </constraints>
+                </imageView>
+                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="bg_huomiao_disable" translatesAutoresizingMaskIntoConstraints="NO" id="MdR-aI-oQp">
+                    <rect key="frame" x="264" y="266" width="17" height="17"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="17" id="c9y-ig-mQ5"/>
+                        <constraint firstAttribute="height" constant="17" id="qkQ-wF-FJD"/>
+                    </constraints>
+                </imageView>
+                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="bg_aoxiang_disable" translatesAutoresizingMaskIntoConstraints="NO" id="yTn-MT-bWA">
+                    <rect key="frame" x="279" y="191" width="85" height="85"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="85" id="1S1-Mc-Ihu"/>
+                        <constraint firstAttribute="height" constant="85" id="Qms-9f-9gf"/>
+                    </constraints>
+                </imageView>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="正在奔向纳米园全值药房" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5ij-TQ-KSU">
+                    <rect key="frame" x="217" y="374" width="165" height="18"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                    <color key="textColor" red="0.75294117650000003" green="0.75294117650000003" blue="0.75294117650000003" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="EP0-T1-zf0">
+                    <rect key="frame" x="0.0" y="0.0" width="240" height="128"/>
+                    <color key="backgroundColor" red="0.80000000000000004" green="0.80000000000000004" blue="0.80000000000000004" alpha="0.59253102836879434" colorSpace="calibratedRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="2" id="qq2-8c-VDv">
+                            <variation key="heightClass=regular-widthClass=compact" constant="2"/>
+                        </constraint>
+                    </constraints>
+                    <variation key="default">
+                        <mask key="constraints">
+                            <exclude reference="qq2-8c-VDv"/>
+                        </mask>
+                    </variation>
+                    <variation key="heightClass=regular-widthClass=compact">
+                        <mask key="constraints">
+                            <include reference="qq2-8c-VDv"/>
+                        </mask>
+                    </variation>
+                </view>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="6Kr-yC-QXt" firstAttribute="top" secondItem="DhC-0A-CSP" secondAttribute="top" constant="30" id="2Td-mu-eTp"/>
+                <constraint firstItem="MdR-aI-oQp" firstAttribute="leading" secondItem="6Kr-yC-QXt" secondAttribute="leading" constant="7" id="3hR-tl-gkn"/>
+                <constraint firstItem="MdR-aI-oQp" firstAttribute="bottom" secondItem="6Kr-yC-QXt" secondAttribute="bottom" constant="-2" id="4cl-QS-JMX"/>
+                <constraint firstItem="DhC-0A-CSP" firstAttribute="centerX" secondItem="o9u-i1-zaL" secondAttribute="centerX" id="7KH-gh-cFX"/>
+                <constraint firstItem="yTn-MT-bWA" firstAttribute="top" secondItem="DhC-0A-CSP" secondAttribute="top" id="Kd0-yl-J96"/>
+                <constraint firstItem="6Kr-yC-QXt" firstAttribute="leading" secondItem="DhC-0A-CSP" secondAttribute="leading" constant="22" id="Qc5-0A-6FM"/>
+                <constraint firstItem="5ij-TQ-KSU" firstAttribute="centerX" secondItem="o9u-i1-zaL" secondAttribute="centerX" id="VkU-4L-YGh"/>
+                <constraint firstItem="yTn-MT-bWA" firstAttribute="trailing" secondItem="DhC-0A-CSP" secondAttribute="trailing" id="Vwr-FE-QQr"/>
+                <constraint firstItem="5ij-TQ-KSU" firstAttribute="top" secondItem="DhC-0A-CSP" secondAttribute="bottom" constant="25" id="YKI-rI-2np"/>
+                <constraint firstItem="DhC-0A-CSP" firstAttribute="centerY" secondItem="o9u-i1-zaL" secondAttribute="centerY" constant="-30" id="dy6-to-nJk"/>
+                <constraint firstAttribute="trailing" secondItem="EP0-T1-zf0" secondAttribute="trailing" id="klO-T6-m0Q"/>
+                <constraint firstItem="EP0-T1-zf0" firstAttribute="top" secondItem="o9u-i1-zaL" secondAttribute="top" id="n1s-hK-Ra8"/>
+                <constraint firstItem="EP0-T1-zf0" firstAttribute="leading" secondItem="o9u-i1-zaL" secondAttribute="leading" id="yel-wj-n11"/>
+            </constraints>
+            <variation key="default">
+                <mask key="subviews">
+                    <exclude reference="EP0-T1-zf0"/>
+                </mask>
+                <mask key="constraints">
+                    <exclude reference="klO-T6-m0Q"/>
+                    <exclude reference="n1s-hK-Ra8"/>
+                    <exclude reference="yel-wj-n11"/>
+                </mask>
+            </variation>
+            <variation key="heightClass=regular-widthClass=compact">
+                <mask key="subviews">
+                    <include reference="EP0-T1-zf0"/>
+                </mask>
+                <mask key="constraints">
+                    <include reference="klO-T6-m0Q"/>
+                    <include reference="n1s-hK-Ra8"/>
+                    <include reference="yel-wj-n11"/>
+                </mask>
+            </variation>
+            <connections>
+                <outlet property="circleImage" destination="yTn-MT-bWA" id="N2p-a8-EeY"/>
+                <outlet property="fireImage" destination="MdR-aI-oQp" id="dH4-Ec-rwe"/>
+                <outlet property="nameLabel" destination="5ij-TQ-KSU" id="T6H-7X-ja1"/>
+            </connections>
+            <point key="canvasLocation" x="-3919" y="-341"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="bg_aoxiang_disable" width="85" height="85"/>
+        <image name="bg_ditu_disable" width="129" height="158"/>
+        <image name="bg_huojian_disable" width="58" height="63"/>
+        <image name="bg_huomiao_disable" width="17" height="17"/>
+    </resources>
+</document>

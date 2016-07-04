@@ -1,0 +1,381 @@
+//
+//  CircleMsgRootViewController.m
+//  APP
+//
+//  圈子消息页面
+//  调用接口:
+//  调用全量接口: AllInfoCircleMsgList    h5/team/chat/message/getAll
+//  删除某个私聊会话：RemoveInfoCircleMsg    h5/team/chat/session/del
+//  置所有消息已读：UpdateAllCircleMsgRead  h5/team/chat/session/updateAllRead
+//  Created by PerryChen on 3/9/16.
+//  Copyright © 2016 carret. All rights reserved.
+//
+
+#import "CircleMsgRootViewController.h"
+#import "CircleMsgCell.h"
+#import "ExpertInfoViewController.h"
+#import "CustomPopListView.h"
+#import "SVProgressHUD.H"
+#import "HttpClient.h"
+#import "Circle.h"
+#import "CircleMsgSyncModel.h"
+#import "PrivateChatViewController.h"
+
+@interface CircleMsgRootViewController ()<UITableViewDelegate, UITableViewDataSource>
+@property (strong, nonatomic) IBOutlet UIView *expertInfoCellView;  // 置顶的圈子消息页面
+@property (weak, nonatomic) IBOutlet UILabel *expertInfoCellLbl;    // 置顶的圈子消息Label
+@property (weak, nonatomic) IBOutlet UILabel *expertInfoCellContentLbl; // 置顶的圈子消息内容label
+@property (weak, nonatomic) IBOutlet UIImageView *expertInfoCellRedPoint;   // 置顶的圈子消息小红点
+@property (weak, nonatomic) IBOutlet UILabel *expertInfoCellTimeLbl;    // 置顶的圈子消息时间label
+@property (strong, nonatomic) CustomPopListView *customPopListView;
+
+@property (weak, nonatomic) IBOutlet UITableView *tbViewContent;
+@property (nonatomic, strong) CircleMsgListModel *listModel;        // 圈子消息的model
+@property (nonatomic, strong) NSMutableArray *arrCircleList;        // 全部的圈子私聊消息
+@property (nonatomic, strong) NSArray *arrCircleTeamList;    // 圈子消息的数组
+
+- (IBAction)actionToExpertInfo:(id)sender;
+
+@end
+
+@implementation CircleMsgRootViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.navigationItem.title = @"消息";
+    self.tbViewContent.rowHeight = 90.0f;
+    self.view.backgroundColor = RGBHex(qwColor4);
+    self.arrCircleList = [@[] mutableCopy];
+    [self setUpRightItem];
+    [self setCircleMsgInfo];
+    [self setCircleMsgStyle];
+    
+//    DDLogVerbose(@"the msg list is %@",[[CircleMsgSyncModel sharedInstance] getAllCircleMsgList]);
+    
+    [self getAllCircleMsg];
+    // Do any additional setup after loading the view.
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    [self getCachedCircleMsg];
+    [self.tbViewContent reloadData];
+}
+
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+    if([self.tbViewContent viewWithTag:1018] == nil) {
+        [self enableSimpleRefresh:self.tbViewContent block:^(SRRefreshView *sender) {
+            [self getAllCircleMsg];
+        }];
+    }
+}
+
+/**
+ *  刷新所有圈子私聊消息，用于通知
+ */
+- (void)refreshAllCircleMsg
+{
+    [self getAllCircleMsg];
+}
+
+/**
+ *  获取所有缓存的消息列表
+ */
+- (void)getCachedCircleMsg
+{
+    self.arrCircleList = [NSMutableArray arrayWithArray:[[CircleMsgSyncModel sharedInstance] getAllCircleMsgList]];
+    self.arrCircleTeamList = [NSMutableArray arrayWithArray:[[CircleMsgSyncModel sharedInstance] getNewestTeamMsg]];
+    [self setCircleMsgInfo];
+    [self.tbViewContent reloadData];
+}
+
+/**
+ *  设置圈子小红点显示流程
+ */
+- (void)setCircleExpertRedPoint
+{
+    BOOL isShowRedPoint = NO;
+    if (QWGLOBALMANAGER.configure.expertCommentRed) {
+        isShowRedPoint = YES;
+    } else if (QWGLOBALMANAGER.configure.expertFlowerRed) {
+        isShowRedPoint = YES;
+    } else if (QWGLOBALMANAGER.configure.expertSystemInfoRed) {
+        isShowRedPoint = YES;
+    }
+    if (isShowRedPoint) {
+        // 显示小红点
+        self.expertInfoCellRedPoint.hidden = NO;
+    } else {
+        // 隐藏小红点
+        self.expertInfoCellRedPoint.hidden = YES;
+    }
+}
+
+/**
+ *  设置置顶圈子的数据
+ */
+- (void)setCircleMsgInfo
+{
+    self.expertInfoCellLbl.text = @"圈子";
+    self.expertInfoCellView.backgroundColor = RGBHex(qwColor11);
+    if (self.arrCircleTeamList.count == 0) {
+        self.expertInfoCellTimeLbl.text = @"";
+        self.expertInfoCellRedPoint.hidden = YES;
+        self.expertInfoCellContentLbl.text = @"暂无圈子消息";
+        
+    } else {
+
+        if (self.arrCircleTeamList.count <= 0) {
+            return;
+        }
+        CircleTeamMsgVoModel *model = self.arrCircleTeamList[0];
+        
+        self.expertInfoCellContentLbl.text = model.msgTitle;
+        self.expertInfoCellTimeLbl.text = model.createDate;
+        if (model.flagRead) {
+            self.expertInfoCellRedPoint.hidden = YES;
+        } else {
+            self.expertInfoCellRedPoint.hidden = NO;
+        }
+        if (QWGLOBALMANAGER.configure.expertSystemInfoRed == NO && QWGLOBALMANAGER.configure.expertCommentRed == NO && QWGLOBALMANAGER.configure.expertFlowerRed == NO) {
+            self.expertInfoCellRedPoint.hidden = YES;
+        }
+    }
+
+
+    self.tbViewContent.tableHeaderView = self.expertInfoCellView;
+}
+
+/**
+ *  设置置顶圈子的样式
+ */
+- (void)setCircleMsgStyle
+{
+    self.expertInfoCellLbl.font = fontSystem(kFontS1);
+    self.expertInfoCellLbl.textColor = RGBHex(qwColor6);
+    self.expertInfoCellContentLbl.font = fontSystem(kFontS5);
+    self.expertInfoCellContentLbl.textColor = RGBHex(qwColor8);
+    self.expertInfoCellTimeLbl.font = fontSystem(kFontS5);
+    self.expertInfoCellTimeLbl.textColor = RGBHex(qwColor8);
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/**
+ *  设置导航条右上方按钮
+ */
+- (void)setUpRightItem
+{
+    UIBarButtonItem *fixed = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
+    fixed.width = -15;
+    
+    UIView *rightView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 60, 40)];
+    
+    //三个点button
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    button.frame = CGRectMake(5, -2, 50, 40);
+    [button setImage:[UIImage imageNamed:@"icon-unfold"] forState:UIControlStateNormal];
+    [button addTarget:self action:@selector(rightAction) forControlEvents:UIControlEventTouchUpInside];
+    [rightView addSubview:button];
+    
+    UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithCustomView:rightView];
+    self.navigationItem.rightBarButtonItems = @[fixed,rightItem];
+}
+
+/**
+ *  三个点的点击事件
+ */
+- (void)rightAction
+{
+    self.customPopListView = [CustomPopListView sharedManagerWithtitleList:@[@"全部标记为已读"]];
+    self.customPopListView.delegate = self;
+    [self.customPopListView show];
+}
+
+/**
+ *  全量获取圈子消息列表
+ */
+- (void)getAllCircleMsg
+{
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+        return;
+    }
+    InfoCircleMsgListModelR *modelR = [InfoCircleMsgListModelR new];
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    modelR.point = @"0";
+    modelR.view = @"999";
+    modelR.viewType = @"-1";
+    [[CircleMsgSyncModel sharedInstance] pullAllCicleMsgListWithParams:modelR Success:^(CircleMsgListModel *model) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.listModel = model;
+            [[CircleMsgSyncModel sharedInstance] saveCircleTeamMsg:model.teamMsgList];
+            self.arrCircleTeamList = self.listModel.teamMsgList;
+            self.arrCircleList = [NSMutableArray arrayWithArray:self.listModel.sessionMsglist];
+            [self setCircleMsgInfo];
+            if (self.arrCircleTeamList.count <= 0) {
+                return;
+            }
+            CircleTeamMsgVoModel *modelC = self.arrCircleTeamList[0];
+            if (!modelC.flagRead) {
+                if ([modelC.msgClass intValue] == 1) {
+                    QWGLOBALMANAGER.configure.expertCommentRed = YES;
+                } else if ([modelC.msgClass intValue] == 2) {
+                    QWGLOBALMANAGER.configure.expertFlowerRed = YES;
+                } else if ([modelC.msgClass intValue] == 99) {
+                    QWGLOBALMANAGER.configure.expertSystemInfoRed = YES;
+                }
+                [QWGLOBALMANAGER saveAppConfigure];
+            }
+            [self.tbViewContent reloadData];
+        });
+    } failure:^(HttpException *e) {
+        
+    }];
+}
+
+#pragma mark ---- CustomPopListView 代理 ----
+- (void)customPopListView:(CustomPopListView *)ReturnIndexView didSelectedIndex:(NSIndexPath *)indexPath
+{
+
+    [self.customPopListView hide];
+    if (indexPath.row == 0) {
+        //全部标记为已读
+        if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+            [SVProgressHUD showErrorWithStatus:kWarning12];
+            return;
+        }
+        [[CircleMsgSyncModel sharedInstance] updateAllMsgReadWithSuccess:^(BaseModel *model) {
+            [self getCachedCircleMsg];
+            [self.tbViewContent reloadData];
+        } failure:^(HttpException *e) {
+            
+        }];
+    }
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+
+#pragma mark - UITableView methods
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    CircleMsgCell *cell = [tableView dequeueReusableCellWithIdentifier:@"CircleMsgCell"];
+    CircleChatPointModel *model = self.arrCircleList[indexPath.section];
+    [cell setCell:model];
+    return cell;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return 1;
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return self.arrCircleList.count;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section
+{
+    return 0.0f;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section
+{
+    UIView *headerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, tableView.frame.size.width, 0.0f)];
+    headerView.backgroundColor = RGBHex(qwColor10);
+    return headerView;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    PrivateChatViewController* privateChatVC = [[UIStoryboard storyboardWithName:@"PrivateChatViewController" bundle:nil] instantiateViewControllerWithIdentifier:@"PrivateChatViewController"];
+    CircleChatPointModel *model = self.arrCircleList[indexPath.section];
+    privateChatVC.userId = model.recipientId;
+    privateChatVC.nickName = model.nickName;
+    privateChatVC.sessionID = [NSString stringWithFormat:@"%@",model.sessionId];
+    privateChatVC.fromList = YES;
+    privateChatVC.expertType = model.userType;
+    model.readFlag = YES;
+    [CircleChatPointModel updateObjToDB:model WithKey:[NSString stringWithFormat:@"%@",model.sessionId]];
+    [QWGLOBALMANAGER updateCircleMsgRedPoint];
+    [self.navigationController pushViewController:privateChatVC animated:YES];
+}
+
+/**
+ *  左划删除
+ *
+ *  @return
+ */
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    CircleChatPointModel *modelChat = self.listModel.sessionMsglist[indexPath.section];
+    InfoCircleRemoveCircleModelR *modelR = [InfoCircleRemoveCircleModelR new];
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    modelR.sessionId = modelChat.sessionId;
+    [Circle removeCircleMsgListWithParams:modelR success:^(BaseModel *model) {
+        [CircleChatPointModel deleteObjFromDBWithKey:modelChat.sessionId];
+        [self.arrCircleList removeObjectAtIndex:indexPath.section];
+        // TODO: 是否跟消息盒子同步  // 这个入口还有?
+        [QWGLOBALMANAGER noticeUnreadLocalWithType:MsgBoxListMsgTypeExpertPTP sessionID:modelR.sessionId isRead:YES];
+        
+        [self.tbViewContent reloadData];
+    } failure:^(HttpException *e) {
+        [self showError:@"删除失败"];
+    }];
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForDeleteConfirmationButtonForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return @"删除";
+}
+
+#pragma mark - Noti methods
+- (void)getNotifType:(Enum_Notification_Type)type data:(id)data target:(id)obj
+{
+    if (NotifCircleMsgRedPoint == type) {
+        [self setCircleExpertRedPoint];
+    } else if (NotifNewCircleMsg == type) {
+        self.arrCircleList = [NSMutableArray arrayWithArray:[[CircleMsgSyncModel sharedInstance] getAllCircleMsgList]];
+        [self.tbViewContent reloadData];
+    }
+}
+
+/**
+ *  跳转至圈子消息
+ *
+ *  @param sender
+ */
+- (IBAction)actionToExpertInfo:(id)sender {
+    ExpertInfoViewController *vc = [[ExpertInfoViewController alloc] init];
+    if (self.arrCircleTeamList.count > 0) {
+        CircleTeamMsgVoModel *model = self.arrCircleTeamList[0];
+        if ([model.msgClass intValue] == 1) {
+            vc.selectedTab = 1;
+        } else if ([model.msgClass intValue] == 2) {
+            vc.selectedTab = 2;
+        } else if ([model.msgClass intValue] == 99) {
+            vc.selectedTab = 99;
+        }
+    } else {
+        vc.selectedTab = 1;
+    }
+
+    vc.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+@end

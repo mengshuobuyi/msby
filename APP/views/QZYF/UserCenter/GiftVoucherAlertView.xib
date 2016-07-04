@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="GiftVoucherAlertView">
+            <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view alpha="0.40000000000000002" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="div-wB-MkA">
+                    <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                    <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                </view>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="t9L-Db-A2C">
+                    <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                    <subviews>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="首次使用问药客户端，问药君赠您一张优惠券，可到“我的优惠券中查看”" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="oVo-DJ-lG6">
+                            <rect key="frame" x="0.0" y="-21" width="42" height="21"/>
+                            <constraints>
+                                <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="35" id="kZW-lG-7WS"/>
+                            </constraints>
+                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                            <color key="textColor" red="0.59999999999999998" green="0.59999999999999998" blue="0.59999999999999998" alpha="1" colorSpace="calibratedRGB"/>
+                            <nil key="highlightedColor"/>
+                            <variation key="default">
+                                <mask key="constraints">
+                                    <exclude reference="kZW-lG-7WS"/>
+                                </mask>
+                            </variation>
+                            <variation key="heightClass=regular-widthClass=compact">
+                                <mask key="constraints">
+                                    <include reference="kZW-lG-7WS"/>
+                                </mask>
+                            </variation>
+                        </label>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" adjustsImageWhenHighlighted="NO" adjustsImageWhenDisabled="NO" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="VxR-a0-wWX">
+                            <rect key="frame" x="-23" y="-15" width="46" height="30"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="35" id="bMD-EK-7Dn"/>
+                                <constraint firstAttribute="width" constant="100" id="bhy-Uv-Mfq"/>
+                            </constraints>
+                            <fontDescription key="fontDescription" type="system" pointSize="18"/>
+                            <color key="tintColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            <state key="normal" title="我知道了" backgroundImage="btn_img_statenormal">
+                                <color key="titleColor" red="1" green="0.61568627450000002" blue="0.035294117649999998" alpha="1" colorSpace="calibratedRGB"/>
+                            </state>
+                            <state key="highlighted" backgroundImage="btn_img_statehighlight">
+                                <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            </state>
+                            <variation key="default">
+                                <mask key="constraints">
+                                    <exclude reference="bMD-EK-7Dn"/>
+                                    <exclude reference="bhy-Uv-Mfq"/>
+                                </mask>
+                            </variation>
+                            <variation key="heightClass=regular-widthClass=compact">
+                                <mask key="constraints">
+                                    <include reference="bMD-EK-7Dn"/>
+                                    <include reference="bhy-Uv-Mfq"/>
+                                </mask>
+                            </variation>
+                            <connections>
+                                <action selector="dimissView:" destination="iN0-l3-epB" eventType="touchUpInside" id="G50-fN-cH0"/>
+                            </connections>
+                        </button>
+                    </subviews>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstItem="oVo-DJ-lG6" firstAttribute="top" secondItem="t9L-Db-A2C" secondAttribute="top" constant="23" id="4Fc-h8-qzd"/>
+                        <constraint firstAttribute="bottom" secondItem="VxR-a0-wWX" secondAttribute="bottom" constant="15" id="F5l-Y6-mhy"/>
+                        <constraint firstAttribute="centerX" secondItem="VxR-a0-wWX" secondAttribute="centerX" id="hiS-GC-AyT"/>
+                        <constraint firstItem="oVo-DJ-lG6" firstAttribute="leading" secondItem="t9L-Db-A2C" secondAttribute="leading" constant="15" id="iK5-6q-DfY"/>
+                        <constraint firstAttribute="trailing" secondItem="oVo-DJ-lG6" secondAttribute="trailing" constant="15" id="l01-Ar-iCy"/>
+                        <constraint firstItem="VxR-a0-wWX" firstAttribute="top" secondItem="oVo-DJ-lG6" secondAttribute="bottom" constant="30" id="wVL-ND-PSQ"/>
+                    </constraints>
+                    <variation key="default">
+                        <mask key="subviews">
+                            <exclude reference="oVo-DJ-lG6"/>
+                            <exclude reference="VxR-a0-wWX"/>
+                        </mask>
+                        <mask key="constraints">
+                            <exclude reference="4Fc-h8-qzd"/>
+                            <exclude reference="iK5-6q-DfY"/>
+                            <exclude reference="l01-Ar-iCy"/>
+                            <exclude reference="F5l-Y6-mhy"/>
+                            <exclude reference="hiS-GC-AyT"/>
+                            <exclude reference="wVL-ND-PSQ"/>
+                        </mask>
+                    </variation>
+                    <variation key="heightClass=regular-widthClass=compact">
+                        <mask key="subviews">
+                            <include reference="oVo-DJ-lG6"/>
+                            <include reference="VxR-a0-wWX"/>
+                        </mask>
+                        <mask key="constraints">
+                            <include reference="4Fc-h8-qzd"/>
+                            <include reference="iK5-6q-DfY"/>
+                            <include reference="l01-Ar-iCy"/>
+                            <include reference="F5l-Y6-mhy"/>
+                            <include reference="hiS-GC-AyT"/>
+                            <include reference="wVL-ND-PSQ"/>
+                        </mask>
+                    </variation>
+                </view>
+            </subviews>
+            <constraints>
+                <constraint firstItem="div-wB-MkA" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="VT4-hx-VMv"/>
+                <constraint firstItem="div-wB-MkA" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="bSg-zI-FOc"/>
+                <constraint firstAttribute="bottom" secondItem="div-wB-MkA" secondAttribute="bottom" id="dvA-Mu-s8f"/>
+                <constraint firstItem="t9L-Db-A2C" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="20" id="ejL-sU-XmE"/>
+                <constraint firstAttribute="trailing" secondItem="div-wB-MkA" secondAttribute="trailing" id="gCL-wV-j1L"/>
+                <constraint firstAttribute="centerY" secondItem="t9L-Db-A2C" secondAttribute="centerY" constant="20" id="oKj-9t-QC5"/>
+                <constraint firstAttribute="trailing" secondItem="t9L-Db-A2C" secondAttribute="trailing" constant="20" id="zrL-9G-wvZ"/>
+            </constraints>
+            <nil key="simulatedStatusBarMetrics"/>
+            <variation key="default">
+                <mask key="subviews">
+                    <exclude reference="div-wB-MkA"/>
+                    <exclude reference="t9L-Db-A2C"/>
+                </mask>
+                <mask key="constraints">
+                    <exclude reference="VT4-hx-VMv"/>
+                    <exclude reference="bSg-zI-FOc"/>
+                    <exclude reference="dvA-Mu-s8f"/>
+                    <exclude reference="gCL-wV-j1L"/>
+                    <exclude reference="ejL-sU-XmE"/>
+                    <exclude reference="oKj-9t-QC5"/>
+                    <exclude reference="zrL-9G-wvZ"/>
+                </mask>
+            </variation>
+            <variation key="heightClass=regular-widthClass=compact">
+                <mask key="subviews">
+                    <include reference="div-wB-MkA"/>
+                    <include reference="t9L-Db-A2C"/>
+                </mask>
+                <mask key="constraints">
+                    <include reference="VT4-hx-VMv"/>
+                    <include reference="bSg-zI-FOc"/>
+                    <include reference="dvA-Mu-s8f"/>
+                    <include reference="gCL-wV-j1L"/>
+                    <include reference="ejL-sU-XmE"/>
+                    <include reference="oKj-9t-QC5"/>
+                    <include reference="zrL-9G-wvZ"/>
+                </mask>
+            </variation>
+            <connections>
+                <outlet property="CustomAlertView" destination="t9L-Db-A2C" id="Vc1-Q9-WKK"/>
+                <outlet property="bkView" destination="div-wB-MkA" id="VZ4-Uk-lWS"/>
+                <outlet property="btn" destination="VxR-a0-wWX" id="14e-eM-adw"/>
+            </connections>
+        </view>
+    </objects>
+    <resources>
+        <image name="btn_img_statehighlight" width="76" height="35"/>
+        <image name="btn_img_statenormal" width="76" height="35"/>
+    </resources>
+</document>

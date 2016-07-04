@@ -1,0 +1,535 @@
+//
+//  ConsultPharmacySearchViewController.m
+//  wenyao
+//  药房搜索  －2.2.5版本之前
+//  Created by Meng on 15/1/19.
+//  Copyright (c) 2015年 xiezhenghong. All rights reserved.
+//
+
+#import "ConsultPharmacySearchViewController.h"
+//#import "MATagButtonView.h"
+#import "NSString+AbandonStringBlank.h"
+#import <CoreText/CoreText.h>
+#import "AppDelegate.h"
+#import "SBJson.h"
+#import "MJRefresh.h"
+#import "StoreModelR.h"
+#import "Store.h"
+#import "StoreModel.h"
+#import "PharmacyStoreDetailViewController.h"
+#import "PharamySearchTableViewCell.h"
+#import "CustomInfoAlertView.h"
+
+@interface ConsultPharmacySearchViewController()<UISearchBarDelegate,UITableViewDataSource,UITableViewDelegate>
+
+{
+    UISearchBar *m_searchBar;
+    UITextField *m_searchField;
+    
+    UIView      *footView;
+    UIView      *vInfo;
+//    UIView      *_nodataView;
+//    UIView      *bgView;
+    
+    NSInteger   currentPage;
+    
+    UIView *sectionView;
+    
+    UIView *topView;
+    
+    CGFloat currentLongitude;
+    CGFloat currentLatitude;
+    
+    
+    
+}
+
+@property (nonatomic ,strong) NSMutableArray *searchStoreHistory;
+@property (nonatomic ,strong)             NSString *city;
+@property (nonatomic ,strong)             NSString *province;
+@property (nonatomic ,strong) NSMutableArray *dataSource;
+
+
+@end
+
+@implementation ConsultPharmacySearchViewController
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    [m_searchBar becomeFirstResponder];
+    [self.navigationController setNavigationBarHidden:YES animated:NO];
+}
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    [self.navigationController setNavigationBarHidden:NO animated:NO];
+    [m_searchBar resignFirstResponder];
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    self.dataSource = [NSMutableArray array];
+    self.view.backgroundColor = [UIColor clearColor];
+    [self setUpSearchBarView];
+    [self setUpTableView];
+    [self setUpTableViewFootView];
+    [self.dataSource addObjectsFromArray:[SearchStorehModel getArrayFromDBWithWhere:nil]];
+    for(SearchStorehModel *model in self.dataSource) {
+        if(model.type == 0 && (model.name == nil)) {
+            [self.dataSource removeAllObjects];
+            [SearchStorehModel deleteAllObjFromDB];
+        }
+    }
+    if (self.dataSource.count == 0) {
+        
+        if (!self.mapInfoModel) {
+            [self showInfoView:kWarning31 image:nil];
+            
+        }else if (QWGLOBALMANAGER.currentNetWork == kNotReachable){//网络中断
+            [self showInfoView:kWarning32 image:@"网络信号icon.png"];
+        }else{
+            [self showInfoView:kWarning33 image:nil];
+        }
+    }
+    
+}
+
+#pragma mark ------ setup ------
+
+- (void)setUpSearchBarView
+{
+    topView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, APP_W, STATUS_H + NAV_H)];
+    UIView* status_bg = [[UIView alloc] initWithFrame:RECT(0, 0, APP_W, STATUS_H)];
+    status_bg.backgroundColor = RGBHex(qwColor1);
+    [topView addSubview:status_bg];
+    UIView* searchbg = [[UIView alloc] initWithFrame:CGRectMake(0, STATUS_H, APP_W, NAV_H)];
+    searchbg.backgroundColor= RGBHex(qwColor1);
+    [topView addSubview:searchbg];
+    
+    m_searchBar = [[UISearchBar alloc] initWithFrame:CGRectMake(0, STATUS_H, APP_W-50, NAV_H)];
+    m_searchBar.tintColor = [UIColor blueColor];
+    m_searchBar.barStyle = UIBarStyleDefault;
+    m_searchBar.placeholder = @"搜索药店";
+    m_searchBar.delegate = self;
+    [topView addSubview:m_searchBar];
+    if (iOSv7) {
+        UIView* barView = [m_searchBar.subviews objectAtIndex:0];
+        [[barView.subviews objectAtIndex:0] removeFromSuperview];
+    } else {
+        [[m_searchBar.subviews objectAtIndex:0] removeFromSuperview];
+    }
+    //取消按钮
+    UIButton* cancelBtn = [[UIButton alloc] initWithFrame:RECT(APP_W-60, STATUS_H, 60, NAV_H)];
+    cancelBtn.backgroundColor = [UIColor clearColor];
+    cancelBtn.titleLabel.font = font(kFont1, kFontS4);
+    [cancelBtn setTitle:@"取消" forState:0];
+    [cancelBtn setTitleColor:[UIColor whiteColor] forState:0];
+    [cancelBtn addTarget:self action:@selector(onCancelBtnTouched:) forControlEvents:UIControlEventTouchUpInside];
+    cancelBtn.tag = 888;
+    [topView addSubview:cancelBtn];
+    [self.view addSubview:topView];
+    
+}
+
+- (void)setUpTableView{
+    self.tableMain = [[UITableView alloc] initWithFrame:CGRectMake(0, topView.frame.origin.y + topView.frame.size.height, APP_W, APP_H-NAV_H-STATUS_H) style:UITableViewStylePlain];
+    self.tableMain.delegate = self;
+    self.tableMain.dataSource = self;
+    self.tableMain.separatorStyle = UITableViewCellSeparatorStyleNone;
+    self.tableMain.backgroundColor = RGBHex(qwColor11);
+    [self.view addSubview:self.tableMain];
+}
+
+- (void)setUpTableViewFootView{
+    
+    footView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, APP_W, 40)];
+    footView.backgroundColor = [UIColor whiteColor];
+    footView.clipsToBounds = YES;
+    
+    UIImageView *image = [[UIImageView alloc]initWithImage:[UIImage imageNamed:@"清空搜索记录icon.png"]];
+    image.frame = CGRectMake(APP_W*0.35 - 20, 10, 15, 15);
+    
+    UIButton * clearBtn = [[UIButton alloc]initWithFrame:CGRectMake(APP_W*0.35, 10, 100, 15)];
+    clearBtn.titleLabel.font = fontSystem(15);
+    [clearBtn setTitle:@"清空搜索历史" forState:0];
+    [clearBtn setTitleColor:RGBHex(qwColor7) forState:0];
+    [clearBtn setBackgroundColor:[UIColor clearColor]];
+    [clearBtn addTarget:self action:@selector(onClearBtnTouched:) forControlEvents:UIControlEventTouchUpInside];
+    
+    [footView addSubview:image];
+    [footView addSubview:clearBtn];
+    
+    self.tableMain.tableFooterView.frame = footView.frame;
+    self.tableMain.tableFooterView = footView;
+}
+
+- (void)onClearBtnTouched:(UIButton *)button
+{
+    
+    [SearchStorehModel deleteAllObjFromDB];
+    [self.dataSource removeAllObjects];
+    [self showInfoView:kWarning33 image:nil];
+    [self.tableMain reloadData];
+}
+
+#pragma mark ----
+#pragma mark UITableViewDelegate
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 1;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    if ([NSString abandonStringBlank:m_searchBar.text].length == 0) {
+        return 30;
+    }
+    return 0;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
+    if ([NSString abandonStringBlank:m_searchBar.text].length == 0) {
+        UIView * v = [[UIView alloc]initWithFrame:CGRectMake(0, 0 , APP_W, 30)];
+        v.backgroundColor = RGBHex(qwColor10);
+        UIImage* icon = [UIImage imageNamed:@"clock.png"];
+        UIImageView* iconView = [[UIImageView alloc ] initWithImage:icon];
+        iconView.frame = RECT(14, v.frame.size.height/2 - icon.size.height/2, icon.size.width, icon.size.height);
+        [v addSubview:iconView];
+        UILabel * label = [[UILabel alloc]initWithFrame:CGRectMake(14+icon.size.width+5, 9, 200, 12)];
+        label.font = [UIFont systemFontOfSize:12.0f];
+        label.text = @"最近搜索";
+        [v addSubview:label];
+        return v;
+    }
+    return nil;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 35;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return self.dataSource.count;
+}
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *ConsultPharmacyIdentifier = @"PharamySearchTableViewCell";
+    PharamySearchTableViewCell *cell = (PharamySearchTableViewCell *)[tableView dequeueReusableCellWithIdentifier:ConsultPharmacyIdentifier];
+    if(cell == nil){
+        UINib *nib = [UINib nibWithNibName:@"PharamySearchTableViewCell" bundle:nil];
+        [tableView registerNib:nib forCellReuseIdentifier:ConsultPharmacyIdentifier];
+        cell = (PharamySearchTableViewCell *)[tableView dequeueReusableCellWithIdentifier:ConsultPharmacyIdentifier];
+        //            [cell setHighlighted:YES animated:YES];
+    }
+    
+    cell.mainLabel.font = font(kFont1, 14);
+    
+    if ([NSString abandonStringBlank:m_searchBar.text].length == 0) {//显示历史记录
+        SearchStorehModel *model = self.dataSource[indexPath.row];
+        cell.mainLabel.text = model.name;
+        if([model.promotion boolValue]){
+            cell.CouponTag.hidden = NO;
+        }else{
+            cell.CouponTag.hidden = YES;
+        }
+    }else{//显示搜索内容
+        SearchStorehModel *storeModel = self.dataSource[indexPath.row];
+
+        if([storeModel.promotion boolValue]){
+            cell.CouponTag.hidden = NO;
+        }else{
+            cell.CouponTag.hidden = YES;
+        }
+        NSString *text = storeModel.name;
+
+        
+        NSMutableAttributedString *mutableString = [[NSMutableAttributedString alloc] initWithString:text];
+        
+        NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:[NSString abandonStringBlank:m_searchBar.text] options:kNilOptions error:nil];
+        
+        NSRange range = NSMakeRange(0,text.length);
+        
+        [regex enumerateMatchesInString:text options:kNilOptions range:range usingBlock:^(NSTextCheckingResult *result, NSMatchingFlags flags, BOOL *stop) {
+            NSRange subStringRange = [result rangeAtIndex:0];
+            [mutableString addAttribute:NSForegroundColorAttributeName value:[UIColor colorWithRed:0/255.0f green:183/255.0f blue:45/255.0f alpha:1] range:subStringRange];
+        }];
+        cell.mainLabel.attributedText = mutableString;
+  
+    }
+    
+    UILabel *line = [[UILabel alloc] initWithFrame:CGRectMake(0, 34.5, APP_W, 0.5)];
+    line.backgroundColor = [UIColor grayColor];
+    line.alpha = 0.8;
+    [cell.contentView addSubview:line];
+    
+    return cell;
+}
+
+
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    SearchStorehModel *storeModel = self.dataSource[indexPath.row];
+    
+    NSMutableDictionary *param = [[NSMutableDictionary alloc]init];
+    param[@"关键词"] = storeModel.name;
+    [QWGLOBALMANAGER statisticsEventId:@"x_yflb_ss_gjc" withLable:@"药房列表-搜索-点击某个关键词" withParams:param];
+    
+    if([storeModel.type intValue] == 2){
+
+        [QWGLOBALMANAGER pushBranchDetail:storeModel.branchId withType:@"4" navigation:self.navigationController];
+        
+    }else{
+        [QWGLOBALMANAGER pushBranchDetail:storeModel.branchId withType:@"5" navigation:self.navigationController];
+    }
+}
+
+#pragma mark save store search info to database
+- (void)saveStoreInfoToDB:(SearchStorehModel *)storeModel
+{
+    
+    NSMutableArray *searchHistory = [NSMutableArray array];
+    [searchHistory addObjectsFromArray:[SearchStorehModel getArrayFromDBWithWhere:nil]];
+    
+    for (int i = 0; i < searchHistory.count; i++) {
+        SearchStorehModel *model = searchHistory[i];
+        if ([storeModel.branchId isEqualToString:model.branchId]) {
+            [searchHistory removeObject:model];
+            break;
+        }
+    }
+    if (searchHistory.count >= 5) {
+        [searchHistory removeObjectAtIndex:4];
+    }
+    
+    [searchHistory insertObject:storeModel atIndex:0];
+    [SearchStorehModel deleteAllObjFromDB];
+    [SearchStorehModel saveObjToDBWithArray:searchHistory];
+}
+
+#pragma mark -
+#pragma mark -UISearchBarDelegate
+
+- (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText
+{
+    NSString *keyWord = [NSString abandonStringBlank:searchText];
+    if (keyWord.length == 0) {
+        [self removeInfoView];
+        [self removeMyInfoView];
+        [self.tableMain removeFooter];
+        [self.dataSource removeAllObjects];
+        self.tableMain.tableFooterView = footView;
+
+        NSArray *hisArr = [SearchStorehModel getArrayFromDBWithWhere:nil];
+        
+        if (hisArr.count > 0) {
+            [self.dataSource addObjectsFromArray:hisArr];
+        }
+        
+        if (self.dataSource.count == 0) {
+            [self showInfoView:kWarning33 image:nil];
+        }
+        [self.tableMain reloadData];
+        
+        
+    }else{
+        if (QWGLOBALMANAGER.currentNetWork != kNotReachable) {
+            [self.tableMain addFooterWithTarget:self action:@selector(footerRereshing)];
+            [self loadDataWithString:keyWord footRefresh:NO];
+        }else{
+            [self showMyInfoView:kWarning34 image:@"没有搜索结果icon.png" tag:0];
+
+        }
+    }
+}
+
+/**
+ *  @brief 根据关键字请求数据源
+ *
+ *  @param string 关键字
+ *  @param foot   是否是上拉刷新
+ */
+- (void)loadDataWithString:(NSString *)string footRefresh:(BOOL)foot
+{
+    BOOL clearSource;  //是否上次数据源
+    if (foot) {
+        clearSource = NO;
+    }else{
+        clearSource = YES;
+        currentPage = 1;
+    }
+    
+    [QWGLOBALMANAGER readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) { //add by jxb
+        
+        StoreSearchRegionModelR *searchModelR = [StoreSearchRegionModelR new];
+        searchModelR.page   = @(currentPage);
+        searchModelR.pageSize   = @(20);
+        searchModelR.name    = [NSString abandonStringBlank:string];
+        searchModelR.longitude = @(mapInfoModel.location.coordinate.longitude);
+        searchModelR.latitude = @(mapInfoModel.location.coordinate.latitude);
+        searchModelR.city = mapInfoModel.city;
+        searchModelR.active = @(0);
+        searchModelR.sort = @(0);
+        
+        HttpClientMgr.progressEnabled = NO;
+        [self removeMyInfoView];
+        [Store searchStoreWithParam:searchModelR success:^(id responseObj) {
+            
+            NSMutableArray *keyArr = [NSMutableArray array];
+            [keyArr addObject:NSStringFromClass([SearchStorehModel class])];
+            
+            NSMutableArray *valueArr = [NSMutableArray array];
+            [valueArr addObject:@"list"];
+            
+            StoreNearByListModel *listModel = [StoreNearByListModel parse:responseObj ClassArr:keyArr Elements:valueArr];
+            
+            
+            if (clearSource == YES) {
+                [self.dataSource removeAllObjects];
+            }
+            
+            [self.dataSource addObjectsFromArray:listModel.list];
+            if (self.dataSource.count > 0) {
+                [self removeInfoView];
+                [self.tableMain reloadData];
+                currentPage ++;
+                [self.tableMain footerEndRefreshing];
+                [self.tableMain setFrame:CGRectMake(0, topView.frame.origin.y + topView.frame.size.height, APP_W, APP_H-NAV_H)];
+                self.tableMain.tableFooterView = nil;
+            }else{
+                [self showMyInfoView:kWarning34 image:@"没有搜索结果icon.png" tag:0];
+            }
+            
+        } failure:^(HttpException *e) {
+            
+            
+        }];
+
+    }];
+
+}
+
+- (void)footerRereshing
+{
+    [self loadDataWithString:[NSString abandonStringBlank:m_searchBar.text] footRefresh:YES];
+}
+
+- (BOOL)searchBar:(UISearchBar *)searchBar shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text
+{
+    if ([NSString abandonStringBlank:text].length == 0) {
+        
+    }else{
+        
+    }
+    return YES;
+}
+
+
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
+{
+    [m_searchBar resignFirstResponder];
+}
+- (void)onCancelBtnTouched:(id)sender
+{
+    [self.navigationController popViewControllerAnimated:NO];
+    [QWGLOBALMANAGER statisticsEventId:@"x_yflb_ss_qx" withLable:@"药房搜索" withParams:nil];
+}
+
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    [m_searchBar resignFirstResponder];
+    [m_searchField resignFirstResponder];
+}
+
+- (void)showInfoView:(NSString *)text image:(NSString *)imageName
+{
+    [super showInfoView:text image:imageName];
+    [self.view bringSubviewToFront:topView];
+}
+
+- (void)viewInfoClickAction:(id)sender
+{
+    [m_searchBar resignFirstResponder];
+    [m_searchField resignFirstResponder];
+}
+
+
+#pragma mark -
+#pragma mark 处理本视图收到的通知
+- (void)getNotifType:(Enum_Notification_Type)type data:(id)data target:(id)obj{
+    if (NotifNetworkDisconnect == type || NotifNetworkReconnect == type) {
+
+    }
+}
+
+-(void)showMyInfoView:(NSString *)text image:(NSString*)imageName tag:(NSInteger)tag
+{
+    UIImage * imgInfoBG = [UIImage imageNamed:imageName];
+    
+    
+    if (vInfo==nil) {
+        vInfo = [[UIView alloc]initWithFrame:CGRectMake(0, topView.frame.origin.y + topView.frame.size.height, APP_W, APP_H-NAV_H)];
+        vInfo.backgroundColor = RGBHex(qwColor11);
+    }
+    
+//    vInfo.frame = self.view.bounds;
+    
+    for (id obj in vInfo.subviews) {
+        [obj removeFromSuperview];
+    }
+    
+    UIImageView *imgvInfo;
+    UILabel* lblInfo;
+    
+    imgvInfo=[[UIImageView alloc]init];
+    [vInfo addSubview:imgvInfo];
+    
+    lblInfo = [[UILabel alloc]init];
+    lblInfo.numberOfLines=0;
+    lblInfo.font = fontSystem(kFontS4);
+    lblInfo.textColor = RGBHex(qwColor8);//0x89889b 0x6a7985
+    lblInfo.textAlignment = NSTextAlignmentCenter;
+    [vInfo addSubview:lblInfo];
+    
+    UIButton *btnClick = [[UIButton alloc] initWithFrame:vInfo.bounds];
+    btnClick.tag=tag;
+    [btnClick addTarget:self action:@selector(viewInfoClickAction:) forControlEvents:UIControlEventTouchUpInside];
+    [vInfo addSubview:btnClick];
+    
+    
+    float vw=CGRectGetWidth(vInfo.bounds);
+    
+    CGRect frm;
+    frm=RECT((vw-imgInfoBG.size.width)/2,45.0f, imgInfoBG.size.width, imgInfoBG.size.height);
+    imgvInfo.frame=frm;
+    imgvInfo.image = imgInfoBG;
+    
+    float lw=vw-40*2;
+    float lh=(imageName!=nil)?CGRectGetMaxY(imgvInfo.frame) + 24:40;
+    CGSize sz = [QWGLOBALMANAGER getTextSizeWithContent:text WithUIFont:fontSystem(kFontS1) WithWidth:lw];
+    frm=RECT((vw-lw)/2, 67.0f + imgInfoBG.size.height, lw,sz.height);
+    lblInfo.frame=frm;
+    lblInfo.text = text;
+    
+    [self.view addSubview:vInfo];
+    [self.view bringSubviewToFront:vInfo];
+}
+
+- (void)removeMyInfoView{
+    
+    if(vInfo != nil){
+        [vInfo removeFromSuperview];
+    }
+}
+
+@end

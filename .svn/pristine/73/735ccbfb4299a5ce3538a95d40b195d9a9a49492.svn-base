@@ -1,0 +1,570 @@
+//
+//  BaseShoppingCartVC.m
+//  APP
+//
+//  Created by garfield on 16/3/23.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "BaseShoppingCartVC.h"
+#import "ShoppingCartOverFlowView.h"
+#import "SVProgressHUD.h"
+#import "UITapGestureRecognizerExt.h"
+#import "NoticeCustomView.h"
+#import "Constant.h"
+#import "AppDelegate.h"
+#import "WebDirectViewController.h"
+#import "ShoppingCartViewController.h"
+
+@interface BaseShoppingCartVC ()<UIAlertViewDelegate,UITextFieldDelegate>
+
+@end
+
+@implementation BaseShoppingCartVC
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    // Do any additional setup after loading the view.
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    if(self.shoppingList.count == 0 && [self isKindOfClass:[ShoppingCartViewController class]]) {
+        [self showShoppingCartBackgroundStatus:EmptyShoppingCartStatus];
+    }
+}
+
+- (void)initializeUI {
+    _backGroundStausView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, APP_W, APP_H)];
+    [_backGroundStausView setBackgroundColor:[UIColor clearColor]];
+    _hintImageView = [[UIImageView alloc] initWithFrame:CGRectMake((APP_W - 250) / 2, 80, 250, 170)];//250 170  /*120 120
+    [_backGroundStausView addSubview:_hintImageView];
+
+    _hintLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 250, APP_W, 21)];
+    _hintLabel.textAlignment = NSTextAlignmentCenter;
+    _hintLabel.font = fontSystem(kFontS1);
+    _hintLabel.textColor = RGBHex(qwColor8);
+    [_backGroundStausView addSubview:_hintLabel];
+
+    _hintButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    _hintButton.frame = CGRectMake((APP_W - 155 ) / 2.0, 290, 155, 40);
+    _hintButton.layer.borderWidth = 1.0f;
+    _hintButton.layer.borderColor = RGBHex(qwColor2).CGColor;
+    _hintButton.layer.cornerRadius = 3.0;
+    _hintButton.layer.masksToBounds = YES;
+    _hintButton.titleLabel.font = fontSystem(kFontS3);
+    [_hintButton setTitleColor:RGBHex(qwColor2) forState:UIControlStateNormal];
+    [_backGroundStausView addSubview:_hintButton];
+    
+    UIButton *clearBtn = [[UIButton alloc]initWithFrame:CGRectMake(0, 0, 40, 40)];
+    [clearBtn setTitleColor:RGBHex(qwColor1) forState:UIControlStateNormal];
+    [clearBtn setTitle:@"清空" forState:UIControlStateNormal];
+    clearBtn.titleLabel.font = fontSystem(kFontS1);
+    [clearBtn addTarget:self action:@selector(clearAlert) forControlEvents:UIControlEventTouchUpInside];
+    UIBarButtonItem *naviBtn = [[UIBarButtonItem alloc]initWithCustomView:clearBtn];
+    self.navigationItem.rightBarButtonItem = naviBtn;
+}
+
+-(void)clearAlert {
+    NSString *type;
+    if (self.pageType == 1) {
+        type = @"购物车_清空";
+    }else {
+        type = @"带返回购物车_清空";
+    }
+    [QWGLOBALMANAGER statisticsEventId:type withLable:nil withParams:nil];
+    UIAlertView *alert = [[UIAlertView alloc]initWithTitle:nil message:@"是否清空购物车中全部商品?" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"清空", nil];
+    alert.tag = 123;
+    [alert show];
+}
+//跳转到首页 逛逛
+- (void)pushToHomePage
+{
+    [QWGLOBALMANAGER statisticsEventId:@"x_gwc_sy" withLable:@"购物车-去首页逛逛" withParams:nil];
+    [(UINavigationController *)QWGLOBALMANAGER.tabBar.viewControllers[0] popToRootViewControllerAnimated:NO];
+    QWGLOBALMANAGER.tabBar.selectedIndex = 0;
+}
+
+//强烈建议开通
+- (void)highlyRecommendedToOpen
+{
+    if(![QWGLOBALMANAGER checkLoginStatus:self])
+        return;
+    [QWGLOBALMANAGER statisticsEventId:@"x_gwc_kt" withLable:@"购物车-强烈建议开通" withParams:nil];
+    [QWGLOBALMANAGER readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) {
+        MmallAdviceModelR *modelR = [MmallAdviceModelR new];
+        modelR.token = QWGLOBALMANAGER.configure.userToken;
+        modelR.city = mapInfoModel.city;
+        modelR.deviceType = 2;
+        modelR.deviceCode =QWGLOBALMANAGER.deviceToken;
+        [MallCart queryMmallAdvice:modelR success:^(BaseAPIModel *responseModel) {
+            if([responseModel.apiStatus integerValue] == 0) {
+                [QWUserDefault setBool:YES key:kReportNotOpenKey];
+                [self showShoppingCartBackgroundStatus:NotOpenReportedStatus];
+            }else{
+                [SVProgressHUD showErrorWithStatus:responseModel.apiMessage duration:0.8f];
+            }
+        } failure:NULL];
+    }];
+}
+
+//购物车没数据时,背景状态处理
+- (void)showShoppingCartBackgroundStatus:(ShoppingCartStatus)status
+{
+    UIBarButtonItem *btn = self.navigationItem.rightBarButtonItem;
+    switch (status) {
+        case NormalShoppingCartStatus:
+        {
+            btn.customView.hidden = NO;
+            [_backGroundStausView removeFromSuperview];
+            _backGroundStausView.hidden = YES;
+            break;
+        }
+        case EmptyShoppingCartStatus:
+        {
+             btn.customView.hidden = YES;
+            _backGroundStausView.hidden = NO;
+            [self.view addSubview:_backGroundStausView];
+            _hintLabel.text = @"购物车空空如也";
+            [_hintButton setTitle:@"去首页逛逛" forState:UIControlStateNormal];
+            [_hintButton removeTarget:self action:NULL forControlEvents:UIControlEventTouchUpInside];
+            [_hintButton addTarget:self action:@selector(pushToHomePage) forControlEvents:UIControlEventTouchUpInside];
+            [_hintButton setTitleColor:RGBHex(qwColor7) forState:UIControlStateNormal];
+            _hintButton.layer.borderColor = RGBHex(qwColor9).CGColor;
+//            _hintImageView.frame = CGRectMake((APP_W - 93.0) / 2, 110, 93, 84);
+            _hintImageView.image = [UIImage imageNamed:@"bg_gouwuche_disable"];
+            break;
+        }
+        case NotOpenNoReportedStatus:
+        {
+            btn.customView.hidden = YES;
+            _backGroundStausView.hidden = NO;
+            [self.view addSubview:_backGroundStausView];
+            _hintLabel.text = @"您所在城市还未开通购药服务";
+            [_hintButton setTitle:@"强烈建议开通" forState:UIControlStateNormal];
+            [_hintButton removeTarget:self action:NULL forControlEvents:UIControlEventTouchUpInside];
+            [_hintButton addTarget:self action:@selector(highlyRecommendedToOpen) forControlEvents:UIControlEventTouchUpInside];
+            [_hintButton setTitleColor:RGBHex(qwColor2) forState:UIControlStateNormal];
+            _hintButton.layer.borderColor = RGBHex(qwColor2).CGColor;
+            _hintImageView.image = [UIImage imageNamed:@"ic_img_cry"];
+            _hintImageView.frame = CGRectMake((APP_W - 120) / 2, 80, 120, 120);
+            break;
+        }
+        case NotOpenReportedStatus:
+        {
+            btn.customView.hidden = YES;
+            _backGroundStausView.hidden = NO;
+            [self.view addSubview:_backGroundStausView];
+            _hintLabel.text = @"您所在城市还未开通购药服务";
+            [_hintButton setTitle:@"您已建议开通" forState:UIControlStateNormal];
+            [_hintButton removeTarget:self action:NULL forControlEvents:UIControlEventTouchUpInside];
+            [_hintButton addTarget:self action:@selector(doNothing) forControlEvents:UIControlEventTouchUpInside];
+            [_hintButton setTitleColor:RGBHex(qwColor9) forState:UIControlStateNormal];
+            _hintButton.layer.borderColor = RGBHex(qwColor9).CGColor;
+            _hintImageView.image = [UIImage imageNamed:@"ic_img_cry"];
+            _hintImageView.frame = CGRectMake((APP_W - 120) / 2, 80, 120, 120);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+- (void)doNothing{}
+
+- (UIView *)createDynamicHeaderView:(NSInteger)section
+{
+    CartBranchVoModel *model = self.shoppingList[section];
+    UIView *header = [[UIView alloc] initWithFrame:CGRectMake(0, 0, APP_W, 39.0)];
+    [header setBackgroundColor:[UIColor whiteColor]];
+    QWButton *button = [QWButton buttonWithType:UIButtonTypeCustom];
+    button.obj = model;
+    if(model.choose) {
+        [button setImage:[UIImage imageNamed:@"icon_shopping_selected1"] forState:UIControlStateNormal];
+    }else{
+        [button setImage:[UIImage imageNamed:@"icon_shopping_rest1"] forState:UIControlStateNormal];
+    }
+    button.frame = CGRectMake(0, 0, 39, 39);
+    [button addTarget:self action:@selector(chooseBranchAllProduct:) forControlEvents:UIControlEventTouchUpInside];
+    [header addSubview:button];
+    
+    UIImageView *storeIcon = [[UIImageView alloc] initWithFrame:CGRectMake(42, (39 - 14) / 2.0, 14, 14)];
+    storeIcon.image = [UIImage imageNamed:@"icon_shopping_pharmacy"];
+    [header addSubview:storeIcon];
+    
+    UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(66, 0, 200, 39.0)];
+    label.font = fontSystem(kFontS4);
+    label.textColor = RGBHex(qwColor6);
+    label.text = model.branchName;
+    [label sizeToFit];
+    CGRect rect = label.frame;
+    rect.size.height = 39;
+    label.frame = rect;
+    [header addSubview:label];
+    
+    UIView *topSeparator = [[UIView alloc] initWithFrame:CGRectMake(0, 38.5, APP_W, 0.5)];
+    topSeparator.backgroundColor = RGBHex(qwColor10);
+    [header addSubview:topSeparator];
+    
+    UIView *bottomSeparator = [[UIView alloc] initWithFrame:CGRectMake(0, 0, APP_W, 0.5)];
+    bottomSeparator.backgroundColor = RGBHex(qwColor10);
+    [header addSubview:bottomSeparator];
+    
+    UIView *rightSeparator = [[UIView alloc] initWithFrame:CGRectMake(APP_W - 20.5, 0, 0.5, 39)];
+    rightSeparator.backgroundColor = RGBHex(qwColor10);
+    [header addSubview:rightSeparator];
+    
+    UIView *leftSeparator = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 0.5, 39)];
+    leftSeparator.backgroundColor = RGBHex(qwColor10);
+    [header addSubview:leftSeparator];
+    UIImageView *accessoryView = [[UIImageView alloc] initWithFrame:CGRectMake(APP_W - 40, (39 - 13 ) / 2.0 + 1, 8, 13)];
+    accessoryView.image = [UIImage imageNamed:@"arr_right"];
+    [header addSubview:accessoryView];
+    UITapGestureRecognizerExt *tapGesture = [[UITapGestureRecognizerExt alloc] initWithTarget:self action:@selector(tapStoreDetail:)];
+    tapGesture.obj = model;
+    [header addGestureRecognizer:tapGesture];
+    if(model.supportOnlineTrading) {
+        UIView *containerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, APP_W, 39.0f + 29.0f)];
+        [containerView addSubview:header];
+        ShoppingCartOverFlowView *flowView = [[NSBundle mainBundle] loadNibNamed:@"ShoppingCartOverFlowView" owner:self options:nil][0];
+        [containerView addSubview:flowView];
+        
+        [containerView addConstraint:[NSLayoutConstraint constraintWithItem:flowView attribute:NSLayoutAttributeLeading relatedBy:NSLayoutRelationEqual toItem:containerView attribute:NSLayoutAttributeLeading multiplier:1.0 constant:0.0]];
+        [containerView addConstraint:[NSLayoutConstraint constraintWithItem:flowView attribute:NSLayoutAttributeTrailing relatedBy:NSLayoutRelationEqual toItem:containerView attribute:NSLayoutAttributeTrailing multiplier:1.0 constant:0.0]];
+        
+        [containerView addConstraint:[NSLayoutConstraint constraintWithItem:flowView attribute:NSLayoutAttributeTop relatedBy:NSLayoutRelationEqual toItem:containerView attribute:NSLayoutAttributeTop multiplier:1.0 constant:39]];
+        [containerView addConstraint:[NSLayoutConstraint constraintWithItem:flowView attribute:NSLayoutAttributeBottom relatedBy:NSLayoutRelationEqual toItem:containerView attribute:NSLayoutAttributeBottom multiplier:1.0 constant:0]];
+        UITapGestureRecognizerExt *tapGesture = [[UITapGestureRecognizerExt alloc] initWithTarget:self action:@selector(showMedicineInformation:)];
+        tapGesture.obj = model;
+        [flowView addGestureRecognizer:tapGesture];
+        return containerView;
+    }else{
+        return header;
+    }
+}
+
+- (IBAction)showMedicineInformation:(UITapGestureRecognizerExt *)gesture
+{
+    CartBranchVoModel *model = gesture.obj;
+    
+    [NoticeCustomView showPerformViewInView:APPDelegate.window WithTitle:model.groupName content:model.groupName];
+    
+    
+}
+
+
+- (void)jointProductModel:(NSArray *)productList addArray:(NSMutableArray *)jsonArray
+{
+    for(CartBranchVoModel *branchModel in productList) {
+        for(CartProductVoModel *subProductModel in branchModel.products)
+        {
+            NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+            dict[@"quantity"] = [NSNumber numberWithInteger:subProductModel.quantity];
+            dict[@"objId"] = subProductModel.id;
+            dict[@"objType"] = [NSNumber numberWithInt:1];
+            [jsonArray addObject:dict];
+        }
+        
+        for (CartComboVoModel *subComboVoModel in branchModel.combos) {
+            NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+            dict[@"quantity"] = [NSNumber numberWithInt:subComboVoModel.quantity];
+            dict[@"objId"] = subComboVoModel.packageId;
+            dict[@"objType"] = [NSNumber numberWithInt:2];
+            [jsonArray addObject:dict];
+        }
+        
+        for(CartRedemptionVoModel *redeptionModel in branchModel.redemptions) {
+            NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+            dict[@"quantity"] = [NSNumber numberWithInt:redeptionModel.quantity];
+            dict[@"objId"] = redeptionModel.actId;
+            dict[@"objType"] = [NSNumber numberWithInt:3];
+            [jsonArray addObject:dict];
+        }
+    }
+}
+
+- (void)checkBackGroundStatus
+{
+    [QWGLOBALMANAGER readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) {
+        if(mapInfoModel.status == 2) {
+            if([QWUserDefault getBoolBy:kReportNotOpenKey]) {
+                [self showShoppingCartBackgroundStatus:NotOpenReportedStatus];
+            }else{
+                [self showShoppingCartBackgroundStatus:NotOpenNoReportedStatus];
+            }
+        }else{
+            [self showShoppingCartBackgroundStatus:EmptyShoppingCartStatus];
+        }
+    }];
+}
+
+//同步未读数
+- (void)syncUnreadNum
+{
+    [QWGLOBALMANAGER postNotif:NotifShoppingUnreadUpdate data:nil object:nil];
+    NSInteger index = [QWGLOBALMANAGER getUnreadShoppingCart];
+    if([self isKindOfClass:[ShoppingCartViewController class]]) {
+        if(index > 0) {
+            self.navigationController.tabBarItem.badgeValue = [NSString stringWithFormat:@"%d",index];
+        }else{
+            self.navigationController.tabBarItem.badgeValue = nil;
+        }
+    }
+}
+
+
+//点击进入药店详情
+- (void)tapStoreDetail:(UITapGestureRecognizerExt *)sender
+{
+    NSString *type;
+    if (self.pageType == 1) {
+        type = @"购物车_药房名称";
+    }else {
+        type = @"带返回购物车_药房名称";
+    }
+    [QWGLOBALMANAGER statisticsEventId:type withLable:nil withParams:nil];
+    CartBranchVoModel *model = (CartBranchVoModel *)sender.obj;
+    
+    [QWGLOBALMANAGER pushBranchDetail:model.branchId withType:@"3" navigation:self.navigationController];
+}
+
+- (NSMutableArray *)sortCombosProdcut:(NSArray *)combos
+{
+    NSMutableArray *retArray = [NSMutableArray arrayWithCapacity:10];
+    for(NSInteger index = 0; index < combos.count; ++index) {
+        CartComboVoModel *comboVoModel = combos[index];
+        if(comboVoModel.druglist.count == 1) {
+            ComboProductVoModel *subModel = comboVoModel.druglist[0];
+            subModel.showType = 4;
+            subModel.reduce = comboVoModel.reduce;
+            subModel.combosPrice = comboVoModel.price;
+            subModel.packageId = comboVoModel.packageId;
+            subModel.desc = comboVoModel.desc;
+            subModel.quantity = comboVoModel.quantity;
+            subModel.choose = comboVoModel.choose;
+            [retArray addObject:subModel];
+        }else{
+            for(ComboProductVoModel *subModel in comboVoModel.druglist) {
+                if(subModel == comboVoModel.druglist[0]) {
+                    subModel.packageId = comboVoModel.packageId;
+                    subModel.desc = comboVoModel.desc;
+                    subModel.showType = 1;
+                    subModel.combosPrice = comboVoModel.price;
+                    subModel.reduce = comboVoModel.reduce;
+                    subModel.combosPrice = comboVoModel.price;
+                    subModel.quantity = comboVoModel.quantity;
+                    subModel.packageId = comboVoModel.packageId;
+                }else if (subModel == [comboVoModel.druglist lastObject]) {
+                    subModel.packageId = comboVoModel.packageId;
+                    subModel.quantity = comboVoModel.quantity;
+                    subModel.choose = comboVoModel.choose;
+                    subModel.combosPrice = comboVoModel.price;
+                    subModel.showType = 3;
+                }else{
+                    subModel.packageId = comboVoModel.packageId;
+                    subModel.combosPrice = comboVoModel.price;
+                    subModel.quantity = comboVoModel.quantity;
+                    subModel.showType = 2;
+                }
+                [retArray addObject:subModel];
+            }
+        }
+    }
+    return retArray;
+}
+
+- (BOOL)checkChooseAll:(CartBranchVoModel *)model
+{
+    BOOL chooseAll = YES;
+    for(CartProductVoModel *submodel in model.products) {
+        if(!submodel.choose) {
+            chooseAll = NO;
+            break;
+        }
+    }
+    for(CartComboVoModel *submodel in model.combos) {
+        if(!submodel.choose) {
+            chooseAll = NO;
+            break;
+        }
+    }
+    if(chooseAll) {
+        model.choose = YES;
+    }
+    return chooseAll;
+}
+
+- (double)calculateTotalPrice:(double *)retMinusPrice
+{
+    //总价应付多少
+    double totalPrice = 0.0;
+    //优惠了多少金额
+    double minusPrice = 0.0;
+    for(CartBranchVoModel *model in self.shoppingList) {
+        for(CartProductVoModel *productModel in model.products) {
+            if(productModel.choose) {
+                totalPrice += [productModel.price doubleValue] * productModel.quantity;
+                if(productModel.promotions.count > 0 && productModel.quantity > 0) {
+                    CartPromotionVoModel *promotionModel = productModel.promotions[0];
+                    
+                    NSInteger presentNum = 0;
+                    if(productModel.quantity > (productModel.saleStock + productModel.stock)) {
+                        presentNum = floor( productModel.saleStock / promotionModel.unitNum);
+                    }else if (productModel.quantity > productModel.saleStock) {
+                        presentNum = floor( productModel.saleStock / promotionModel.unitNum);
+                    }else{
+                        presentNum = floor( productModel.quantity / promotionModel.unitNum);
+                    }
+      
+                    switch (promotionModel.type) {
+                        case 2:{
+                            //2.折扣
+                            
+                            NSInteger count = presentNum;
+                            totalPrice -= (count * promotionModel.unitNum) * (1 - promotionModel.value) * [productModel.price doubleValue];
+                            minusPrice += (count * promotionModel.unitNum) * (1 - promotionModel.value) * [productModel.price doubleValue];
+                            break;
+                        }
+                        case 3: {
+                            //3.立减
+                            NSInteger count = presentNum;
+                            totalPrice -= count * promotionModel.value;
+                            minusPrice += count * promotionModel.value;
+                            break;
+                        }
+                        case 4: {
+                            //4.特价
+                            totalPrice -= presentNum * ([productModel.price doubleValue] - promotionModel.value);
+                            minusPrice += presentNum * ([productModel.price doubleValue] - promotionModel.value);
+                            break;
+                        }
+                        case 5: {
+                            //5.抢购
+                            if(productModel.quantity > promotionModel.limitQty) {
+                                presentNum = promotionModel.limitQty;
+                            }else{
+                                presentNum = productModel.quantity;
+                            }
+                            totalPrice -=  ([productModel.price doubleValue] - promotionModel.value) * presentNum;
+                            minusPrice += ([productModel.price doubleValue] - promotionModel.value) * presentNum;
+                            break;
+                        }
+                        default:{
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        for(CartComboVoModel *comboVoModel in model.combos) {
+            if(comboVoModel.choose) {
+                totalPrice += comboVoModel.price * comboVoModel.quantity;
+                minusPrice += comboVoModel.reduce * comboVoModel.quantity;
+            }
+        }
+        for (CartRedemptionVoModel *redemptionVoModel in model.redemptions) {
+            totalPrice += redemptionVoModel.salePrice;
+            minusPrice += redemptionVoModel.price - redemptionVoModel.salePrice;
+        }
+    }
+    *retMinusPrice = minusPrice;
+    return totalPrice;
+}
+
+- (double)calculatePriceOnly:(CartBranchVoModel *)branchModel
+{
+    //总价应付多少
+    double totalPrice = 0.0;
+    //优惠了多少金额
+    double minusPrice = 0.0;
+    for(CartProductVoModel *productModel in branchModel.products) {
+        if(productModel.choose) {
+            totalPrice += [productModel.price doubleValue] * productModel.quantity;
+            if(productModel.promotions.count > 0 && productModel.quantity > 0) {
+                CartPromotionVoModel *promotionModel = productModel.promotions[0];
+                
+                NSInteger presentNum = 0;
+                if(productModel.quantity > (productModel.saleStock + productModel.stock)) {
+                    presentNum = productModel.saleStock / promotionModel.unitNum;
+                }else if (productModel.quantity > productModel.saleStock) {
+                    presentNum = productModel.saleStock / promotionModel.unitNum;
+                }else{
+                    presentNum = productModel.quantity / promotionModel.unitNum;
+                }
+                
+                switch (promotionModel.type) {
+                    case 2:{
+                        //2.折扣
+                        
+                        NSInteger count = presentNum;
+                        totalPrice -= (count * promotionModel.unitNum) * (1 - promotionModel.value) * [productModel.price doubleValue];
+                        minusPrice += (count * promotionModel.unitNum) * (1 - promotionModel.value) * [productModel.price doubleValue];
+                        break;
+                    }
+                    case 3: {
+                        //3.立减
+                        NSInteger count = presentNum;
+                        //判断数据出错,防止立减金额为负数
+                        totalPrice -= count * promotionModel.value;
+                        minusPrice += count * promotionModel.value;
+                        break;
+                    }
+                    case 4: {
+                        //4.特价
+                        totalPrice -= productModel.quantity * ([productModel.price doubleValue] - promotionModel.value);
+                        minusPrice += presentNum * ([productModel.price doubleValue] - promotionModel.value);
+                        break;
+                    }
+                    case 5: {
+                        //5.抢购
+                        if(productModel.quantity > promotionModel.limitQty) {
+                            presentNum = promotionModel.limitQty;
+                        }else{
+                            presentNum = productModel.quantity;
+                        }
+                        totalPrice -=  ([productModel.price doubleValue] - promotionModel.value) * presentNum;
+                        minusPrice += ([productModel.price doubleValue] - promotionModel.value) * presentNum;
+                        break;
+                    }
+                    default:{
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    for(CartComboVoModel *comboVoModel in branchModel.combos) {
+        if(comboVoModel.choose) {
+            totalPrice += comboVoModel.price * comboVoModel.quantity;
+            minusPrice += comboVoModel.reduce * comboVoModel.quantity;
+        }
+    }
+    
+    return totalPrice;
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+#pragma mark - TextDelegate
+-(BOOL)textFieldShouldEndEditing:(UITextField *)textField {
+    [UIView animateWithDuration:0.3 animations:^{
+        CGRect frame = self.view.frame;
+        frame.origin.y = 64.0;
+        self.view.frame = frame;
+    }];
+    return YES;
+}
+
+- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
+    BOOL should = YES;
+    if (textField.text.length >= 2 && ![string isEqualToString:@""]) {
+        should = NO;
+    }
+    DebugLog(@"-------string ------%@",string);
+    return should;
+}
+@end

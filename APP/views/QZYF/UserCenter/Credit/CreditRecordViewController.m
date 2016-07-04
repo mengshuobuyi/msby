@@ -1,0 +1,118 @@
+//
+//  CreditRecordViewController.m
+//  APP
+//
+//  Created by Martin.Liu on 15/12/3.
+//  Copyright © 2015年 carret. All rights reserved.
+//
+
+#import "CreditRecordViewController.h"
+#import "CreditRecordTableCell.h"
+#import "Credit.h"
+#import "SVProgressHUD.h"
+@interface CreditRecordViewController ()<UITableViewDataSource, UITableViewDelegate>
+@property (strong, nonatomic) IBOutlet UITableView *tableView;
+
+@end
+
+@implementation CreditRecordViewController
+{
+    NSArray* creditRecords;
+}
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    [self.tableView addStaticImageHeader];
+    // Do any additional setup after loading the view.
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    [self loadData];
+}
+
+- (void)viewInfoClickAction:(id)sender
+{
+    if (QWGLOBALMANAGER.currentNetWork != kNotReachable){
+        [self removeInfoView];
+        [self loadData];
+    }
+}
+
+- (void)loadData
+{
+    if(QWGLOBALMANAGER.currentNetWork == kNotReachable){
+
+        [self showInfoView:kWarning12 image:@"网络信号icon.png"];
+    }else{
+        
+        CreditRecordsR* creditRecrodsR = [[CreditRecordsR alloc] init];
+        creditRecrodsR.token = QWGLOBALMANAGER.configure.userToken;
+        __weak __typeof(self) weakSelf = self;
+        [Credit getCreditRecords:creditRecrodsR success:^(CreditRecordsModel *recordsmodel) {
+            if ([recordsmodel.apiStatus integerValue] != 0) {
+                if (!StrIsEmpty(recordsmodel.apiMessage)) {
+                    [SVProgressHUD showErrorWithStatus:recordsmodel.apiMessage duration:DURATION_LONG];
+                }
+            }
+            
+            NSArray *creditRecordArray = recordsmodel.list;
+            DebugLog(@"credit response : %@", creditRecordArray);
+            creditRecords = creditRecordArray;
+            [weakSelf.tableView reloadData];
+            if (creditRecords.count == 0) {
+                [self showInfoView:@"您还没有积分记录!" image:@"ic_img_fail"];
+            }
+        } failure:^(HttpException *e) {
+            if (e.errorCode != -999) {
+                if(e.errorCode == -1001){
+                    [self showInfoView:kWarning215N26 image:@"ic_img_fail"];
+                }else{
+                    [self showInfoView:kWarning39 image:@"ic_img_fail"];
+                }
+            }
+        }];
+    }
+}
+
+- (void)UIGlobal
+{
+    self.view.backgroundColor = RGBHex(qwColor11);
+    self.tableView.tableFooterView = [[UIView alloc] init];
+}
+
+#pragma mark - UITableView Delegate
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return creditRecords.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    CreditRecordTableCell* cell = [tableView dequeueReusableCellWithIdentifier:@"CreditRecordTableCell" forIndexPath:indexPath];
+    [cell setCell:creditRecords[indexPath.row]];
+    
+    return cell;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 65;
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

@@ -1,0 +1,269 @@
+//
+//  TreatMedicineViewController.m
+//  APP
+//
+//  Created by Meng on 15/6/10.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "DiseaseTreatRuleMedicineViewController.h"
+
+#import "Drug.h"
+#import "DiseaseModel.h"
+#import "DiseaseModelR.h"
+#import "CouponPromotionTableViewCell.h"
+#import "WebDirectViewController.h"
+
+#define CollectCellHeight 188
+
+static NSString * const TreatMedicineCellIdentifier = @"TreatMedicineCellIdentifier";
+
+@interface DiseaseTreatRuleMedicineViewController ()<UITableViewDelegate,UITableViewDataSource>
+{
+    NSInteger currentPage;
+}
+@property (nonatomic ,strong) NSMutableArray *dataSource;
+@property (nonatomic, strong) UITableView    *tableView;
+
+@end
+
+@implementation DiseaseTreatRuleMedicineViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.dataSource = [NSMutableArray array];
+    self.tableView = [[UITableView alloc] initWithFrame:CGRectMake(12, 0, APP_W-24, self.view.frame.size.height)];
+    self.tableView.backgroundColor = [UIColor clearColor];
+    self.tableView.delegate = self;
+    self.tableView.dataSource = self;
+    self.tableView.scrollEnabled = NO;
+    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+//    self.tableView.showsHorizontalScrollIndicator = NO;
+//    self.tableView.showsVerticalScrollIndicator = NO;
+    [self.tableView registerNib:[UINib nibWithNibName:@"CouponPromotionTableViewCell" bundle:nil] forCellReuseIdentifier:@"CouponPromotionTableViewCell"];
+    
+    [self.view addSubview:self.tableView];
+}
+
+-(void)popVCAction:(id)sender {
+    [super popVCAction:sender];
+    
+}
+
+- (void)setUpTableFrame:(CGRect)rect
+{
+    self.tableView.frame = rect;
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+- (void)currentViewSelected:(void (^)(CGFloat))finishLoading
+{
+    if (self.dataSource.count > 0) {
+        if (finishLoading) {
+            finishLoading(self.dataSource.count * 81 + 10);
+        }
+    }
+
+    currentPage = 1;
+    DiseaseProductListR *productr=[DiseaseProductListR new];
+    productr.diseaseId = self.diseaseId;
+    productr.type = self.requestType;
+    productr.currPage = [NSString stringWithFormat:@"%ld",(long)currentPage];
+    productr.pageSize = @"12";
+    productr.v = @"2.0";
+    //新增城市和省
+    
+    MapInfoModel *mapInfoModel = [QWUserDefault getObjectBy:APP_MAPINFOMODEL];
+    productr.province  =  mapInfoModel == nil ? @"江苏省":mapInfoModel.province;
+    productr.city      =  mapInfoModel == nil ? @"苏州市":mapInfoModel.city;
+    [HttpClientMgr setProgressEnabled:NO];
+    [Drug queryDiseaseProductListWithParam:productr Success:^(id DFUserModel) {
+        [self removeInfoView];
+        [self.dataSource removeAllObjects];
+        DiseaseFormulaPruduct *productModel = (DiseaseFormulaPruduct *)DFUserModel;
+        [self.dataSource addObjectsFromArray:productModel.list];
+        if (self.dataSource.count > 0) {
+            currentPage ++;
+            [self.tableView reloadData];
+            CGFloat height = 81 * self.dataSource.count;
+            self.tableView.contentSize = CGSizeMake(APP_W-20, height);
+            [self.tableView setFrame:CGRectMake(10, 10, APP_W-20, height)];
+            NSInteger type = [self.requestType integerValue];
+            [self.view setFrame:CGRectMake((type - 1) * APP_W, 0, APP_W, height + 10)];
+            
+            if (finishLoading) {
+                finishLoading(self.dataSource.count * 81 + 10);
+            }
+
+        }else{
+            if (finishLoading) {
+                finishLoading(400);
+            }
+            [self showInfoView:@"无相关药品" image:@"ic_img_fail"];
+        }
+        
+    } failure:^(HttpException *e) {
+        if(e.errorCode!=-999){
+            if(e.errorCode == -1001){
+                [self showInfoView:kWarning215N26 image:@"ic_img_fail"];
+            }else{
+                [self showInfoView:kWarning39 image:@"ic_img_fail"];
+            }
+        }
+        return;
+    }];
+}
+
+- (void)footerRereshing:(void (^)(CGFloat))finishRefresh :(void (^)(BOOL))canLoadMore :(void (^)())failure
+{
+    if(self.dataSource.count == 0) {
+        if (finishRefresh) {
+            finishRefresh(350);
+        }
+        [self showInfoView:@"无相关药品" image:@"ic_img_fail"];
+        return;
+    }
+    DiseaseProductListR *productr=[DiseaseProductListR new];
+    productr.diseaseId = self.diseaseId;
+    productr.type = self.requestType;
+    productr.currPage = [NSString stringWithFormat:@"%ld",(long)currentPage];
+    productr.pageSize = @"12";
+    productr.v = @"2.0";
+    //新增城市和省
+    MapInfoModel *mapInfoModel = [QWUserDefault getObjectBy:APP_MAPINFOMODEL];
+    productr.province=mapInfoModel==nil?@"江苏省":mapInfoModel.province;
+    productr.city=mapInfoModel==nil?@"苏州市":mapInfoModel.city;
+    [HttpClientMgr setProgressEnabled:NO];
+    [Drug queryDiseaseProductListWithParam:productr Success:^(id DFUserModel) {
+        DiseaseFormulaPruduct *productModel = (DiseaseFormulaPruduct *)DFUserModel;
+        [self.dataSource addObjectsFromArray:productModel.list];
+        if (productModel.list.count == 0) {
+            if (canLoadMore) {
+                canLoadMore(NO);
+            }
+        }
+        if (self.dataSource.count > 0) {
+            currentPage ++;
+            [self.tableView reloadData];
+            CGFloat height = 81 * self.dataSource.count;
+            self.tableView.contentSize = CGSizeMake(APP_W-20, height);
+            [self.tableView setFrame:CGRectMake(10, 10, APP_W-20, height)];
+            NSInteger type = [self.requestType integerValue];
+            [self.view setFrame:CGRectMake((type - 1) * APP_W, 0, APP_W, height + 10)];
+            if (finishRefresh) {
+                finishRefresh(height + 10);
+            }
+        }else{
+            if (finishRefresh) {
+                finishRefresh(400);
+            }
+            [self showInfoView:@"无相关药品" image:@"ic_img_fail"];
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure();
+        }
+        if(e.errorCode!=-999){
+            if(e.errorCode == -1001){
+                [self showInfoView:kWarning215N26 image:@"ic_img_fail"];
+            }else{
+                [self showInfoView:kWarning39 image:@"ic_img_fail"];
+            }
+            
+        }
+        return;
+    }];
+}
+
+#pragma mark -
+#pragma mark UITableViewDelegate
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 81.0f;
+}
+
+- (NSInteger)tableView:(UITableView *)atableView numberOfRowsInSection:(NSInteger)section
+{
+    return self.dataSource.count;
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)atableView
+{
+    return 1;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)atableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    CouponPromotionTableViewCell *cell = [atableView dequeueReusableCellWithIdentifier:@"CouponPromotionTableViewCell"];
+    DiseaseFormulaPruductclass *model = self.dataSource[indexPath.row];
+    [cell.ImagUrl setImageWithURL:[NSURL URLWithString:model.imgUrl] placeholderImage:[UIImage imageNamed:@"药品默认图片"]];
+    
+    cell.proName.text = model.proName;
+    cell.spec.text = model.spec;
+    cell.factoryName.text = model.factory;
+    
+    cell.label.hidden=YES;
+    [cell.gift removeFromSuperview];
+    [cell.discount removeFromSuperview];
+    [cell.voucher removeFromSuperview];
+    [cell.special removeFromSuperview];
+//    cell.label.text = model.label;
+    
+//    if(!model.gift){
+//        [cell.gift removeFromSuperview];
+//    }
+//    if(!model.discount){
+//        [cell.discount removeFromSuperview];
+//    }
+//    if(!model.voucher){
+//        [cell.voucher removeFromSuperview];
+//    }
+//    if(!model.special){
+//        [cell.special removeFromSuperview];
+//    }
+    
+    return cell;
+}
+
+//- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
+//{
+//    
+//    RegionBestSellerCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:TreatMedicineCellIdentifier forIndexPath:indexPath];
+//    
+//    DiseaseFormulaPruductclass *model = self.dataSource[indexPath.row];
+////    NSString* imgurl = PORID_IMAGE(model.proId);
+//    [cell.headImageView setImageWithURL:[NSURL URLWithString:model.imgUrl]
+//                       placeholderImage:[UIImage imageNamed:@"药品默认图片.png"]];
+//    cell.titleLabel.text = model.proName;
+//    if ([model.promotionType integerValue] == 1) {//是否显示"惠"字
+//        cell.diseaseDrugTag.hidden = NO;
+//    }
+//    
+//    return cell;
+//}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    DiseaseFormulaPruductclass *model = self.dataSource[indexPath.row];
+    [self pushToDrugDetailWithDrugID:model.proId promotionId:model.promotionId];
+}
+
+- (void)pushToDrugDetailWithDrugID:(NSString *)drugId promotionId:(NSString *)promotionID{
+    WebDirectViewController *vcWebMedicine = [[UIStoryboard storyboardWithName:@"WebDirect" bundle:nil] instantiateViewControllerWithIdentifier:@"WebDirectViewController"];
+    MapInfoModel *modelMap = [QWUserDefault getObjectBy:APP_MAPINFOMODEL];
+    WebDrugDetailModel *modelDrug = [WebDrugDetailModel new];
+    modelDrug.modelMap = modelMap;
+    modelDrug.proDrugID = drugId;
+    modelDrug.promotionID = promotionID;
+    WebDirectLocalModel *modelLocal = [WebDirectLocalModel new];
+    modelLocal.modelDrug = modelDrug;
+    modelLocal.typeLocalWeb = WebPageToWebTypeMedicine;
+    [vcWebMedicine setWVWithLocalModel:modelLocal];
+    [self.navigationController pushViewController:vcWebMedicine animated:YES];
+}
+
+@end

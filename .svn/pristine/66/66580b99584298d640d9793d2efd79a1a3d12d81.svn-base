@@ -1,0 +1,125 @@
+//
+//  StoreSearchResultViewController.m
+//  APP
+//  店内搜索药品 中间页面  3.0.0新增
+//  Created by 李坚 on 16/1/18.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "StoreSearchResultViewController.h"
+#import "WeiStoreTableViewCell.h"
+#import "MedicineDetailViewController.h"
+#import "ConsultStore.h"
+
+static NSString *const storeCellIdentifier = @"WeiStoreTableViewCell";
+
+
+@interface StoreSearchResultViewController ()
+@property (weak, nonatomic) IBOutlet UITableView *mainTableView;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *lineHeightLayout;
+@property (strong, nonatomic) IBOutlet UIView *headView;
+
+@property (strong, nonatomic) IBOutlet UIView *NoResultHeaderView;
+@end
+
+@implementation StoreSearchResultViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    self.title = @"搜索结果";
+    if(_branchArray == nil)
+        _branchArray = [NSMutableArray array];
+    self.lineHeightLayout.constant = 0.5f;
+    _mainTableView.tableHeaderView = _NoResultHeaderView;
+    _mainTableView.backgroundColor = RGBHex(qwColor11);
+    [_mainTableView registerNib:[UINib nibWithNibName:storeCellIdentifier bundle:nil] forCellReuseIdentifier:storeCellIdentifier];
+    _mainTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    
+    if(self.branchArray.count == 0){
+    
+    [QWGLOBALMANAGER readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) { //add by jxb
+        
+        ProductByCodeModelR *modelR = [ProductByCodeModelR new];
+        modelR.city = mapInfoModel.city;
+        modelR.code = self.productCode;
+        modelR.longitude = @(mapInfoModel.location.coordinate.longitude);
+        modelR.latitude = @(mapInfoModel.location.coordinate.latitude);
+        
+        [ConsultStore MedicineDetailByCode:modelR success:^(BranchProductVo *model) {
+            
+            if([model.apiStatus intValue] == 0){
+                
+                self.title = model.name;
+                [_branchArray addObjectsFromArray:model.branchs];
+                [_mainTableView reloadData];
+            }
+        } failure:^(HttpException *e) {
+        }];
+    }];
+        
+    }else{
+        [_mainTableView reloadData];
+    }
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - UITableViewDelegate
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
+    
+    if(_branchArray.count > 0){
+       return 45.5f;
+    }else{
+        return 0.0f;
+    }
+}
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
+    if(_branchArray.count > 0){
+        return _headView;
+    }else{
+        return nil;
+    }
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    
+    return self.branchArray.count;
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    return [WeiStoreTableViewCell getCellHeight:self.branchArray[indexPath.row]];
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    WeiStoreTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:storeCellIdentifier];
+    MicroMallBranchVo *model = self.branchArray[indexPath.row];
+    cell.path = indexPath;
+    cell.priceLabel.hidden = NO;
+    cell.priceLabel.text = [NSString stringWithFormat:@"￥%.2f",[model.price floatValue]];
+    __weak StoreSearchResultViewController *weakSelf =self;
+    [cell setCell:model withSpell:^(NSIndexPath *path) {
+        
+        MicroMallBranchVo *model = self.branchArray[path.row];
+        model.spelled = !model.spelled;
+        [weakSelf.mainTableView reloadRowsAtIndexPaths:@[path] withRowAnimation:UITableViewRowAnimationFade];
+    }];
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+   
+    MicroMallBranchVo *VO = self.branchArray[indexPath.row];
+    
+    MedicineDetailViewController *VC = [[MedicineDetailViewController alloc]initWithNibName:@"MedicineDetailViewController" bundle:nil];
+    VC.lastPageName = @"店内搜索结果页";
+    VC.proId = VO.branchProId;
+    [self.navigationController pushViewController:VC animated:YES];
+    
+    NSString *branchName = VO.name.length == 0?VO.branchName:VO.name;
+    [QWGLOBALMANAGER statisticsEventId:@"x_dnss_yf" withLable:nil withParams:[NSMutableDictionary dictionaryWithDictionary:@{@"药房名":branchName}]];
+}
+@end

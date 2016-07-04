@@ -1,0 +1,1177 @@
+//
+//  ConsultPharmacyViewController.m
+//  wenyao
+//  附近药房列表  225老版本
+//  Created by xiezhenghong on 14-9-17.
+//  Copyright (c) 2014年 xiezhenghong. All rights reserved.
+//
+
+#import "newConsultPharmacyViewController.h"
+#import "ConsultTableViewCell.h"
+#import "ReceiverAddressTableViewController.h"
+
+#import "ComboxView.h"
+#import "RightAccessButton.h"
+
+#import "MJRefresh.h"
+#import "CityListViewController.h"
+#import "UIImageView+WebCache.h"
+
+#import "LLARingSpinnerView.h"
+#import "SBJson.h"
+
+#import "LoginViewController.h"
+#import "SVProgressHUD.h"
+#import "ConsultPharmacySearchViewController.h"
+#import "PharmacyStoreDetailViewController.h"
+#import <AMapSearchKit/AMapSearchAPI.h>
+
+#import "QWGlobalManager.h"
+
+#import "QWUserDefault.h"
+
+#import "ComboxViewCell.h"
+#import "ComboxRightViewTableViewCell.h"
+
+#import "StoreModelR.h"
+#import "StoreModel.h"
+#import "Store.h"
+#import "MapInfoModel.h"
+#import "PublicAPI.h"
+#import "PublicModel.h"
+#import "PublicModelR.h"
+#import "SelectView.h"
+
+
+@interface newConsultPharmacyViewController ()<ComboxViewDelegate,
+MAMapViewDelegate,AMapSearchDelegate,UISearchBarDelegate>
+{
+    ComboxView                  *leftComboxView;
+    ComboxView                  *rightComboxView;
+    SelectView                  *rightSelectView;
+    
+    RightAccessButton           *leftButton;
+    RightAccessButton           *rightButton;
+    
+    UIView                      *messageView;
+    UILabel                     *messageLabel;
+    UIImageView                 *messageimage;
+    UILabel                     *addressLabel;
+    UISegmentedControl          *segementView;
+    
+    NSArray                     *leftMenuItems;
+    NSArray                     *rightMenuItems;
+    
+//    BOOL pflag0Before;
+//    BOOL pflag1Before;
+//    BOOL pflag2Before;
+//    BOOL pflag3Before;
+    
+    BOOL flag0Before;
+    BOOL flag1Before;
+    BOOL flag2Before;
+    BOOL flag3Before;
+    
+//    BOOL pflag0;
+//    BOOL pflag1;
+//    BOOL pflag2;
+//    BOOL pflag3;
+    
+    BOOL flag0;
+    BOOL flag1;
+    BOOL flag2;
+    BOOL flag3;
+    
+    
+    NSUInteger                  currentPage;
+//    NSUInteger                  pleftIndex;
+    NSUInteger                  leftIndex;
+    NSUInteger                  rightIndex;
+    NSUInteger                  centerIndex;
+    
+    NSMutableDictionary         *cacheSetting;
+    CLLocation                  *selfCurrentLocation;
+    NSDictionary                *cityList;
+    AMapReGeocode               *__reGeocode;
+    UISearchBar                 *searchBar;
+    UIBarButtonItem             *searchBarButton;
+    
+    UIBarButtonItem *rightBarButton;
+    
+    MapInfoModel *currentMapInfoModel;
+    MapInfoModel *oldMapInfoModel;
+    
+    BOOL                        isShowPromotion;
+    BOOL                        firstPushIntoView;
+    NSInteger                   rightOrLeft;
+    //    AreaCodeAndMapInfoModel *areaCodeAndMapInfoModel;
+}
+//@property (nonatomic, strong) NSString          *lastCityName;//上次定位的位置
+//showType为1区域范围内       2为全国范围内
+@property (nonatomic, assign) NSUInteger               showType;
+@property (nonatomic, strong) NSString                 *selectedCityName;
+@property (nonatomic, strong) NSMutableArray           *dataSource;
+@property (nonatomic, strong) NSMutableArray            *filterDataSource;
+@property (nonatomic, assign) BOOL                      resetEnable;
+@property (nonatomic, strong) UILabel                   *locationWatingLabel;
+@property (nonatomic, strong) UIActivityIndicatorView   *watingIndicator;
+@property (nonatomic, strong) LLARingSpinnerView        *spinnerView;
+@property (nonatomic ,strong) NSString                  *lastCityName;
+@property (nonatomic ,strong) UITableView               *rootTableView;
+@property (nonatomic ,strong) NSMutableArray            *topStarArr;
+
+@end
+
+@implementation newConsultPharmacyViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self)
+    {
+        self.segementIndex = 0;
+    }
+    return self;
+}
+
+#pragma mark
+#pragma mark ------viewDidLoad------
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    //add at 10月10日
+    
+    isShowPromotion = YES;
+    firstPushIntoView = YES;
+    self.dataType = Enum_Data_Promotion;
+    currentMapInfoModel = [[MapInfoModel alloc] init];
+    oldMapInfoModel = [[MapInfoModel alloc] init];
+    CGRect rect = self.view.frame;
+    rect.size.height -= 64;
+    self.view.frame = rect;
+    self.dataSource = [NSMutableArray arrayWithCapacity:15];
+    self.topStarArr = [NSMutableArray array];
+    self.filterDataSource = [NSMutableArray arrayWithCapacity:15];
+    
+    leftMenuItems = @[@"按距离",@"按人气",@"按评价"];
+    rightMenuItems = @[@"医保定点",@"送药上门",@"24H药房"];
+//    pleftIndex = 0;
+//    pflag0 = NO;
+//    pflag1 = NO;
+//    pflag2 = NO;
+//    pflag3 = NO;
+//    pflag0Before = NO;
+//    pflag1Before = NO;
+//    pflag2Before = NO;
+//    pflag3Before = NO;
+    leftIndex = 0;
+    flag0 = NO;
+    flag1 = NO;
+    flag2 = NO;
+    flag3 = NO;
+    flag0Before = NO;
+    flag1Before = NO;
+    flag2Before = NO;
+    flag3Before = NO;
+    
+    searchBarButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"搜索"] style:UIBarButtonItemStylePlain target:self action:@selector(searchBarButtonClick)];
+    self.navigationItem.rightBarButtonItems = @[searchBarButton];
+    
+    [self setupSegmentView];
+    [self setupTableView];
+    self.showType = 1;
+    [self setupHeaderView];
+    
+    [self.rootTableView addFooterWithTarget:self action:@selector(footerRereshing)];
+    self.rootTableView.footerPullToRefreshText = kWarning6;
+    self.rootTableView.footerReleaseToRefreshText = kWarning7;
+    self.rootTableView.footerRefreshingText = kWarning9;
+    self.rootTableView.footerNoDataText = kWarning44;
+    
+    [self storeSearchRegionWithFlag:YES];
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    ((QWBaseNavigationController *)self.navigationController).canDragBack = NO;
+    
+    NSString *address = [QWGLOBALMANAGER QWGetLocation].formattedAddress;
+    NSString *city = [QWGLOBALMANAGER QWGetLocation].city;
+    if ([address rangeOfString:city].location != NSNotFound) {
+        addressLabel.text = [[address componentsSeparatedByString:city] lastObject];
+    }else {
+        addressLabel.text = address;
+    }
+    
+    if(!_comeFromHomePage){
+        [self naviLeftBottonImage:nil highlighted:nil action:nil];
+    }
+    [QWCLICKEVENT qwTrackPageBegin:@"ConsultPharmacyViewController"];
+}
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    ((QWBaseNavigationController *)self.navigationController).canDragBack = YES;
+    [QWCLICKEVENT qwTrackPageEnd:@"ConsultPharmacyViewController"];
+}
+
+- (void)popVCAction:(id)sender{
+    
+    [QWGLOBALMANAGER statisticsEventId:@"x_yflb_fh" withLable:@"药房列表" withParams:nil];
+}
+#pragma mark - 建立SegmentView
+- (void)setupSegmentView{
+    
+    segementView = [[UISegmentedControl alloc]initWithItems:@[@"优惠药房",@"全部药房"]];
+    segementView.frame = CGRectMake(0, 0, 150, 30);
+    
+    segementView.tintColor = [UIColor whiteColor];
+    
+    //    [segementView setBackgroundImage:[UIImage imageNamed:@"btn_img_left"] forState:UIControlStateNormal barMetrics:UIBarMetricsDefault];
+    
+    NSDictionary *dicSelected = [NSDictionary dictionaryWithObjectsAndKeys:RGBHex(0x5abba8),UITextAttributeTextColor,  fontSystem(13.0f),UITextAttributeFont ,[UIColor clearColor],UITextAttributeTextShadowColor ,nil];
+    [segementView setTitleTextAttributes:dicSelected forState:UIControlStateSelected];
+    
+    NSDictionary *dicNormal = [NSDictionary dictionaryWithObjectsAndKeys:RGBHex(qwColor4),UITextAttributeTextColor,  fontSystem(13.0f),UITextAttributeFont ,[UIColor clearColor],UITextAttributeTextShadowColor ,nil];
+    [segementView setTitleTextAttributes:dicNormal forState:UIControlStateNormal];
+    
+    segementView.selectedSegmentIndex = self.segementIndex;
+    [segementView addTarget:self action:@selector(segementAction:)forControlEvents:UIControlEventValueChanged];  //
+    self.navigationItem.titleView=segementView;
+}
+
+#pragma mark - 顶部UISegementView切换触发函数
+- (void)segementAction:(UISegmentedControl *)sender{
+    
+    [leftComboxView dismissView];
+    [rightComboxView dismissView];
+    
+    if (self.cityCloseInfoModel) {//如果上个页面定位城市未开通
+        [self showMessageLabel:kWarning215N10];
+        self.locationWatingLabel.text = self.cityCloseInfoModel.formattedAddress;
+        return;
+    }
+    
+    switch (sender.selectedSegmentIndex) {
+        case 0:
+            //表示显示优惠药房
+            DDLogVerbose(@"显示优惠药房数据");
+            rightMenuItems = @[@"医保定点",@"送药上门",@"24H药房"];
+            isShowPromotion = YES;
+
+//            [leftButton setButtonTitle:leftMenuItems[pleftIndex]];
+            [leftButton setButtonTitle:leftMenuItems[leftIndex]];
+            [leftComboxView.tableView reloadData];
+            break;
+        case 1:
+            //表示显示全部药房
+            DDLogVerbose(@"显示全部药房数据");
+            rightMenuItems = @[@"医保定点",@"送药上门",@"24H药房",@"已开通服务"];
+            isShowPromotion = NO;
+
+            [leftButton setButtonTitle:leftMenuItems[leftIndex]];
+            [leftComboxView.tableView reloadData];
+
+            break;
+        default:
+            break;
+    }
+    
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {//有网络
+        [self loadNearbyStoreCache];
+    }else{
+        currentPage = 1;
+        [self storeSearchRegionWithFlag:YES];
+    }
+}
+
+#pragma mark - UITbaleView初始化
+- (void)setupTableView
+{
+    CGRect rect = CGRectMake(0, 72.0f, APP_W, APP_H - NAV_H - 44 - 72);
+  
+    self.rootTableView = [[UITableView alloc] initWithFrame:rect style:UITableViewStylePlain];
+    self.rootTableView.delegate = self;
+    self.rootTableView.dataSource = self;
+    self.rootTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    self.rootTableView.backgroundColor = RGBHex(qwColor11);
+    UIView *footView = [[UIView alloc]init];
+    footView.backgroundColor = RGBHex(qwColor11);
+    self.rootTableView.tableFooterView = footView;
+    [self.rootTableView addStaticImageHeader];
+    [self.view addSubview:self.rootTableView];
+}
+
+#pragma mark - 首页重新定位和更换地址
+- (void)getNotifType:(Enum_Notification_Type)type data:(id)data target:(id)obj{
+    
+    if (NotifLocateFinished == type) {
+        MapInfoModel *addressModel=(MapInfoModel*)data;
+        
+        //更改UI并且重新请求当前定位下的药房列表数据
+        NSString *address = addressModel.formattedAddress;
+        NSString *city = addressModel.city;
+        if ([address rangeOfString:city].location != NSNotFound) {
+            addressLabel.text = [[address componentsSeparatedByString:city] lastObject];
+        }else {
+            addressLabel.text = address;
+        }
+        [self storeSearchRegionWithFlag:YES];
+        
+    }else if (NotifManualUpdateAddress == type){//更换地址的通知
+        MapInfoModel *addressModel = [QWUserDefault getObjectBy:kModifiedCityModel];
+        
+        //更改UI并且重新请求当前定位下的药房列表数据
+        NSString *address = addressModel.formattedAddress;
+        NSString *city = addressModel.city;
+        if ([address rangeOfString:city].location != NSNotFound) {
+            addressLabel.text = [[address componentsSeparatedByString:city] lastObject];
+        }else {
+            addressLabel.text = address;
+        }
+        [self storeSearchRegionWithFlag:YES];
+        
+    }
+    
+    
+}
+
+
+
+#pragma mark
+#pragma mark 准备获取服务器数据
+- (void)willRequestStoreSearchData:(CLLocation *)location
+                          cityName:(NSString *)cityName
+                      provinceName:(NSString *)provinceName
+{
+    currentMapInfoModel.location = location;
+    currentMapInfoModel.city = cityName;
+    currentMapInfoModel.province = provinceName;
+
+    
+    [self segementAction:segementView];
+}
+
+#pragma mark - 加载本地缓存数据
+- (void)loadNearbyStoreCache
+{
+    NSArray *array;
+    
+    if(isShowPromotion){
+        array = [StoreNearByModel getArrayFromDBWithWhere:@"pageIndex=0"];
+    }else{
+        array = [StoreNearByModel getArrayFromDBWithWhere:@"pageIndex=1"];
+    }
+
+    if (array.count > 0) {
+        [self hiddenTableViewHeader];
+        self.dataSource = [NSMutableArray arrayWithArray:array];
+        
+        [self tableViewReloadData];
+    }else{
+        [self showInfoView:kWarning29 image:@"网络信号icon.png"];
+    }
+}
+
+#pragma mark
+#pragma mark 通过网络加载药店列表
+/**
+ *  @brief 请求服务器数据  flag表示是否需要清空数组
+ *
+ *  @param flag 表示是否需要清空数组
+ */
+- (void)storeSearchRegionWithFlag:(BOOL)flag
+{
+    [self removeInfoView];
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+        return;
+    }
+    
+    [QWGLOBALMANAGER readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) {
+        
+        StoreSearchRegionModelR *regionModelR = [StoreSearchRegionModelR new];
+        regionModelR.longitude = [NSNumber numberWithFloat:mapInfoModel.location.coordinate.longitude];
+        regionModelR.latitude = [NSNumber numberWithFloat:mapInfoModel.location.coordinate.latitude];
+        regionModelR.province = mapInfoModel.province;
+        regionModelR.city = mapInfoModel.city;
+        
+        regionModelR.active = @0;//active 药店服务状态：0全部、-1即将开通、1已开通
+        if (flag) {//需要清空数组
+            currentPage = 1;
+        }
+        NSString *tag = @"";
+        switch (leftIndex) {
+            case 0:
+            {
+                regionModelR.sort = @0;
+                break;
+            }
+            case 1:
+            {
+                regionModelR.sort = @1;
+                break;
+            }
+            case 2:
+            {
+                regionModelR.sort = @2;
+                break;
+            }
+            default:
+                break;
+        }
+        
+        if(flag2){//24H药房
+            tag = @"1";
+        }
+        if(flag0){//医保定点
+            if([tag isEqualToString:@""]){
+                tag = @"2";
+            }else{
+                tag = [NSString stringWithFormat:@"%@_#QZSP#_2",tag];
+            }
+        }
+        if(flag1){//送药上门
+            if([tag isEqualToString:@""]){
+                tag = @"3";
+            }else{
+                tag = [NSString stringWithFormat:@"%@_#QZSP#_3",tag];
+            }
+        }
+        if(![tag isEqualToString:@""]){
+            regionModelR.tags = tag;
+        }
+        if(flag3){//已开通服务
+            regionModelR.active = @1;
+        }else{
+            regionModelR.active = @0;
+        }
+        regionModelR.page = [NSNumber numberWithInteger:currentPage];
+        regionModelR.pageSize = @10;
+        DebugLog(@"post = %@",regionModelR);
+        [self.rootTableView setFooterHidden:NO];
+        if (flag) {
+            HttpClientMgr.progressEnabled = YES;
+        }else{
+            HttpClientMgr.progressEnabled = NO;
+        }
+        
+        if(isShowPromotion == YES){
+            if(firstPushIntoView){
+                regionModelR.check = @"1";
+                [self startHTTPRequestWithParam:regionModelR andPromotion:YES andFlag:flag];
+            }else{
+                regionModelR.check = @"0";
+                [self startHTTPRequestWithParam:regionModelR andPromotion:YES andFlag:flag];
+            }
+        }else{
+            [self startHTTPRequestWithParam:regionModelR andPromotion:isShowPromotion andFlag:flag];
+        }
+    }];
+}
+
+- (void)startHTTPRequestWithParam:(StoreSearchRegionModelR *)regionModelR andPromotion:(BOOL)promotion andFlag:(BOOL)flag{
+    
+    [self hiddenMessageLabel];
+    if([regionModelR.page intValue] == 1){
+        [QWLOADING showLoading];
+    }
+    if(flag){
+        [self.rootTableView.footer setCanLoadMore:YES];
+    }
+    [Store getNearByStoreWithParam:regionModelR withPromotion:isShowPromotion success:^(id responseObj) {
+        
+        [self.rootTableView.footer endRefreshing];
+        NSMutableArray *keyArr = [NSMutableArray array];
+        [keyArr addObject:NSStringFromClass([StoreNearByModel class])];
+        [keyArr addObject:NSStringFromClass([StoreNearByTagModel class])];
+        NSMutableArray *valueArr = [NSMutableArray array];
+        [valueArr addObject:@"list"];
+        [valueArr addObject:@"tags"];
+        StoreNearByListModel *listModel = [StoreNearByListModel parse:responseObj ClassArr:keyArr Elements:valueArr];
+        
+        NSMutableArray *list = [NSMutableArray arrayWithArray:listModel.list];
+        
+        //测试使用，模拟附近优惠药房没有数据-start
+//        if(promotion == YES){
+//            [list removeAllObjects];
+//        }
+        //测试使用，模拟附近优惠药房没有数据-end
+        
+        if (flag && list.count == 0) {
+            
+            if(firstPushIntoView){
+                
+                isShowPromotion = NO;
+                self.dataType = Enum_Data_All;
+                [segementView setSelectedSegmentIndex:1];
+                [self segementAction:segementView];
+                firstPushIntoView = NO;
+                return;
+            }else{
+                
+                if(promotion){
+                    if(flag0 || flag1 || flag2){
+                        //优惠药房列表筛选过后
+                        [self showMessageLabel:@"没有符合条件的优惠药店"];
+                    }else{
+                        //优惠药房列表未经筛选
+                        [self showMessageLabel:@"您所在城市暂时没有优惠"];
+                    }
+                }else{
+                    if(flag0 || flag1 || flag2 || flag3){
+                        //全部药房列表筛选过后
+                        [self showMessageLabel:@"没有符合条件的优惠药店"];
+                    }else{
+                        //全部药房列表未经筛选
+                        [self showMessageLabel:@"您所在城市暂时没有优惠"];
+                    }
+                }
+                
+                [QWLOADING removeLoading];
+                [self.rootTableView.footer setCanLoadMore:NO];
+            }
+            
+        }
+        firstPushIntoView = NO;
+       
+        
+        if (flag) { //第一页时
+            [self.topStarArr removeAllObjects];
+            for (StoreNearByModel *nearByModel in list) {
+                if ([nearByModel.isTopStar isEqualToString:@"Y"]) {
+                    [self.topStarArr addObject:nearByModel];
+                }
+            }
+            [self.dataSource removeAllObjects];
+        }else{ //大于第一页
+            for (int i=0; i<list.count; i++) {
+                StoreNearByModel *nearByModel = list[i];
+                
+                for (int j = 0; j<self.topStarArr.count; j++) {
+                    StoreNearByModel *topStarModel = self.topStarArr[j];
+                    if ([nearByModel.branchId isEqualToString:topStarModel.branchId]) {//分页大于第一页时,如果存在明星药房,则删除该药房
+                        [list removeObject:nearByModel];
+                    }
+                }
+            }
+            if(list.count == 0){
+                [self.rootTableView.footer endRefreshing];
+                [self.rootTableView.footer setCanLoadMore:NO];
+            }
+        }
+        
+        [self.dataSource addObjectsFromArray:list];
+        [self tableViewReloadData];
+        if (flag == YES) { //只缓存第一页数据
+            
+            //            ???????????????
+//            [StoreNearByModel deleteAllObjFromDB];
+            //            ????????????????
+            
+            for (StoreNearByModel *model in list) {
+                if(promotion == YES){
+                    
+                    model.accountId = [NSString stringWithFormat:@"%@0",model.accountId];
+                    model.pageIndex = 0;
+                }else{
+                    model.accountId = [NSString stringWithFormat:@"%@1",model.accountId];
+                    model.pageIndex = 1;
+                }
+            }
+            if(promotion == YES){
+                [StoreNearByModel deleteWithWhere:@"pageIndex=0"];
+            }else{
+                [StoreNearByModel deleteWithWhere:@"pageIndex=1"];
+            }
+            
+            [StoreNearByModel insertToDBWithArray:list filter:^(id model, BOOL inserted, BOOL *rollback) {
+             
+            }];
+            
+            
+        }
+        if (self.dataSource.count > 0) {
+            currentPage ++;
+        }else{
+            
+        }
+        [QWLOADING removeLoading];
+    } failure:^(HttpException *e) {
+        [self.rootTableView.footer endRefreshing];
+        if (e.errorCode != -999) {
+            if(e.errorCode == -1001){
+                [self showMessageLabel:kWarning215N26];
+            }else{
+                [self showMessageLabel:kWarning39];
+            }
+        }
+        [QWLOADING removeLoading];
+    }];
+}
+
+
+- (void)tableViewReloadData
+{
+    
+    //如果断网情况下,就把顶端的空间给移除
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+        [self hiddenTableViewHeader];
+    }
+    [self.rootTableView reloadData];
+}
+
+
+#pragma mark - 无数据背景提示UI
+- (void)showMessageLabel:(NSString *)message
+{
+    
+    if(messageView == nil){
+        messageView = [[UIView alloc]initWithFrame:CGRectMake(0, 38, APP_W, APP_H - NAV_H - 76)];
+        messageView.backgroundColor = RGBHex(qwColor11);
+    }
+    if(messageimage == nil){
+        
+        messageimage = [[UIImageView alloc]initWithFrame:CGRectMake((APP_W - 150)/2, 20, 150, 150)];
+        messageimage.image = [UIImage imageNamed:@"ic_img_cry"];
+        [messageView addSubview:messageimage];
+    }
+    
+    if(messageLabel == nil){
+        messageLabel = [[UILabel alloc]init];
+        messageLabel.frame = CGRectMake(0, 0, APP_W, 30);
+        messageLabel.center = messageView.center;
+        CGRect rect = messageLabel.frame;
+        rect.origin.y = messageimage.frame.origin.y + messageimage.frame.size.height + 25;
+        messageLabel.frame = rect;
+        
+        messageLabel.numberOfLines = 0;
+        messageLabel.font = fontSystem(14.0f);
+        messageLabel.textColor = RGBHex(qwColor7);
+        messageLabel.backgroundColor = [UIColor clearColor];
+        messageLabel.textAlignment = NSTextAlignmentCenter;
+        
+        [messageView addSubview:messageLabel];
+    }
+    messageLabel.text = message;
+    [self.view addSubview:messageView];
+    
+
+}
+
+- (void)hiddenMessageLabel
+{
+    if(messageView != nil){
+        [messageView removeFromSuperview];
+    }
+}
+
+#pragma mark
+#pragma mark 上拉刷新
+- (void)footerRereshing
+{
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+        [SVProgressHUD showErrorWithStatus:kWarning29 duration:DURATION_SHORT];
+        [self.rootTableView.footer endRefreshing];
+        return;
+    }
+    [self storeSearchRegionWithFlag:NO];
+}
+
+#pragma mark - 建立筛选框UI
+- (void)setupHeaderView
+{
+    UIImageView *headerView = nil;
+    if(![self.view viewWithTag:1008])
+    {
+        headerView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, APP_W, 72)];
+        headerView.tag = 1008;
+        headerView.userInteractionEnabled = YES;
+        headerView.backgroundColor = RGBHex(qwColor4);
+//        [headerView setImage:[UIImage imageNamed:@"菜单下拉背景new.png"]];
+        UIView *line = [[UIView alloc]initWithFrame:CGRectMake(APP_W/2, 4, 0.5, 40)];
+        line.backgroundColor = RGBHex(qwColor10);
+        [headerView addSubview:line];
+        
+        leftButton = [[RightAccessButton alloc] initWithFrame:CGRectMake(0, 0, APP_W / 2.0, 40)];
+        [headerView addSubview:leftButton];
+        rightButton = [[RightAccessButton alloc] initWithFrame:CGRectMake(APP_W / 2.0, 0, APP_W / 2.0, 40)];
+        [headerView addSubview:rightButton];
+        
+        UIImageView *accessView1 = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 12, 11)];
+        UIImageView *accessView2 = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 18, 18)];
+
+        
+        [accessView1 setImage:[UIImage imageNamed:@"btn_img_down.png"]];
+        [accessView2 setImage:[UIImage imageNamed:@"btn_img_choose"]];
+ 
+        
+        leftButton.accessIndicate = accessView1;
+        rightButton.accessIndicate = accessView2;
+
+        [leftButton setCustomColor:RGBHex(qwColor6)];
+        [rightButton setCustomColor:RGBHex(qwColor6)];
+
+        
+        [leftButton setButtonTitle:@"按距离"];
+        [rightButton setButtonTitle:@"筛选"];
+        leftButton.customFont = fontSystem(kFontS4);
+        rightButton.customFont = fontSystem(kFontS4);
+        
+        [rightButton addTarget:self action:@selector(showRightTable:) forControlEvents:UIControlEventTouchDown];
+        [leftButton addTarget:self action:@selector(showLeftTable:) forControlEvents:UIControlEventTouchDown];
+        
+        leftComboxView = [[ComboxView alloc] initWithFrame:CGRectMake(0, 38, APP_W, [leftMenuItems count]*46)];
+        leftComboxView.delegate = self;
+        leftComboxView.comboxDeleagte = self;
+        leftComboxView.tableView.scrollEnabled = NO;
+        
+        rightComboxView = [[ComboxView alloc] initWithFrame:CGRectMake(0, 38, APP_W, [rightMenuItems count]*46)];
+        rightComboxView.delegate = self;
+        rightComboxView.comboxDeleagte = self;
+        rightComboxView.tableView.scrollEnabled = NO;
+        
+//        pleftIndex = 0;
+        leftIndex = 0;
+        rightIndex = 0;
+        
+        UIView *addressView = [[UIView alloc]initWithFrame:CGRectMake(0, 40, APP_W, 32)];
+        addressView.backgroundColor = RGBHex(qwColor11);
+        
+        UIImageView *LocationImage = [[UIImageView alloc]initWithFrame:CGRectMake(15, 9.5, 13, 13)];
+        LocationImage.image = [UIImage imageNamed:@"icon_details_map_grey"];
+        [addressView addSubview:LocationImage];
+        
+        UIImageView *editImage = [[UIImageView alloc]initWithFrame:CGRectMake(APP_W - 30, 8.5, 15, 15)];
+        editImage.image = [UIImage imageNamed:@"icon_editor_grey"];
+        [addressView addSubview:editImage];
+        
+        //地址编辑按钮
+        UIButton *editBtn = [[UIButton alloc]initWithFrame:CGRectMake(0, 0, APP_W, 35)];
+        [editBtn addTarget:self action:@selector(editAddress:) forControlEvents:UIControlEventTouchUpInside];
+        [addressView addSubview:editBtn];
+        
+        if(!addressLabel){
+            addressLabel = [[UILabel alloc]initWithFrame:CGRectMake(33, 0, APP_W - 65, 32)];
+            addressLabel.font = fontSystem(kFontS5);
+            addressLabel.textColor = RGBHex(qwColor7);
+            addressLabel.text = @"";
+            [addressView addSubview:addressLabel];
+        }
+        [headerView addSubview:addressView];
+
+    }else{
+        headerView = (UIImageView *)[self.view viewWithTag:1008];
+    }
+    [self.view addSubview:headerView];
+}
+
+#pragma mark - 编辑地址
+- (void)editAddress:(id)sender{
+    
+    ReceiverAddressTableViewController *VC = [[ReceiverAddressTableViewController alloc]init];
+    VC.pageType = PageComeFromStoreList;
+    VC.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:VC animated:YES];
+}
+
+#pragma mark - 隐藏筛选框UI
+- (void)hiddenTableViewHeader
+{
+    UIView *headView = (UIView *)[self.view viewWithTag:1008];
+    if (headView) {
+        [headView removeFromSuperview];
+    }
+    CGRect rect = CGRectMake(0, 32, APP_W, APP_H - NAV_H - 32 - 44);
+    self.rootTableView.frame = rect;
+}
+
+#pragma mark - 展示左边筛选框
+- (void)showLeftTable:(id)sender
+{
+    [rightButton changeArrowDirectionUp:NO];
+    rightButton.isToggle = NO;
+    [rightComboxView dismissView];
+    rightButton.accessIndicate.image = [UIImage imageNamed:@"btn_img_choose"];
+
+
+    if(leftButton.isToggle) {
+        [leftComboxView dismissView];
+        [leftButton changeArrowDirectionUp:NO];
+        leftButton.accessIndicate.image = [UIImage imageNamed:@"btn_img_down"];
+    }else{
+        [leftButton setTitleColor:RGBHex(qwColor2) forState:UIControlStateNormal];
+        rightOrLeft = 0;
+        [leftComboxView showInView:self.view];
+        [leftButton changeArrowDirectionUp:YES];
+        leftButton.accessIndicate.image = [UIImage imageNamed:@"btn_img_up"];
+        leftButton.isToggle = YES;
+    }
+}
+
+- (void)comboxViewDidDisappear:(ComboxView *)combox{
+    
+    if([combox isEqual:leftComboxView]){
+        [leftButton setTitleColor:RGBHex(qwColor7) forState:UIControlStateNormal];
+        [leftButton changeArrowDirectionUp:NO];
+        leftButton.accessIndicate.image = [UIImage imageNamed:@"btn_img_down"];
+        leftButton.isToggle = NO;
+    }else{
+        [rightButton setTitleColor:RGBHex(qwColor7) forState:UIControlStateNormal];
+        rightButton.accessIndicate.image = [UIImage imageNamed:@"btn_img_choose"];
+        rightButton.isToggle = NO;
+        [self ViewSelected];
+    }
+}
+
+- (void)ViewSelected{
+    
+    if(flag0 == flag0Before && flag1 == flag1Before && flag2 == flag2Before && flag3 == flag3Before){
+        
+    }else{
+        [self storeSearchRegionWithFlag:YES];
+    }
+    flag0Before = flag0;
+    flag1Before = flag1;
+    flag2Before = flag2;
+    flag3Before = flag3;
+}
+
+#pragma mark - 展示右边筛选框
+- (void)showRightTable:(id)sender
+{
+    [leftButton changeArrowDirectionUp:NO];
+    leftButton.isToggle = NO;
+    [leftComboxView dismissView];
+    leftButton.accessIndicate.image = [UIImage imageNamed:@"btn_img_down"];
+    
+    
+    if(rightButton.isToggle) {
+        rightButton.accessIndicate.image = [UIImage imageNamed:@"btn_img_choose"];
+        [rightComboxView dismissView];
+        
+    }else{
+        [rightButton setTitleColor:RGBHex(qwColor2) forState:UIControlStateNormal];
+        rightOrLeft = 1;
+        rightComboxView.frame = CGRectMake(0, 38, APP_W, APP_H);
+        rightComboxView.tableView.frame = CGRectMake(0, 0, APP_W, rightMenuItems.count * 46);
+        [rightComboxView.tableView reloadData];
+        //筛选橘黄色按钮
+        rightButton.accessIndicate.image = [UIImage imageNamed:@"btn_img_chooseselect"];
+        [rightComboxView showInView:self.view];
+        
+        rightButton.isToggle = YES;
+    }
+}
+
+#pragma mark - 右上角搜索按钮点击触发事件
+- (void)searchBarButtonClick
+{
+    ConsultPharmacySearchViewController *consultPharmacySearchViewController = [[ConsultPharmacySearchViewController alloc] init];
+    consultPharmacySearchViewController.mapInfoModel = currentMapInfoModel;
+    consultPharmacySearchViewController.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:consultPharmacySearchViewController animated:NO];
+}
+
+
+#pragma mark -
+#pragma mark UITableViewDelegate
+- (CGFloat)tableView:(UITableView *)atableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([atableView isEqual:self.rootTableView])
+        return 90.0f;
+    else
+        return 46;
+}
+
+- (NSInteger)tableView:(UITableView *)atableView numberOfRowsInSection:(NSInteger)section
+{
+    if([atableView isEqual:self.rootTableView])
+    {
+        return [self.dataSource count];
+    }else if([atableView isEqual:leftComboxView.tableView])
+    {
+        return leftMenuItems.count;
+    }else{
+        
+        return rightMenuItems.count;
+    }
+
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)atableView
+{
+    return 1;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)atableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if([atableView isEqual:self.rootTableView]) {
+        static NSString *ConsultPharmacyIdentifier = @"ConsultTableViewCell";
+        ConsultTableViewCell *cell = (ConsultTableViewCell *)[atableView dequeueReusableCellWithIdentifier:ConsultPharmacyIdentifier];
+        if(cell == nil){
+            UINib *nib = [UINib nibWithNibName:@"ConsultTableViewCell" bundle:nil];
+            [atableView registerNib:nib forCellReuseIdentifier:ConsultPharmacyIdentifier];
+            cell = (ConsultTableViewCell *)[atableView dequeueReusableCellWithIdentifier:ConsultPharmacyIdentifier];
+            //            [cell setHighlighted:YES animated:YES];
+        }
+        StoreNearByModel *storeModel = self.dataSource[indexPath.row];
+
+        //        UIView *line = [[UIView alloc]init];
+        //        line.frame = CGRectMake(0, cell.contentView.frame.size.height-0.5, cell.contentView.frame.size.width, 0.5);
+        //        line.backgroundColor = RGBHex(qwColor10);
+        //        [cell.contentView addSubview:line];
+        [cell setNearbyStoreCell:storeModel];
+        return cell;
+    }else if([atableView isEqual:leftComboxView.tableView]){
+        static NSString *MenuIdentifier = @"MenuIdentifier";
+        ComboxViewCell *cell = [atableView dequeueReusableCellWithIdentifier:MenuIdentifier];
+        if (cell == nil)
+        {
+            cell = [[ComboxViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:MenuIdentifier];
+            cell.separatorHidden = NO;
+            cell.textLabel.font = [UIFont systemFontOfSize:14.0f];
+            cell.textLabel.textColor = RGBHex(qwColor9);
+        }
+        if(indexPath.row == 0){
+            UIView *line = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, 0.5)];
+            line.backgroundColor = RGBHex(qwColor10);
+            [cell addSubview:line];
+        }
+        
+        NSString *content = nil;
+        BOOL showImage = NO;
+    
+        content = leftMenuItems[indexPath.row];
+        
+//        if(segementView.selectedSegmentIndex == 0){
+//            
+//            if(indexPath.row == pleftIndex) {
+//                showImage = YES;
+//            }
+//            
+//            [cell setCellWithContent:content showImage:showImage];
+//        }else{
+//            
+//            if(indexPath.row == leftIndex) {
+//                showImage = YES;
+//            }
+//            [cell setCellWithContent:content showImage:showImage];
+//        }
+        
+        if(indexPath.row == leftIndex) {
+            showImage = YES;
+        }
+        [cell setCellWithContent:content showImage:showImage];
+        
+        return cell;
+    }else{
+        static NSString *ConsultPharmacyIdentifier = @"ComboxRightViewTableViewCell";
+        ComboxRightViewTableViewCell *cell = (ComboxRightViewTableViewCell *)[atableView dequeueReusableCellWithIdentifier:ConsultPharmacyIdentifier];
+        if(cell == nil){
+            UINib *nib = [UINib nibWithNibName:@"ComboxRightViewTableViewCell" bundle:nil];
+            [atableView registerNib:nib forCellReuseIdentifier:ConsultPharmacyIdentifier];
+            cell = (ComboxRightViewTableViewCell *)[atableView dequeueReusableCellWithIdentifier:ConsultPharmacyIdentifier];
+            //            [cell setHighlighted:YES animated:YES];
+        }
+        
+//        if(segementView.selectedSegmentIndex == 0){
+//            
+//            if(indexPath.row == 0){
+//                UIView *line = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, 0.5)];
+//                line.backgroundColor = RGBHex(qwColor10);
+//                [cell addSubview:line];
+//                [cell setCellWithContent:rightMenuItems[indexPath.row] withSwitch:pflag0Before];
+//                
+//            }
+//            if(indexPath.row == 1){
+//                [cell setCellWithContent:rightMenuItems[indexPath.row] withSwitch:pflag1Before];
+//            }
+//            if(indexPath.row == 2){
+//                [cell setCellWithContent:rightMenuItems[indexPath.row] withSwitch:pflag2Before];
+//            }
+//            if(indexPath.row == 3){
+//                [cell setCellWithContent:rightMenuItems[indexPath.row] withSwitch:pflag3Before];
+//            }
+//            
+//            cell.switchButton.tag = indexPath.row;
+//            [cell.switchButton addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
+//        }else{
+//            
+//            if(indexPath.row == 0){
+//                UIView *line = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, 0.5)];
+//                line.backgroundColor = RGBHex(qwColor10);
+//                [cell addSubview:line];
+//                [cell setCellWithContent:rightMenuItems[indexPath.row] withSwitch:flag0Before];
+//                
+//            }
+//            if(indexPath.row == 1){
+//                [cell setCellWithContent:rightMenuItems[indexPath.row] withSwitch:flag1Before];
+//            }
+//            if(indexPath.row == 2){
+//                [cell setCellWithContent:rightMenuItems[indexPath.row] withSwitch:flag2Before];
+//            }
+//            if(indexPath.row == 3){
+//                [cell setCellWithContent:rightMenuItems[indexPath.row] withSwitch:flag3Before];
+//            }
+//            
+//            cell.switchButton.tag = indexPath.row;
+//            [cell.switchButton addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
+//        }
+        
+        if(indexPath.row == 0){
+            UIView *line = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, 0.5)];
+            line.backgroundColor = RGBHex(qwColor10);
+            [cell addSubview:line];
+            [cell setCellWithContent:rightMenuItems[indexPath.row] withSwitch:flag0Before];
+            
+        }
+        if(indexPath.row == 1){
+            [cell setCellWithContent:rightMenuItems[indexPath.row] withSwitch:flag1Before];
+        }
+        if(indexPath.row == 2){
+            [cell setCellWithContent:rightMenuItems[indexPath.row] withSwitch:flag2Before];
+        }
+        if(indexPath.row == 3){
+            [cell setCellWithContent:rightMenuItems[indexPath.row] withSwitch:flag3Before];
+        }
+        
+        cell.switchButton.tag = indexPath.row;
+        [cell.switchButton addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
+        
+        return cell;
+    }
+    
+    
+}
+
+#pragma mark - 右边筛选框内开关触发事件
+- (void)switchAction:(UISwitch *)btn{
+
+//    if(segementView.selectedSegmentIndex == 0){
+//        
+//        switch (btn.tag) {
+//            case 0:{
+//                DDLogVerbose(@"医保定点");
+//                pflag0 = btn.on;
+//                break;
+//            }
+//            case 1:{
+//                DDLogVerbose(@"送药上门");
+//                pflag1 = btn.on;
+//                break;
+//            }
+//            case 2:{
+//                DDLogVerbose(@"24H药房");
+//                pflag2 = btn.on;
+//                break;
+//            }
+//            case 3:{
+//                DDLogVerbose(@"已开通服务");
+//                pflag3 = btn.on;
+//                break;
+//            }
+//        }
+//    }else{
+//        
+//        switch (btn.tag) {
+//            case 0:{
+//                DDLogVerbose(@"医保定点");
+//                flag0 = btn.on;
+//                break;
+//            }
+//            case 1:{
+//                DDLogVerbose(@"送药上门");
+//                flag1 = btn.on;
+//                break;
+//            }
+//            case 2:{
+//                DDLogVerbose(@"24H药房");
+//                flag2 = btn.on;
+//                break;
+//            }
+//            case 3:{
+//                DDLogVerbose(@"已开通服务");
+//                flag3 = btn.on;
+//                break;
+//            }
+//        }
+//    }
+    
+    switch (btn.tag) {
+        case 0:{
+            DDLogVerbose(@"医保定点");
+            flag0 = btn.on;
+            break;
+        }
+        case 1:{
+            DDLogVerbose(@"送药上门");
+            flag1 = btn.on;
+            break;
+        }
+        case 2:{
+            DDLogVerbose(@"24H药房");
+            flag2 = btn.on;
+            break;
+        }
+        case 3:{
+            DDLogVerbose(@"已开通服务");
+            flag3 = btn.on;
+            break;
+        }
+    }
+
+}
+
+- (void)tableView:(UITableView *)atableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [atableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+        [SVProgressHUD showErrorWithStatus:kWarning12 duration:0.8f];
+        return;
+    }
+    
+    if([atableView isEqual:self.rootTableView]) {
+
+        StoreNearByModel *storeModel = self.dataSource[indexPath.row];
+        
+        //老药房列表可能有社会药房，需跳转新药房详情
+        if([storeModel.type intValue] == 0){
+            [SVProgressHUD showErrorWithStatus:@"type给了0"];
+            return;
+        }
+        if([storeModel.type intValue] == 2){
+     
+            [QWGLOBALMANAGER pushBranchDetail:storeModel.branchId withType:@"4" navigation:self.navigationController];
+        }else{
+            
+            [QWGLOBALMANAGER pushBranchDetail:storeModel.branchId withType:@"5" navigation:self.navigationController];
+        }
+        
+    }else if ([atableView isEqual:leftComboxView.tableView]) {
+        
+        if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+            [SVProgressHUD showErrorWithStatus:kWarning12 duration:0.8f];
+            return;
+        }
+        
+//        if(segementView.selectedSegmentIndex == 0){
+//            pleftIndex = indexPath.row;
+//        }else{
+//            leftIndex = indexPath.row;
+//        }
+        
+        leftIndex = indexPath.row;
+
+        
+        [leftButton setButtonTitle:leftMenuItems[indexPath.row]];
+        [leftComboxView dismissView];
+        [self storeSearchRegionWithFlag:YES];
+        [leftComboxView.tableView reloadData];
+    }
+}
+
+@end

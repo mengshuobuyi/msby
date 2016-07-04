@@ -1,0 +1,19 @@
+//
+//  StoreSocietyDetailViewController.h
+//  APP
+//  开通/未开通 微商城市社会药房详情
+//
+//  Created by 李坚 on 16/5/5.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "QWBaseVC.h"
+
+@interface StoreSocietyDetailViewController : QWBaseVC
+
+@property (nonatomic, strong) NSString *type;//药房type:2.开通微商城市社会药房
+@property (nonatomic, strong) NSString *branchId;//药房Id，传值
+
+
+@end

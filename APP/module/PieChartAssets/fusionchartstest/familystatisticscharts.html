@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Charts测试</title>
+    <link rel="stylesheet" href="jquery.mobile-1.4.5.min.css">
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="jquery.mobile-1.4.5.min.js"></script>
+    <script type="text/javascript" src="fusioncharts.js"></script>
+    <script type="text/javascript" src="fusioncharts.theme.fint.js"></script>
+    
+    <link rel="stylesheet" href="familystatisticscharts.css">
+    <script type="text/javascript">
+        $(document).on("pagebeforecreate",function(event){
+                       document.location="objc://"+"getChartsData"+":/"+"familytatisticscharts";
+                       // window.Android.getChartsData("familytatisticscharts");
+                       });
+                       
+                       function showCharts(jsonData){
+                           charts = function(id,chartsData){
+                               revenueChart = new FusionCharts({
+                                                               type: "doughnut2d",
+                                                               renderAt: id,
+                                                               width: "100%",
+                                                               height: "40%",
+                                                               dataFormat: "json",
+                                                               dataSource: {
+                                                               chart: {
+                                                               bgColor:"#ffffff",
+                                                               legendIconScale:1.5,
+                                                               showLegend:1,
+                                                               "caption": "",
+                                                               "showBorder": "0",
+                                                               "use3DLighting": "0",
+                                                               "enableSmartLabels": "1",
+                                                               smartLineColor:"#c2c2c2c",
+                                                               "startingAngle": "120",
+                                                               "showLabels": "1",
+                                                               "showPercentValues": "1",
+                                                               "enablemultislicing": "0",
+                                                               "showLegend": "0",
+                                                               legendNumColumns:1,
+                                                               drawCustomLegendIcon:1,
+                                                               legendIconBorderThickness:0,
+                                                               slicingdistance: "10",
+                                                               legendItemFontSize:"18",
+                                                               labelFontSize:10,
+                                                               "showTooltip": "0",
+                                                               "decimals": "0",
+                                                               "useDataPlotColorForLabels": "1",
+                                                               "theme": "fint"
+                                                               },
+                                                               data: chartsData
+                                                               },
+                                                               "events": {
+                                                               "renderComplete": function (eventObj, dataObj) {
+                                                               document.location="objc://"+"hideProgressBar"+":/";
+                                                               }
+                                                               }
+                                                               });
+                                                               revenueChart.render();
+                           };
+                           
+                           FusionCharts.ready(function () {
+                                              charts("memberChartContainer",jsonData.labels);
+                                              charts("medicineChartContainer",jsonData.charts);
+                                              });
+                                              //////////////////////////////////////
+                       }
+
+    </script>
+</head>
+<body>
+	<div data-role="page" id="page">
+
+	    <div role="main" class="ui-content">
+	    	<div class="halfPage">
+			    <div class="familystatistics">家庭成员以及家庭用药数量</div>
+			    <hr>
+		        <div id="memberChartContainer">在这里绘制图表</div>
+	        </div>
+
+	        <div class="halfPage">
+	        	<hr>
+		        <div class="familystatistics">用药类型及数量</div>
+		        <hr>
+		        <div id="medicineChartContainer">在这里绘制图表</div>
+	        </div>
+	    </div><!-- /content -->
+
+	</div><!-- /page -->
+</body>
+</html>

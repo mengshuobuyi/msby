@@ -1,0 +1,451 @@
+//
+//  ConsultStoreModel.h
+//  APP
+//
+//  Created by 李坚 on 16/1/5.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "BaseAPIModel.h"
+#import "BasePrivateModel.h"
+#import "MallCartModel.h"
+
+/**
+ *  药房是否有售卖Model
+ *  V4.0
+ */
+@interface BranchProVo : BaseAPIModel
+
+@property (nonatomic, assign) BOOL saleFlag;//商品是否有售
+@property (nonatomic, strong) NSString *id;//药房关联商品ID
+@property (nonatomic, strong) NSString *code;//商品编码,
+@property (nonatomic, strong) NSString *branchId;//门店Id,
+
+@end
+
+/**
+ *  QWGlobarManager定位mapInfoModel中branchInfoModel对应Model
+ *  V4.0
+ */
+@interface ConsultStoreModel : BaseModel
+
+@property (nonatomic, strong) NSString *branchId;//药房ID
+@property (nonatomic, strong) NSString *branchName;//药房名称
+
+@end
+
+/**
+ *  店内公告数据Model
+ *  V3.1
+ */
+@interface BranchNoticeVO : BaseAPIModel
+
+@property (nonatomic, strong) NSString *noticeId;   //ID
+@property (nonatomic, strong) NSString *title;      //标题
+@property (nonatomic, strong) NSString *content;    //内容
+
+@end
+
+/**
+ *  店内药品分类列表数据Model
+ *  V3.1
+ */
+@interface DrugClassifyList : BaseAPIModel
+
+@property (nonatomic, strong) NSArray *list;
+
+@end
+
+/**
+ *  店内药品分类数据Model
+ *  V3.1
+ */
+@interface DrugClassifyVO : BaseModel
+
+@property (nonatomic, strong) NSString *className;//分类名称
+@property (nonatomic, strong) NSString *classID;//分类ID
+@property (nonatomic, strong) NSString *classType;//分类类型:1.普通(包含优惠商品) 2.套餐
+
+@end
+
+/**
+ *  热门微商药房列表数据Model
+ *  V3.0
+ */
+@interface BranchTypeVo : BaseAPIModel
+@property (nonatomic, strong) NSString *type;//类型：1.未开通微商药房 2.社会药房 3.开通微商药房
+@property (nonatomic, strong) NSString *cityOpenType;//城市开通状态：1.城市未开通服务 2.城市未开通微商 3.城市开通微商
+@end
+
+/**
+ *  热门微商药房列表数据Model
+ *  V3.0
+ */
+@interface MicroMallBranchListVo : BaseAPIModel
+@property (nonatomic, strong) NSArray *branchs;//药房数组
+@end
+
+@interface MicroMallBranchVo : BaseModel
+
+@property (nonatomic, strong) NSString *cityName;//药房所在城市名称
+@property (nonatomic, assign) BOOL spelled;//是否展开活动
+@property (nonatomic, strong) NSString *id;//门店商品ID
+@property (nonatomic, strong) NSString *address;//地址
+@property (nonatomic, strong) NSString *longitude;//经度
+@property (nonatomic, strong) NSString *latitude;//纬度
+@property (nonatomic, strong) NSString *branchProId;//门店商品ID
+@property (nonatomic, strong) NSString *type;//类型1.开通微商药房2.未开通微商药房3.社会药房
+@property (nonatomic, strong) NSString *branchId;//药店ID
+@property (nonatomic, strong) NSString *name;//名称
+@property (nonatomic, strong) NSString *branchName;//名称
+@property (nonatomic, strong) NSString *branchAddress;//地址
+@property (nonatomic, strong) NSString *distance;//距离
+@property (nonatomic, strong) NSString *stars;//星级
+@property (nonatomic, strong) NSString *postTag;//配送标签
+@property (nonatomic, strong) NSString *price;//商品价格
+@property (nonatomic, strong) NSString *star;//是否明星药房
+@property (nonatomic, strong) NSString *logo;//图片
+@property (nonatomic, strong) NSString *branchLogo;//图片
+@property (nonatomic, strong) NSArray *promotions;//活动列表
+
+@end
+
+/**
+ *  药房店内商品搜索接口Model
+ *  V3.0
+ */
+@interface MicroMallProductSearchListVo : BaseAPIModel
+@property (nonatomic, strong) NSArray *products;//商品列表
+@property (nonatomic, strong) NSArray *branchs;//附近可售药房
+@end
+
+/**
+ *  门店商品分类及商品列表数据Model
+ *  V3.0
+ */
+@interface CategoryWrapperVo : BaseAPIModel
+@property (nonatomic, strong) NSArray *categorys;//商品分类
+@end
+
+@interface CategoryVo : BaseModel
+@property (nonatomic, strong) NSString *categoryId;//分类ID
+@property (nonatomic, strong) NSString *categoryName;//分类名称
+@property (nonatomic, strong) NSArray *products;//商品列表
+@end
+
+@interface BranchProductList : BaseAPIModel
+
+@property (nonatomic, strong) NSArray *list;//商品ID
+
+@end
+@interface OnSaleBranchListVo : BaseAPIModel
+
+@property (nonatomic, strong) NSArray *branchs;//药店列表
+
+@end
+
+
+@interface BranchProductVo : BaseAPIModel
+
+@property (nonatomic, strong) NSString *id;//商品ID
+@property (nonatomic, strong) NSString *code;//编码
+@property (nonatomic, strong) NSString *name;//名称
+@property (nonatomic, strong) NSString *brand;//品牌
+@property (nonatomic, strong) NSString *spec;//规格
+@property (nonatomic, strong) NSString *barcode;//条形码
+@property (nonatomic, strong) NSString *factory;//生产厂家
+@property (nonatomic, strong) NSString *imgUrl;//图片
+@property (nonatomic, strong) NSArray *imgUrls;//图片集合
+@property (nonatomic, assign) BOOL     inPromotion;//是否有优惠
+@property (nonatomic, strong) NSString *salePrice;//优惠价格
+@property (nonatomic, strong) NSString *price;//原价
+@property (nonatomic, strong) NSArray *promotions;//参与活动
+@property (nonatomic, strong) NSString *purpose;//主治功能简介
+@property (nonatomic, strong) NSArray *branchs;//参与活动
+@property (nonatomic, assign) NSInteger quantity;
+@property (nonatomic, assign) NSInteger      stock; //库存
+@property (nonatomic, assign) NSInteger      saleStock; //优惠库存
+
+@property (nonatomic, strong) NSString *instruction;//内容简介。根据控制码展示
+
+@end
+
+/**
+ *  店内药品活动Model
+ *  fixed at V3.1
+ */
+@interface BranchProductPromotionVo : BaseModel
+@property (nonatomic, strong) NSString *id;//活动ID
+@property (nonatomic, strong) NSString *limitQty;
+
+@property (nonatomic, strong) NSString *type;//活动类型:1.买赠 2.折扣 3.立减 4.特价 5.抢购 6.礼品
+@property (nonatomic, strong) NSString *showType;//展示活动类型:1.券 2.惠 3.抢 4.套餐 5.换购
+@property (nonatomic, strong) NSString *rushTitle;//赠送数量\折扣\立减金额\特价\优惠价格
+@property (nonatomic, strong) NSString *title;//赠送数量\折扣\立减金额\特价\优惠价格
+@property (nonatomic, strong) NSString *value;//规格
+@property (nonatomic, strong) NSString *unitNum;//满足条件数量
+@property (nonatomic, strong) NSString *presentUnit;//【买赠专用】赠品单位
+@property (nonatomic, strong) NSString *presentName;//【买赠专用】赠品名称
+@property (nonatomic, strong) NSString *validityDate;//有效期
+@property (nonatomic, strong) NSString *timeStatus;//1.未开始 2.进行中 3.已结束,
+@property (nonatomic, strong) NSString *limitConsume;//满足条件：金额，最低消费金额,
+
+@end
+
+@interface ProductInstructionsVo : BaseModel
+@property (nonatomic, strong) NSString *title;
+@property (nonatomic, strong) NSString *content;
+@end
+
+/**
+ *  店内药品详情Model
+ *  V3.0
+ */
+@interface MicroMallBranchProductVo : BaseAPIModel
+
+@property (nonatomic, strong) NSString *status;//商品售卖状态：1.在售 2.下架
+@property (nonatomic, assign) NSInteger      stock; //库存
+@property (nonatomic, assign) NSInteger      saleStock; //优惠库存
+@property (nonatomic, strong) NSString *signCode;//
+@property (nonatomic, strong) NSString *id;//商品ID
+@property (nonatomic, strong) NSString *code;//编码
+@property (nonatomic, strong) NSString *name;//名称，含品牌信息
+@property (nonatomic, strong) NSString *spec;//规格
+@property (nonatomic, strong) NSString *barcode;//条形码
+@property (nonatomic, strong) NSString *factory;//生产厂家
+@property (nonatomic, strong) NSString *imgUrl;//图片
+@property (nonatomic, strong) NSArray  *imgUrls;//图片集合
+@property (nonatomic, strong) NSString *price;//原价
+@property (nonatomic, strong) NSString *discountPrice;//折扣价
+@property (nonatomic, strong) NSString *purpose;//主治功能简介
+@property (nonatomic, strong) MicroMallBranchVo *branch;//附近可售药房
+@property (nonatomic, strong) NSArray *branchs;//当前药房信息
+@property (nonatomic, strong) NSArray *promotions;//该药品参与活动列表
+@property (nonatomic, strong) ProductInstructionsVo *instructions;
+@property (nonatomic, strong) NSString *redemptionInfo;//换购活动信息
+@property (nonatomic, strong) NSArray *combos;//商品关联的套餐
+@property (nonatomic, assign) BOOL online;//是否可以聊天,
+@property (nonatomic, assign) BOOL hasExpert;//是否有专家
+@property (nonatomic, strong) NSString *userScore;//工业品赠送用户积分数
+@property (nonatomic, strong) NSString *userScoreLimit;//工业品赠送用户积分数限制
+
+@end
+
+
+/**
+ *  投诉原因列表Model
+ *  V3.0
+ */
+@interface ComplaintReasonList : BaseAPIModel
+@property (nonatomic, strong) NSArray *list;
+@end
+/**
+ *  投诉原因Model
+ *  V3.0
+ */
+@interface ComplaintReasonVO : BaseModel
+
+@property (nonatomic, assign) BOOL selected;        //投诉原因是否被选中
+@property (nonatomic, strong) NSString *reasonId;   //投诉原因id
+@property (nonatomic, strong) NSString *content;    //投诉原因
+
+@end
+
+/**
+ *  药房详情Model
+ *  V3.0
+ */
+@interface BranchDetailVO : BaseAPIModel
+@property (nonatomic, strong) NSString *online;//药房是否可以咨询，用于判断咨询按钮是否显示
+@property (nonatomic, assign) BOOL      supportOnlineTrading;//是否支持网络交易
+@property (nonatomic, assign) BOOL      hasExpert;//是否有专家
+@property (nonatomic, strong) NSString *id;
+@property (nonatomic, strong) NSString *name;
+@property (nonatomic, strong) NSString *shortName;
+@property (nonatomic, strong) NSString *logo;
+@property (nonatomic, strong) NSString *star;
+@property (nonatomic, strong) NSString *stars;
+@property (nonatomic, strong) NSString *lng;//药店定位地址：经度
+@property (nonatomic, strong) NSString *lat;//药店定位地址：纬度
+@property (nonatomic, strong) NSString *address;//药店定位地址
+@property (nonatomic, strong) NSArray *postTips;//送货方式说明
+@property (nonatomic, strong) NSArray *promotions;//优惠活动
+@property (nonatomic, strong) NSNumber *serviceStars;//星级：服务态度
+@property (nonatomic, strong) NSNumber *deliveryStars;//星级：送货速度
+@property (nonatomic, strong) NSArray *links;//电话号码
+@property (nonatomic, strong) NSArray *branchs;//推荐药房
+//当type为1：未开微商药房情况
+@property (nonatomic, strong) NSString *begin;//营业时间：开始
+@property (nonatomic, strong) NSString *end;//营业时间：结束
+@end
+/**
+ *  送货方式说明Model
+ *  V3.0
+ */
+@interface PostTipVo : BaseAPIModel
+
+@property (nonatomic, strong) NSString *title;
+@property (nonatomic, strong) NSString *timeSliceTip;
+@property (nonatomic, strong) NSString *feeTip;//费用
+@property (nonatomic, strong) NSString *manTip;//包邮提示
+@end
+/**
+ *  药房评价List Model
+ *  V3.0
+ */
+@interface AppraiseListVo : BaseAPIModel
+@property (nonatomic, strong) NSArray *appraises;
+@end
+/**
+ *  药房评价Model
+ *  V3.0
+ */
+@interface AppraiseVo : BaseAPIModel
+@property (nonatomic, strong) NSString *remark;
+@property (nonatomic, strong) NSString *date;
+@property (nonatomic, strong) NSString *stars;
+@end
+/**
+ *  药房跑马灯List Model
+ *  V3.0
+ */
+@interface BranchActivityNoticeListVo : BaseAPIModel
+@property (nonatomic, strong) NSArray *notices;
+@end
+/**
+ *  药房跑马灯Model
+ *  V3.0
+ */
+@interface BranchActivityNoticeVo : BaseAPIModel
+@property (nonatomic, strong) NSString *id;
+@property (nonatomic, strong) NSString *type;
+@property (nonatomic, strong) NSString *title;
+@end
+
+/**
+ *  专家集合Model
+ *  V3.2.0
+ */
+@interface ExpertListVo : BaseAPIModel
+@property (nonatomic, strong) NSArray *expertList;//专家集合
+
+@property (nonatomic, strong) NSString *groupName;
+@property (nonatomic, strong) NSString *groupId;
+@end
+/**
+ *  专家Model
+ *  V3.2.0
+ */
+@interface MbrInfoVo : BaseModel
+
+@property (nonatomic, strong) NSString *id;//id
+@property (nonatomic, strong) NSString *sex;//性别(0:男, 1:女, -1:null或空),
+@property (nonatomic, strong) NSString *nickName;//昵称,
+@property (nonatomic, strong) NSString *headImageUrl;//用户头像,
+@property (nonatomic, strong) NSString *groupId;//商户/品牌Id,
+@property (nonatomic, strong) NSString *groupName;//商户/品牌名称,
+@property (nonatomic, strong) NSString *userType;//用户类型,
+@property (nonatomic, strong) NSString *expertise;//擅长领域,
+@property (nonatomic, assign) BOOL onlineFlag;//专家是否在线
+
+@end
+
+/**
+ *  专家是否存在Model
+ *  V3.2.0
+ */
+@interface RegisterValidVO : BaseAPIModel
+@property (nonatomic, assign) BOOL isExists;//专家集合
+@end
+
+/**
+ *  微商药房详情首页总体Model
+ *  V3.2.0
+ */
+@interface MicroMallBranchIndexVo : BaseAPIModel
+
+@property (nonatomic, strong) NSArray *banners;//门店BANNER
+@property (nonatomic, assign) BOOL online;//是否可以聊天,
+@property (nonatomic, assign) BOOL hasExpert;//是否有专家,
+@property (nonatomic, strong) NSArray *combos;//套餐。目前仅返回第一个
+@property (nonatomic, strong) NSArray *redemptions;//换购。目前仅返回金额最小的一个,
+@property (nonatomic, strong) NSArray *categorys;//药品分类列表。包含优惠及普通
+
+@end
+
+@interface MicroMallBranchNewIndexVo : BaseAPIModel
+
+@property (nonatomic, assign) BOOL online;//是否可以聊天,
+@property (nonatomic, assign) BOOL hasExpert;//是否有专家,
+@property (nonatomic, strong) NSString *cityName;//药房所在城市
+@property (nonatomic, strong) NSString *lng;//药房经度
+@property (nonatomic, strong) NSString *lat;//药房维度
+@property (nonatomic, strong) NSString *name;//药房名称,
+@property (nonatomic, strong) NSString *teamId;//所属商家圈id,
+@property (nonatomic, strong) NSString *logo;//药房logo,
+@property (nonatomic, strong) NSString *groupId;// 所属商家id,
+@property (nonatomic, strong) NSArray *combos;//套餐。目前仅返回第一个
+@property (nonatomic, strong) NSArray *categorys;//药品分类列表。包含优惠及普通
+
+@end
+
+/**
+ *  微商药房详情首页Banner Model
+ *  V3.2.0
+ */
+@interface BranchBannerVo : BaseModel
+
+@property (nonatomic, strong) NSString *id;
+@property (nonatomic, strong) NSString *name;//BANNER名称
+@property (nonatomic, strong) NSString *type;//对象类型：1.海报
+@property (nonatomic, strong) NSString *objId;//对象id
+@property (nonatomic, strong) NSString *imgUrl;//BANNER图片
+
+@end
+
+/**
+ *  微商药房详情首页套餐List Model
+ *  V3.2.0
+ */
+@interface ComboVo : BaseModel
+
+@property (nonatomic, strong) NSString *packageId;//套餐ID
+@property (nonatomic, strong) NSString *desc;//套餐描述，App显示字段
+@property (nonatomic, strong) NSString *price;//套餐价
+@property (nonatomic, strong) NSString *reduce;//立减金额
+@property (nonatomic, strong) NSArray  *druglist;//套餐图片
+
+@end
+
+/**
+ *  微商药房详情首页套餐 Model
+ *  V3.2.0
+ */
+@interface ComboProductVo : BaseModel
+
+@property (nonatomic, strong) NSString *branchProId;//商品ID,
+@property (nonatomic, strong) NSString *imgUrl;//图片,
+@property (nonatomic, strong) NSString *spec;//规格,
+@property (nonatomic, strong) NSString *count;//套餐内数量,
+@property (nonatomic, strong) NSString *name;//名称,
+@property (nonatomic, strong) NSString *price;//原价
+
+@end
+
+/**
+ *  微商药房详情首页换购 Model
+ *  V3.2.0
+ */
+@interface RedemptionVo : BaseModel
+
+@property (nonatomic, strong) NSString *actId;//换购活动ID,
+@property (nonatomic, strong) NSString *desc;//换购活动标题，App显示字段,
+@property (nonatomic, strong) NSString *proImgUrl;//商品图片,
+@property (nonatomic, strong) NSString *proName;//商品名称,
+@property (nonatomic, strong) NSString *proSpec;//商品规格,
+@property (nonatomic, strong) NSString *price;//原价,
+@property (nonatomic, strong) NSString *salePrice;//换购价,
+@property (nonatomic, strong) NSString *branchProId;//商品ID,
+@property (nonatomic, strong) NSString *limitPrice;//换购满足金额
+
+@end

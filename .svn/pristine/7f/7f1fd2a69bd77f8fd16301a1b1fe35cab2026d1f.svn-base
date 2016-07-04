@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="LocationShowWelcomeOnce">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="bg_notice_one" translatesAutoresizingMaskIntoConstraints="NO" id="Vav-ea-AHV">
+                    <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                </imageView>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="eDa-1o-GKV">
+                    <rect key="frame" x="50" y="369" width="220" height="110"/>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="110" id="NJt-Mh-TNS"/>
+                    </constraints>
+                    <connections>
+                        <action selector="dismiss:" destination="iN0-l3-epB" eventType="touchUpInside" id="TQr-nE-cU2"/>
+                    </connections>
+                </button>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstAttribute="trailing" secondItem="eDa-1o-GKV" secondAttribute="trailing" constant="50" id="A85-ws-G06"/>
+                <constraint firstItem="Vav-ea-AHV" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="QBJ-De-vKM"/>
+                <constraint firstItem="eDa-1o-GKV" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="50" id="abp-06-ovP"/>
+                <constraint firstItem="eDa-1o-GKV" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" constant="140" id="khN-Nj-b8i"/>
+                <constraint firstAttribute="trailing" secondItem="Vav-ea-AHV" secondAttribute="trailing" id="s7c-xY-gyJ"/>
+                <constraint firstItem="Vav-ea-AHV" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="uDe-oh-kF9"/>
+                <constraint firstAttribute="bottom" secondItem="Vav-ea-AHV" secondAttribute="bottom" id="v4Q-wW-5T0"/>
+            </constraints>
+            <point key="canvasLocation" x="305" y="288"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="bg_notice_one" width="320" height="568"/>
+    </resources>
+</document>

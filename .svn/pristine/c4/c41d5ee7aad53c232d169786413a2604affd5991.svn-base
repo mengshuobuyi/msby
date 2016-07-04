@@ -1,0 +1,164 @@
+//
+//  AddRecommenderViewController.m
+//  APP
+//  我的推荐人添加页面
+//  使用接口如下：
+//  api/mbr/inviter 更新推荐人手机号
+
+//  Created by 李坚 on 16/5/9.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "AddRecommenderViewController.h"
+#import "RecommenderScanViewController.h"
+#import "SVProgressHUD.h"
+#import "LoginViewController.h"
+#import "MyRecommenderViewController.h"
+#import "ZhPMethod.h"
+#import "Mbr.h"
+#import "QYPhotoAlbum.h"
+
+@interface AddRecommenderViewController ()<UITextFieldDelegate>
+
+@property (weak, nonatomic) IBOutlet UIView *recommendView;
+@property (weak, nonatomic) IBOutlet UITextField *recommendTextField;
+
+@end
+
+@implementation AddRecommenderViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    self.title = @"我的推荐人";
+    
+}
+
+- (void)UIGlobal{
+    [super UIGlobal];
+    
+    self.recommendView.layer.masksToBounds = YES;
+    self.recommendView.layer.borderColor = RGBHex(qwColor9).CGColor;
+    self.recommendView.layer.borderWidth = 0.5f;
+    self.recommendView.layer.cornerRadius = 4.0f;
+    self.recommendTextField.delegate = self;
+    
+//    [self naviRightBotton:@"提交" action:@selector(submitAction:)];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"提交" style:UIBarButtonItemStyleDone target:self action:@selector(submitAction:)];
+}
+
+#pragma mark - 提交按钮点击事件
+- (void)submitAction:(id)sender{
+    
+    [self commitAction:self.recommendTextField.text];
+}
+
+#pragma mark - 扫码按钮点击事件
+- (IBAction)scanAction:(id)sender {
+    
+    if (![QYPhotoAlbum checkCameraAuthorizationStatus]) {
+        [QWGLOBALMANAGER getCramePrivate];
+        return;
+    }
+    
+    RecommenderScanViewController *scanVC = [[RecommenderScanViewController alloc]initWithNibName:@"RecommenderScanViewController" bundle:nil];
+    __weak __typeof(self) weakSelf = self;
+    scanVC.scanBlock = ^(NSString *scanCode){
+        
+        //扫码判断逻辑：以"quanwei_"开头，且后面字符串为手机号
+        if([scanCode hasPrefix:@"quanwei_"] && scanCode.length > 7){
+            [weakSelf commitAction:[scanCode substringFromIndex:8]];
+        }else{
+            [SVProgressHUD showSuccessWithStatus:@"扫码错误"];
+        }
+    };
+    [self.navigationController pushViewController:scanVC animated:YES];
+}
+
+#pragma mark - UITextFieldDelegate
+- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string{
+
+    return YES;
+}
+
+#pragma mark - 验证手机号逻辑，手动输入和扫码都走这个方法
+- (void)commitAction:(NSString *)mobile
+{
+    if(!QWGLOBALMANAGER.loginStatus) {
+        LoginViewController *loginViewController = [[LoginViewController alloc] initWithNibName:@"LoginViewController" bundle:nil];
+        UINavigationController *navgationController = [[QWBaseNavigationController alloc] initWithRootViewController:loginViewController];
+        loginViewController.isPresentType = YES;
+        [self presentViewController:navgationController animated:YES completion:NULL];
+        return;
+    }
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+        [SVProgressHUD showErrorWithStatus:@"网络未连接，请重试" duration:0.8];
+        return;
+    }
+    
+    NSString *myPhone = QWGLOBALMANAGER.configure.userName;
+    
+    //判断是否手机号
+    if (mobile.length == 0)
+    {
+        [SVProgressHUD showErrorWithStatus:@"请输入推荐人手机号" duration:1];
+        
+    }else if ((mobile.length > 0 && mobile.length < 11)|| mobile.length > 11)
+    {
+        [SVProgressHUD showErrorWithStatus:@"请输入正确的手机号" duration:1];
+        
+    }else if (mobile.length == 11)
+    {
+        if (isPhoneNumber(mobile))
+        {
+            if ([mobile isEqualToString:myPhone])
+            {
+                [SVProgressHUD showErrorWithStatus:@"输入手机号不能与登录账号一致" duration:0.8];
+            }else
+            {
+                [self.recommendTextField resignFirstResponder];
+                [self recommedRequest:mobile];
+            }
+        }else
+        {
+            [SVProgressHUD showErrorWithStatus:@"请输入正确的手机号" duration:0.8];
+        }
+    }
+}
+
+#pragma mark - 验证手机号请求
+- (void)recommedRequest:(NSString *)mobileNumber{
+    
+    //提交服务器
+    MbrInviterR *modelR = [MbrInviterR new];
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    modelR.inviter = mobileNumber;
+    
+    [Mbr InviteWithParams:modelR success:^(id obj) {
+        
+        MyInviterModel *model = (MyInviterModel *)obj;
+        
+        if([model.apiStatus intValue] == 0){
+            
+            [SVProgressHUD showSuccessWithStatus:@"推荐人添加成功"];
+            
+            [self.navigationController popViewControllerAnimated:YES];
+            
+        }else{
+            if(![model.apiMessage isEqualToString:@""]){
+                [SVProgressHUD showErrorWithStatus:model.apiMessage duration:1.5f];
+            }
+        }
+    } failure:^(HttpException *e) {
+        
+    }];
+
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+@end

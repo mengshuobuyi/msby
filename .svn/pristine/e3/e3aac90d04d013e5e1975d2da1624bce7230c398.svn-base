@@ -1,0 +1,26 @@
+//
+//  AddressCell.h
+//  APP
+//
+//  Created by Meng on 15/6/5.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface AddressCell : UITableViewCell
+@property (weak, nonatomic) IBOutlet UIButton *addressButton;
+
+@property (weak, nonatomic) IBOutlet UILabel *addressLabel;
+
+@property (weak, nonatomic) IBOutlet UIImageView *consultImageView;
+
+@property (weak, nonatomic) IBOutlet UIImageView *phoneImageView;
+
+
+@property (weak, nonatomic) IBOutlet UIButton *phoneButton;
+
+@property (weak, nonatomic) IBOutlet UIButton *consultButton;
+
+
+@end

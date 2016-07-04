@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15F34" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="OnceDrugChatBubbleView">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="130"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="mbu-8S-elS">
+                    <rect key="frame" x="15" y="15" width="61" height="61"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="61" id="CVC-6A-Jwr"/>
+                        <constraint firstAttribute="width" constant="61" id="fIQ-2h-O5F"/>
+                    </constraints>
+                </imageView>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="优生妈咪，叶酸多维营养素片1（孕早期妇女专用）" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Uph-4z-oWZ">
+                    <rect key="frame" x="88" y="15" width="227" height="39"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                    <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="OxV-f1-hLJ">
+                    <rect key="frame" x="89" y="87" width="143" height="28"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="28" id="FDU-LA-uyY"/>
+                        <constraint firstAttribute="width" constant="143" id="v1P-he-4Vd"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                    <state key="normal" title="发送链接">
+                        <color key="titleColor" red="1" green="0.58039215686274503" blue="0.0078431372549019607" alpha="1" colorSpace="calibratedRGB"/>
+                        <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <connections>
+                        <action selector="sendDrugAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="IzQ-3p-RXf"/>
+                    </connections>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="14克*9袋" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="txv-p6-aza">
+                    <rect key="frame" x="88" y="64" width="224" height="14"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="14" id="z9i-yI-jQO"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                    <color key="textColor" red="0.59999999999999998" green="0.59999999999999998" blue="0.59999999999999998" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+            </subviews>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstAttribute="trailing" secondItem="txv-p6-aza" secondAttribute="trailing" constant="8" id="3ry-cl-fNc"/>
+                <constraint firstAttribute="trailing" secondItem="Uph-4z-oWZ" secondAttribute="trailing" constant="5" id="70O-FJ-t9l"/>
+                <constraint firstItem="OxV-f1-hLJ" firstAttribute="centerX" secondItem="iN0-l3-epB" secondAttribute="centerX" id="F5i-Z8-04o"/>
+                <constraint firstItem="mbu-8S-elS" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="15" id="JMA-SQ-Y6a"/>
+                <constraint firstItem="mbu-8S-elS" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="15" id="a3b-Oy-GMV"/>
+                <constraint firstItem="Uph-4z-oWZ" firstAttribute="leading" secondItem="mbu-8S-elS" secondAttribute="trailing" constant="12" id="d90-ti-PXf"/>
+                <constraint firstItem="txv-p6-aza" firstAttribute="leading" secondItem="mbu-8S-elS" secondAttribute="trailing" constant="12" id="dxh-Ud-rf6"/>
+                <constraint firstItem="txv-p6-aza" firstAttribute="top" secondItem="Uph-4z-oWZ" secondAttribute="bottom" constant="10" id="ggX-ul-Rgt"/>
+                <constraint firstItem="Uph-4z-oWZ" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="15" id="qFW-Nq-EEc"/>
+                <constraint firstAttribute="bottom" secondItem="OxV-f1-hLJ" secondAttribute="bottom" constant="15" id="qNL-HV-zrn"/>
+            </constraints>
+            <nil key="simulatedStatusBarMetrics"/>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="drugImageView" destination="mbu-8S-elS" id="Meg-qi-hV3"/>
+                <outlet property="drugName" destination="Uph-4z-oWZ" id="jzF-kL-e0k"/>
+                <outlet property="sendButton" destination="OxV-f1-hLJ" id="HOP-9c-u0F"/>
+                <outlet property="specLabel" destination="txv-p6-aza" id="Qid-5l-g3b"/>
+            </connections>
+            <point key="canvasLocation" x="177" y="-310.5"/>
+        </view>
+    </objects>
+</document>

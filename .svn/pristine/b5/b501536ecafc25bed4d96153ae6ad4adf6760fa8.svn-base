@@ -1,0 +1,82 @@
+//
+//  Search.h
+//  APP
+//
+//  Created by 李坚 on 15/8/19.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import "SearchModelR.h"
+#import "SearchModel.h"
+
+@interface Search : NSObject
+/**
+ *  首页扫码搜门店
+ *  V4.0
+ */
++ (void)homeScanSearchInBranch:(HomeSearInBranchModelR *)model success:(void (^)(MicroMallSearchProArrayVo *))success failure:(void (^)(HttpException *))failure;
+/**
+ *  首页扫码搜城市
+ *  V4.0
+ */
++ (void)homeScanSearchInCity:(ScanSearchModelR *)model success:(void (^)(KeywordModel *))success failure:(void (^)(HttpException *))failure;
+/**
+ *  首页商品搜索，不启用微商
+ *  V3.0
+ */
++ (void)homeNormalSearch:(DreamWordModelR *)model success:(void (^)(KeywordModel *))success failure:(void (^)(HttpException *))failure;
+/**
+ *  首页商品搜索(用于药房内搜索)
+ *  V4.0
+ */
++ (void)homeSearchInBranch:(HomeSearInBranchModelR *)model success:(void (^)(MicroMallSearchProArrayVo *))success failure:(void (^)(HttpException *))failure;
+/**
+ *  首页商品搜索(用于城市内搜索)
+ *  V4.0
+ */
++ (void)homeSearchInCity:(DreamWordModelR *)model success:(void (^)(MicroMallSearchProArrayVo *))success failure:(void (^)(HttpException *))failure;
+/**
+ *  首页商品搜索联想词
+ *  V3.0
+ */
++ (void)homeDreamWord:(DreamWordModelR *)model success:(void (^)(KeywordModel *))success failure:(void (^)(HttpException *))failure;
+//热搜词语
++ (void)searchByKeyword:(KeywordModelR *)model
+                success:(void (^)(id))success
+                failure:(void (^)(HttpException *))failure;
+//搜索
++ (void)searchHotKeyword:(KeywordModelR *)model
+                 success:(void (^)(id))success
+                 failure:(void (^)(HttpException *))failure;
+
++ (void)searchOpencityChecknew:(KeywordModelR *)model
+                       success:(void (^)(OpenCityCheckVoModel *))success
+                       failure:(void (^)(HttpException *))failure;
+
+
+
+//根据关键字查询商品 add by lijian 2.2.0
++ (void)queryProductByKeyword:(QueryProductByKwIdModelR *)model
+                      success:(void (^)(id))success
+                      failure:(void (^)(HttpException *))failure;
+
+//按照字母分组且排序。数据格式为Map
++ (void)searchOpenCity:(BaseModel *)model
+               success:(void (^)(id))success
+               failure:(void (^)(HttpException *))failure;
+/**
+ *  圈贴热词搜索
+ *  V4.0
+ */
+
++(void)queryPostHotKeyWord:(QueryHotKeyR *)modelR success:(void(^)(HotkeyListVo *model))success failure:(void (^)(HttpException *))failure;
+
+/**
+ *  圈贴搜索
+ *  V4.0
+ */
+
++(void)queryTeamListInfo:(QueryTeamListR *)modelR success:(void(^)(PostSearchListVo *model))success failure:(void (^)(HttpException *e))failure;
+
+@end

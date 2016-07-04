@@ -1,0 +1,17 @@
+//
+//  ReportConsultViewController.h
+//  APP
+//  举报药房页面
+//  Created by 李坚 on 16/1/6.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "QWBaseVC.h"
+
+@interface ReportConsultViewController : QWBaseVC
+
+@property (nonatomic, assign) NSInteger objType;//1.未开通微商的药房，2.社会药房，3.微商药房
+@property (nonatomic, strong) NSString *branchId;
+@property (nonatomic, strong) NSString *branchName;
+
+@end

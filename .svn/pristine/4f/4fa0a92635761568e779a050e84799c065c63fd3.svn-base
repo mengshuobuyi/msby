@@ -1,0 +1,257 @@
+//
+//  SearchLocationViewController.m
+//  APP
+//
+//  Created by qw_imac on 15/12/30.
+//  Copyright © 2015年 carret. All rights reserved.
+//
+
+#import "SearchLocationViewController.h"
+#import <AMapSearchKit/AMapSearchAPI.h>
+
+#import <MAMapKit/MAMapKit.h>
+#import <MapKit/MKAnnotation.h>
+#import "CLLocation+YCLocation.h"
+#import "CusAnnotationView.h"
+#import "LocationInfoTableViewCell.h"
+#import "SearchAndChooseAddressViewController.h"
+
+#define _LONGITUDE                  120.731839
+#define _LATITUDE                   31.259742
+#define SPAN MACoordinateSpanMake(0.025, 0.025)
+@interface SearchLocationViewController ()<MAMapViewDelegate,UITableViewDataSource,UITableViewDelegate,AMapSearchDelegate>
+{
+    MAPointAnnotation *pointAnnotation;
+}
+@property (nonatomic,strong) MAMapView                  *mapView;
+@property (nonatomic,strong) UIView                     *topView;
+@property (nonatomic,strong) AMapSearchAPI              *search;
+@property (nonatomic,strong) MapInfoModel               *model;
+@property (nonatomic,strong) AMapPlaceSearchResponse    *response;
+
+@end
+
+@implementation SearchLocationViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    float scale = APP_W /320;
+    self.topView = [[UIView alloc]initWithFrame:CGRectMake(35, 8, APP_W - 55, 29)];
+    self.topView.backgroundColor = RGBHex(0xf0f0f0);
+    self.topView.layer.cornerRadius = 5.0;
+    self.topView.layer.masksToBounds = YES;
+//    self.navigationItem.leftBarButtonItem = nil;
+    
+    UIImageView *imgView = [[UIImageView alloc]initWithFrame:CGRectMake(5, 7, 15, 15)];
+    imgView.image = [UIImage imageNamed:@"ic_btn_search"];
+    
+    UILabel *label1 = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, APP_W - 55 , 29)];
+    label1.text = @"        请输入小区、大厦、学校等";
+    label1.textColor = RGBHex(qwColor8);
+    label1.font = fontSystem(kFontS5);
+    [self.topView addSubview:label1];
+    
+    [self.topView addSubview:imgView];
+    UIButton *searchBtn = [[UIButton alloc]initWithFrame:CGRectMake(0, 0, APP_W - 50, 29)];
+    [searchBtn addTarget:self action:@selector(searchAndChoose) forControlEvents:UIControlEventTouchUpInside];
+//
+//    UIBarButtonItem *cancel = [[UIBarButtonItem alloc]initWithTitle:@"取消" style:UIBarButtonItemStylePlain target:self action:@selector(popVCAction:)];
+//    self.navigationItem.rightBarButtonItem = cancel;
+//    
+//    
+    [self.topView addSubview:searchBtn];
+    
+    
+    self.mapView = QWGLOBALMANAGER.mapView;
+    
+    [self.mapView setFrame:CGRectMake(0, 0, APP_W, 183 * scale)];
+    self.mapView.showsUserLocation = YES;
+    self.mapView.delegate = self;
+    self.mapView.touchPOIEnabled = YES;
+    
+    //读存储地址
+    self.model = [QWGLOBALMANAGER getMapInfoModel];
+    
+    if (!self.model) {
+        self.model = [MapInfoModel new];
+        self.model.city = @"苏州";
+        self.model.formattedAddress = @"生物纳米园";
+        self.model.location = [[CLLocation alloc]initWithLatitude:_LATITUDE longitude:_LONGITUDE];
+    }
+    //大头针
+    pointAnnotation = [[MAPointAnnotation alloc] init];
+    pointAnnotation.coordinate = self.model.location.coordinate;
+    [self.mapView removeAnnotation:pointAnnotation];
+    [self.mapView addAnnotation:pointAnnotation];
+    [self searchPoiWith:self.model];
+    
+    [self.mapView setRegion:MACoordinateRegionMake(self.model.location.coordinate, SPAN) animated:YES];
+    [self.mapView setZoomLevel:16.0 animated:YES];
+    
+    self.tableMain =[[UITableView alloc] initWithFrame:CGRectMake(0, 0 , APP_W, [[UIScreen mainScreen] bounds].size.height - 64) style:UITableViewStylePlain];
+    self.tableMain.separatorStyle = UITableViewCellSeparatorStyleNone;
+    self.tableMain.delegate = self;
+    self.tableMain.dataSource = self;
+    self.tableMain.backgroundColor = [UIColor clearColor];
+    self.tableMain.tableHeaderView = self.mapView;
+    [self.view addSubview:self.tableMain];
+    
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    [self.navigationController.navigationBar addSubview:self.topView];
+}
+
+-(void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+}
+-(void)searchPoiWith:(MapInfoModel *)model{
+    if (!self.search) {
+        self.search = [[AMapSearchAPI alloc]initWithSearchKey:AMAP_KEY Delegate:self];
+    }
+    
+    AMapPlaceSearchRequest *request = [[AMapPlaceSearchRequest alloc]init];
+    request.location = [AMapGeoPoint locationWithLatitude:model.location.coordinate.latitude longitude:model.location.coordinate.longitude];
+    
+    if (model.formattedAddress) {
+        request.keywords = model.formattedAddress;
+    }else {
+        request.keywords = model.city;
+    }
+    if (model.city) {
+        request.city = @[model.city];
+    }else {
+        request.city = @[@"苏州"];
+    }
+    request.sortrule = 1;
+    request.requireExtension = YES;
+    request.offset = 10;
+    [self.search AMapPlaceSearch:request];
+    
+}
+//输入想要查询的地址
+-(void)searchAndChoose {
+    SearchAndChooseAddressViewController *vc = [SearchAndChooseAddressViewController new];
+    vc.isEdit = YES;
+    vc.pageType = _pagetype;
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+#pragma mark - amap回调
+-(void)onPlaceSearchDone:(AMapPlaceSearchRequest *)request response:(AMapPlaceSearchResponse *)response {
+    if (response.pois.count == 0) {
+        return;
+    }
+    self.response = response;
+    [self.tableMain reloadData];
+    
+}
+
+- (void)searchRequest:(id)request didFailWithError:(NSError *)error{
+    
+}
+
+- (MAAnnotationView *)mapView:(MAMapView *)mapView viewForAnnotation:(id<MAAnnotation>)annotation
+{
+    if ([annotation isKindOfClass:[MAPointAnnotation class]]) {
+        static NSString *customReuseIndetifier = @"customReuseIndetifier";
+        CusAnnotationView *annotationView = (CusAnnotationView *)[mapView dequeueReusableAnnotationViewWithIdentifier:customReuseIndetifier];
+        if (annotationView == nil)
+        {
+            annotationView = [[CusAnnotationView alloc] initWithAnnotation:annotation
+                                                           reuseIdentifier:customReuseIndetifier];
+        }
+        annotationView.canShowCallout   = NO;
+        annotationView.calloutOffset = CGPointMake(0, -5);
+        annotationView.draggable = YES;
+        [annotationView setSelected:YES animated:YES];
+        return annotationView;
+    }
+    
+    return nil;
+}
+//移动大头针回调
+- (void)mapView:(MAMapView *)mapView annotationView:(MAAnnotationView *)view didChangeDragState:(MAAnnotationViewDragState)newState
+   fromOldState:(MAAnnotationViewDragState)oldState {
+    CLLocation *location = [[CLLocation alloc]initWithLatitude:view.annotation.coordinate.latitude longitude:view.annotation.coordinate.longitude];
+    self.model.location = location;
+    self.model.formattedAddress = @"";
+    [self searchPoiWith:self.model];
+}
+
+//点击poi回调
+- (void)mapView:(MAMapView *)mapView didTouchPois:(NSArray *)pois {
+    if (pois.count == 0) {
+        return;
+    }
+    MATouchPoi *poi = pois[0];
+    pointAnnotation.coordinate = poi.coordinate;
+    CLLocation *location = [[CLLocation alloc]initWithLatitude:poi.coordinate.latitude longitude:poi.coordinate.longitude];
+    self.model.location = location;
+    self.model.formattedAddress = poi.name;
+    [self searchPoiWith:self.model];
+    
+    [self.mapView addAnnotation:pointAnnotation];
+}
+#pragma mark - tableView
+
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return self.response.pois.count;
+}
+
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    LocationInfoTableViewCell *cell = (LocationInfoTableViewCell *)[tableView dequeueReusableCellWithIdentifier:@"LocationInfoTableViewCell"];
+    if (!cell) {
+        cell =[[NSBundle mainBundle] loadNibNamed:@"LocationInfoTableViewCell" owner:self options:nil][0];
+    }
+    [cell setCellWith:self.response.pois[indexPath.row] AndNumber:indexPath.row];
+    return cell;
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return 56;
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    AMapPOI *poi = self.response.pois[indexPath.row];
+    UpdateAddressR *model = [UpdateAddressR new];
+    model.city = poi.city;
+    model.county = poi.district;
+    model.address = poi.address;
+    model.village = poi.name;
+    model.longitude = [NSString stringWithFormat:@"%f",poi.location.longitude];
+    model.latitude = [NSString stringWithFormat:@"%f",poi.location.latitude];
+    if (self.selectAddress) {
+        self.selectAddress(model);
+    }
+    [self popVCAction:nil];
+}
+
+-(void)popVCAction:(id)sender {
+    [super popVCAction:sender];
+}
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [self.topView removeFromSuperview];
+    [super viewWillDisappear:animated];
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+    [self.mapView removeAnnotation:pointAnnotation];
+    
+    self.mapView.delegate = nil;
+    [super viewDidDisappear:YES];
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+
+@end

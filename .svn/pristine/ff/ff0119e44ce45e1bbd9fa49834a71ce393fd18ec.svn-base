@@ -1,0 +1,494 @@
+//
+//  PatientListViewController.m
+//  APP
+//
+//  Created by PerryChen on 8/19/15.
+//  Copyright (c) 2015 carret. All rights reserved.
+//
+
+#import "PatientListViewController.h"
+#import "FamilyMedicine.h"
+#import "Consult.h"
+#import "StoreModel.h"
+#import "FamilyMedicineR.h"
+#import "FamilyMedicineModel.h"
+#import "XPChatViewController.h"
+#import "PatientListCell.h"
+#import "FamilyMemberInfoViewController.h"
+#import "EditPatientListViewController.h"
+#import "SubmitAlertView.h"
+#import "LoginViewController.h"
+@interface PatientListViewController ()<UITableViewDataSource, UITableViewDelegate, UIAlertViewDelegate, SubmitAlertDelegate>
+
+
+@property (weak, nonatomic) IBOutlet UIButton *btnSubmit;   // 提交按钮
+@property (weak, nonatomic) IBOutlet UIButton *btnAddMember;            // 添加成员的按钮
+@property (weak, nonatomic) IBOutlet UITableView *tbContentView;        // 显示内容的list view
+@property (weak, nonatomic) IBOutlet UIView *viewTBFoot;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *constraintTBBottom;
+
+@property (nonatomic, strong) NSMutableArray *arrFamilyList;        // 家庭成员列表
+
+@property (nonatomic, assign) NSInteger intSelectedMemberIndex;     // 当前页面选择的成员索引
+
+@property (nonatomic, assign) BOOL isEditMode;                      // 是否是编辑模式
+
+@property (nonatomic, assign) NSInteger selectedDelIndex;           // 删除成员的索引
+@property (nonatomic, assign) BOOL isClickedBtn;                    // 防止按钮多次点击的标志位
+
+- (IBAction)action_addMember:(UIButton *)sender;
+- (IBAction)action_Submit:(UIButton *)sender;
+
+@end
+
+@implementation PatientListViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.arrFamilyList = [@[] mutableCopy];
+    /**
+        初始化，将选择成员的索引置为-1等
+     */
+    self.isClickedBtn = NO;
+    self.selectedDelIndex = -1;
+    self.intSelectedMemberIndex = -1;
+    self.isEditMode = NO;
+    
+    [self setRightNaviBtn];
+    self.btnSubmit.layer.cornerRadius = 5.0f;
+    self.btnSubmit.layer.masksToBounds = YES;
+    self.navigationItem.title = @"选择为谁提问";
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    if (QWGLOBALMANAGER.currentNetWork == NotReachable) {
+        [self showInfoView:kWarning12 image:@"网络信号icon"];
+    } else {
+        [self getAllFamiliyMembers];        // 获取数据
+    }
+    
+}
+
+- (void)setRightNaviBtn
+{
+    // 设置导航栏右侧按钮
+    self.navigationItem.rightBarButtonItems = nil;
+    if (!self.isEditMode) {
+        [self naviBackBotton];
+//        [self naviRightBotton:@"编辑" action:@selector(editFamilyList)];
+        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"编辑" style:UIBarButtonItemStyleDone target:self action:@selector(editFamilyList)];
+        self.btnSubmit.hidden = NO;
+        self.constraintTBBottom.constant = 60.0f;
+    } else {
+        self.navigationItem.leftBarButtonItems = nil;
+        self.navigationItem.hidesBackButton = YES;
+//        [self naviRightBotton:@"保存" action:@selector(saveFamilyList)];
+        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"保存" style:UIBarButtonItemStyleDone target:self action:@selector(saveFamilyList)];
+        self.btnSubmit.hidden = YES;
+        self.constraintTBBottom.constant = 10.0f;
+    }
+}
+
+- (void)popVCAction:(id)sender
+{
+    [super popVCAction:sender];
+}
+
+//- (void)popVCAction:(id)sender
+//{
+//    if (self.isEditMode) {
+//        self.isEditMode = NO;
+//        [self setRightNaviBtn];
+//        [self.tbContentView reloadData];
+//        return;
+//    } else {
+//        [super popVCAction:sender];
+//    }
+//}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+// 编辑家庭列表，刷新页面
+- (void)editFamilyList
+{
+    self.isEditMode = YES;
+    [self setRightNaviBtn];
+    [self.tbContentView reloadData];
+}
+
+// 保存家庭列表，刷新页面
+- (void)saveFamilyList
+{
+    self.isEditMode = NO;
+    [self setRightNaviBtn];
+    [self.tbContentView reloadData];
+}
+
+// 请求所有的家庭成员
+#pragma mark - Data source
+- (void)getAllFamiliyMembers
+{
+    QueryFamilyMembersR *modelR = [[QueryFamilyMembersR alloc] init];
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    [FamilyMedicine queryFamilyMembers:modelR success:^(id responModel) {
+        QueryFamilyMembersModel *listModel = (QueryFamilyMembersModel*)responModel;
+        if (listModel.list.count == 0) {
+            return ;
+        }
+        BOOL findMember = NO;   // 是否发现和上次选择的成员ID相同的数据
+        NSInteger indexMyMember = 0;      // 找到我自己的id
+        for (int i = 0; i < listModel.list.count; i++) {        // 遍历服务器返回的家庭成员列表
+            FamilyMembersVo *modelVo = listModel.list[i];
+            if (QWGLOBALMANAGER.selectedFamilyMemberID.length > 0) {    // 如果上次有选择过成员。
+                if ([modelVo.memberId isEqualToString:QWGLOBALMANAGER.selectedFamilyMemberID]) {
+                    // 找到和上次选择的ID相同的成员，更新数据
+                    self.intSelectedMemberIndex = i;
+                    findMember = YES;
+                    break;
+                }
+            } else {
+                // 之前没选择过, 将本人的Id保存起来
+                if ([modelVo.isSelf isEqualToString:@"Y"]) {
+                    indexMyMember = i;
+                    break;
+                }
+            }
+        }
+        if (!findMember) {
+            // 没有找到和上次一样的成员，则将自己的id给赋值过去
+            self.intSelectedMemberIndex = indexMyMember;
+            FamilyMembersVo *modelVo = listModel.list[indexMyMember];
+            QWGLOBALMANAGER.selectedFamilyMemberID = modelVo.memberId;
+        }
+        
+        self.arrFamilyList = [listModel.list mutableCopy];
+        [self.tbContentView reloadData];
+    } failure:^(HttpException *e) {
+        [self showInfoView:kWarning30 image:@"ic_img_fail"];
+    }];
+}
+
+#pragma mark - UITableView methods
+// 选择某个成员
+- (void)setTheMemberSelected:(NSInteger)tagSelect
+{
+    self.intSelectedMemberIndex = tagSelect;
+    FamilyMembersVo *modelVo = self.arrFamilyList[tagSelect];
+    QWGLOBALMANAGER.selectedFamilyMemberID = modelVo.memberId;
+    [self.tbContentView reloadData];
+}
+
+- (void)actionMemberSelected:(UIButton *)btnSelected
+{
+    [self setTheMemberSelected:btnSelected.tag];
+}
+
+// 编辑某个成员
+- (void)actionMemberEdit:(UIButton *)btnEdit
+{
+    [self performSegueWithIdentifier:@"segueToDetail" sender:btnEdit];
+}
+
+// 删除某个成员
+- (void)actionMemberDelete:(UIButton *)btnDel
+{
+    self.selectedDelIndex = btnDel.tag;
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"是否删除" message:nil delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
+    alert.tag = 666;
+    [alert show];
+}
+
+// 拼接字符串，用于咨询页面显示
+- (NSString *)jointTheStringWithModel:(FamilyMembersVo *)modelVo
+{
+    NSMutableString *strNeedShow = [@"" mutableCopy];
+    [strNeedShow appendString:@"("];
+    if ([modelVo.sex isEqualToString:@"M"]) {
+        [strNeedShow appendString:@"男"];
+    } else if ([modelVo.sex isEqualToString:@"F"]) {
+        [strNeedShow appendString:@"女"];
+    }
+    if ([modelVo.age intValue] >= 0) {
+        [strNeedShow appendFormat:@", %@%@",modelVo.age,modelVo.unit];
+    }
+    if (modelVo.slowDiseases.count > 0) {
+        [strNeedShow appendString:@", "];
+        NSString *strDiseases = [modelVo.slowDiseases componentsJoinedByString:@", "];
+        [strNeedShow appendString:strDiseases];
+    }
+    if ([modelVo.pregnant isEqualToString:@"Y"]) {
+        [strNeedShow appendFormat:@", 已怀孕"];
+    }
+    if ([modelVo.allergy isEqualToString:@"Y"]) {
+        [strNeedShow appendFormat:@", 有药物过敏史"];
+    }
+    [strNeedShow appendString:@")"];
+    return [NSString stringWithFormat:@"%@",strNeedShow];
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    FamilyMembersVo *modelVo = self.arrFamilyList[indexPath.row];
+    PatientListCell *cell = [tableView dequeueReusableCellWithIdentifier:@"PatientListCell"];
+    if (self.isEditMode) {      // 编辑模式
+        if ([modelVo.isSelf isEqualToString:@"Y"]) {
+            cell.btnDelete.hidden = YES;
+        } else {
+            cell.btnDelete.hidden = NO;
+        }
+        cell.btnEdit.hidden = NO;
+        cell.btnSelect.hidden = YES;
+        cell.constraintAvatarLead.constant = 52.0f;
+    } else {
+        cell.btnDelete.hidden = YES;
+        cell.btnSelect.hidden = NO;
+        cell.btnEdit.hidden = YES;
+        cell.constraintAvatarLead.constant = 15.0f;
+    }
+    [cell.contentView layoutIfNeeded];
+    [cell.contentView setNeedsLayout];
+    
+    cell.btnSelect.selected = NO;
+    if (indexPath.row == self.intSelectedMemberIndex) {
+        cell.btnSelect.selected = YES;
+    }
+    
+    if ([modelVo.sex isEqualToString:@"M"]) {
+        cell.imgAvatar.image = [UIImage imageNamed:@"ic_portrait_man"];
+    } else if ([modelVo.sex isEqualToString:@"F"]) {
+        cell.imgAvatar.image = [UIImage imageNamed:@"ic_portrait_woman"];
+    } else {
+        cell.imgAvatar.image = [UIImage imageNamed:@"ic_portrait_man"];
+    }
+    cell.btnDelete.tag = cell.btnSelect.tag = cell.btnEdit.tag = cell.btnDelete.tag = indexPath.row;
+    
+    // bind the button action
+    [cell.btnSelect addTarget:self action:@selector(actionMemberSelected:) forControlEvents:UIControlEventTouchUpInside];
+    [cell.btnDelete addTarget:self
+                       action:@selector(actionMemberDelete:) forControlEvents:UIControlEventTouchUpInside];
+    [cell.btnEdit addTarget:self
+                     action:@selector(actionMemberEdit:) forControlEvents:UIControlEventTouchUpInside];
+    
+    cell.lblUserName.text = modelVo.name;
+    if ([modelVo.isComplete isEqualToString:@"Y"]) {        // 是否完善资料
+        cell.lblDetailInfo.text = [self jointTheStringWithModel:modelVo];
+    } else {
+        cell.lblDetailInfo.text = @"(请完善资料)";
+    }
+    cell.separatorLine.hidden = YES;
+    
+    // set font and text color
+    cell.lblUserName.textColor = RGBHex(qwColor6);
+    cell.lblUserName.font = fontSystem(kFontS1);
+    cell.lblDetailInfo.textColor = RGBHex(qwColor8);
+    cell.lblDetailInfo.font = fontSystem(kFontS5);
+    return cell;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return self.arrFamilyList.count;
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 1;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 56.0f;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section
+{
+    return self.viewTBFoot;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section
+{
+    return 56.0f;
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (alertView.tag == 666) {     // 删除成员
+        if (buttonIndex == 1) {
+            if (self.selectedDelIndex < 0) {
+                return;
+            }
+            FamilyMembersVo *modelVo = self.arrFamilyList[self.selectedDelIndex];
+            DeleteFamilyMemberR *modelR = [DeleteFamilyMemberR new];
+            modelR.memberId = modelVo.memberId;
+            [FamilyMedicine deleteFamilyMember:modelR success:^(id member) {    // 删除成功
+                FamilyMembersVo *modelVo = self.arrFamilyList[self.selectedDelIndex];
+                [self.arrFamilyList removeObjectAtIndex:self.selectedDelIndex];
+                // 是否删除了已选择的成员
+                if ([modelVo.memberId isEqualToString:QWGLOBALMANAGER.selectedFamilyMemberID]) {
+                    self.intSelectedMemberIndex = 0;    // 是的话，将选择的成员设为第一个
+                } else {
+                    for (int i = 0; i < self.arrFamilyList.count; i++) {
+                        FamilyMembersVo *modelTemp = self.arrFamilyList[i];
+                        // 遍历，设置选择的成员
+                        if ([modelVo.memberId isEqualToString:modelTemp.memberId]) {
+                            self.intSelectedMemberIndex = i;
+                            break;
+                        }
+                    }
+                }
+                DDLogVerbose(@"the selected index is %d, the del index is %d",self.intSelectedMemberIndex,self.selectedDelIndex);
+                [self.tbContentView reloadData];
+                
+            } failure:^(HttpException *e) {
+                [self showError:@"删除失败"];
+            }];
+        }
+    }
+}
+
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+    if ([segue.identifier isEqualToString:@"segueToDetail"]) {
+        // 跳转编辑页面
+        
+        UIButton *btn = (UIButton *)sender;
+        FamilyMemberInfoViewController *vcInfo = (FamilyMemberInfoViewController *)segue.destinationViewController;
+        FamilyMembersVo *modelVo = self.arrFamilyList[btn.tag];
+        vcInfo.strMemID = modelVo.memberId;
+
+        if ([modelVo.isComplete isEqualToString:@"Y"]) {
+            vcInfo.enumTypeEdit = MemberViewTypeEdit;
+        } else {
+            vcInfo.enumTypeEdit = MemberViewTypeComplete;
+        }
+        vcInfo.isFromConsultDoctor = YES;
+        vcInfo.strConsultTitle = self.modelContent.strConsultTitle;
+        vcInfo.arrPhotos = self.modelContent.arrPhotos;
+    } else if ([segue.identifier isEqualToString:@"segueAddMember"]) {
+        // 跳转增加成员
+        FamilyMemberInfoViewController *vcInfo = (FamilyMemberInfoViewController *)segue.destinationViewController;
+        vcInfo.isFromConsultDoctor = YES;
+        vcInfo.enumTypeEdit = MemberViewTypeAdd;
+        vcInfo.strConsultTitle = self.modelContent.strConsultTitle;
+        vcInfo.arrPhotos = self.modelContent.arrPhotos;
+    }
+}
+
+// 添加家庭成员
+- (IBAction)action_addMember:(UIButton *)sender {
+    [self performSegueWithIdentifier:@"segueAddMember" sender:sender];
+}
+
+- (IBAction)action_Submit:(UIButton *)sender {
+    FamilyMembersVo *modelVo = self.arrFamilyList[self.intSelectedMemberIndex];
+    if ([modelVo.isComplete isEqualToString:@"Y"]) {
+        [self actionSubmit];
+    } else {
+        SubmitAlertView *alert=[SubmitAlertView instance];
+        alert.alertDelegate = self;
+        [alert show];
+    }
+}
+
+#pragma mark - Custom alert delegate
+- (void)actionFillup
+{
+    // 跳转完善资料（修改资料）页面
+    FamilyMemberInfoViewController *vcInfo = (FamilyMemberInfoViewController *)[[UIStoryboard storyboardWithName:@"ConsultForFree" bundle:nil] instantiateViewControllerWithIdentifier:@"FamilyMemberInfoViewController"];
+    FamilyMembersVo *modelVo = self.arrFamilyList[self.intSelectedMemberIndex];
+    vcInfo.strMemID = modelVo.memberId;
+    vcInfo.isFromConsultDoctor = YES;
+    vcInfo.strConsultTitle = self.modelContent.strConsultTitle;
+    vcInfo.arrPhotos = self.modelContent.arrPhotos;
+    vcInfo.enumTypeEdit = MemberViewTypeEdit;
+    [self.navigationController pushViewController:vcInfo animated:YES];
+}
+
+#pragma mark ----- 登录Action
+
+- (void)loginButtonClick
+{
+    LoginViewController *loginViewController = [[LoginViewController alloc] initWithNibName:@"LoginViewController" bundle:nil];
+    loginViewController.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:loginViewController animated:YES];
+}
+
+// 提交问题
+- (void)actionSubmit
+{
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+        [self showError:kWarning12];
+        return;
+    }
+    if (self.isClickedBtn == YES) {
+        return;
+    }
+
+    if(!QWGLOBALMANAGER.loginStatus){
+        [self loginButtonClick];
+        return;
+    }
+    FamilyMembersVo *modelVo = self.arrFamilyList[self.intSelectedMemberIndex];
+    ConsultDocModelR *modelR = [ConsultDocModelR new];
+    MapInfoModel *mapInfoModel = [QWUserDefault getObjectBy:APP_MAPINFOMODEL];
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    self.modelContent.strConsultTitle = [NSString stringWithFormat:@"%@ %@",self.modelContent.strConsultTitle,[self jointTheStringWithModel:modelVo]];
+    modelR.title = self.modelContent.strConsultTitle;
+    if(mapInfoModel==nil){
+        modelR.lon = [NSString stringWithFormat:@"%f",DEFAULT_LONGITUDE];
+        modelR.lat = [NSString stringWithFormat:@"%f",DEFAULT_LATITUDE];
+        modelR.city =@"苏州市";
+    }else{
+        modelR.city= mapInfoModel.city;
+        modelR.lon = [NSString stringWithFormat:@"%f",mapInfoModel.location.coordinate.longitude];
+        modelR.lat = [NSString stringWithFormat:@"%f",mapInfoModel.location.coordinate.latitude];
+    }
+    modelR.location = @"1";
+    self.isClickedBtn = YES;        // 设置已经点击过
+    [Consult postConsultDoctorWithParam:modelR success:^(id UFModel) {
+        ConsultDocModel *couponlist = (ConsultDocModel *)UFModel;
+        if ([couponlist.apiStatus intValue]==1001003 || [couponlist.apiStatus intValue]==1001002) {
+            [self loginButtonClick];
+            self.isClickedBtn = NO;
+            return;
+        }else if([couponlist.apiStatus intValue]==0){
+            [QWGLOBALMANAGER appHadConsult];
+            XPChatViewController *xpVC = [[UIStoryboard storyboardWithName:@"XPChatViewController" bundle:[NSBundle mainBundle]] instantiateViewControllerWithIdentifier:@"XPChatViewController"];
+            ConsultInfoModel *model = [ConsultInfoModel new];
+            model.title = modelR.title;
+            model.list = [self.modelContent.arrPhotos mutableCopy];
+            model.consultId = couponlist.consultId;
+            model.firstConsultId = [NSString stringWithFormat:@"%@",((ConsultDetailModel *)couponlist.details[0]).detailId];
+            xpVC.showType = MessageShowTypeNewCreate;
+            xpVC.messageSender = [NSString stringWithFormat:@"%@",couponlist.consultId];
+            xpVC.consultInfo = model;
+            xpVC.avatarUrl = model.storeModel.imgUrl;
+            if (self.navigationController.viewControllers.count>=2) {
+                xpVC.delegatePopVC=[self.navigationController.viewControllers objectAtIndex:self.navigationController.viewControllers.count-2];
+            }
+            [self.navigationController pushViewController:xpVC animated:YES];
+        }else{
+            [self showError:couponlist.apiMessage];
+            self.isClickedBtn = NO;
+        }
+    }failure:^(HttpException *e) {
+            [self showError:kWarning0];
+        self.isClickedBtn = NO;
+    }];
+
+}
+
+@end
+
+@implementation ConsultContentModel
+
+@end

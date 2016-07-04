@@ -1,0 +1,13 @@
+//
+//  PersonInfoViewController.h
+//  APP
+//
+//  Created by qwfy0006 on 15/4/23.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "QWBaseVC.h"
+
+@interface PersonInfoViewController : QWBaseVC
+
+@end

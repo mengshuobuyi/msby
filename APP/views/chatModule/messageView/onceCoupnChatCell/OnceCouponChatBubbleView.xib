@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9060" systemVersion="15B42" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9051"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="OnceCouponChatBubbleView">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="150"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="修改商品价格啦啦啦啦" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="0Py-wn-kka">
+                    <rect key="frame" x="13" y="5" width="300" height="40"/>
+                    <animations/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="300" id="8S5-8K-QOz"/>
+                        <constraint firstAttribute="height" constant="40" id="Dnq-hb-sAJ"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                    <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="b4p-bw-kun">
+                    <rect key="frame" x="13" y="49" width="60" height="60"/>
+                    <animations/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="60" id="AKP-zE-8rw"/>
+                        <constraint firstAttribute="width" constant="60" id="QD2-dQ-cpz"/>
+                    </constraints>
+                </imageView>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="你好你好你好你好你好你好你好你好你好你好" lineBreakMode="tailTruncation" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="EGm-NW-vYt">
+                    <rect key="frame" x="86" y="46" width="225" height="60"/>
+                    <animations/>
+                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                    <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Jrs-j4-epC">
+                    <rect key="frame" x="86" y="107" width="75" height="28"/>
+                    <animations/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="28" id="YVH-1O-Jo0"/>
+                        <constraint firstAttribute="width" constant="75" id="nt6-G4-I7q"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                    <state key="normal" title="发送">
+                        <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <connections>
+                        <action selector="sendCouponAction:" destination="iN0-l3-epB" eventType="touchUpInside" id="ve1-k8-5M7"/>
+                    </connections>
+                </button>
+            </subviews>
+            <animations/>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="EGm-NW-vYt" firstAttribute="leading" secondItem="b4p-bw-kun" secondAttribute="trailing" constant="13" id="3b9-C0-sAK"/>
+                <constraint firstAttribute="trailing" secondItem="EGm-NW-vYt" secondAttribute="trailing" constant="9" id="DhP-Fv-O56"/>
+                <constraint firstItem="0Py-wn-kka" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="5" id="H8o-pc-oHl"/>
+                <constraint firstItem="Jrs-j4-epC" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="86" id="Iwf-DZ-bju"/>
+                <constraint firstAttribute="bottom" secondItem="Jrs-j4-epC" secondAttribute="bottom" constant="15" id="Kzs-w9-4L7"/>
+                <constraint firstItem="0Py-wn-kka" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="13" id="Pcj-cE-5Ud"/>
+                <constraint firstAttribute="bottom" secondItem="b4p-bw-kun" secondAttribute="bottom" constant="41" id="gxJ-Bb-n3u"/>
+                <constraint firstItem="b4p-bw-kun" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="13" id="niU-tS-38P"/>
+                <constraint firstItem="EGm-NW-vYt" firstAttribute="top" secondItem="0Py-wn-kka" secondAttribute="bottom" constant="1" id="pab-oh-pKj"/>
+                <constraint firstItem="Jrs-j4-epC" firstAttribute="top" secondItem="EGm-NW-vYt" secondAttribute="bottom" constant="1" id="wDW-Hr-eUt"/>
+            </constraints>
+            <nil key="simulatedStatusBarMetrics"/>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="couponContent" destination="EGm-NW-vYt" id="CGp-rL-YfB"/>
+                <outlet property="couponImageView" destination="b4p-bw-kun" id="NUH-XG-sBj"/>
+                <outlet property="couponTitle" destination="0Py-wn-kka" id="vPd-bi-cdi"/>
+                <outlet property="sendButton" destination="Jrs-j4-epC" id="Gat-c5-iqc"/>
+            </connections>
+            <point key="canvasLocation" x="367" y="190.5"/>
+        </view>
+    </objects>
+</document>

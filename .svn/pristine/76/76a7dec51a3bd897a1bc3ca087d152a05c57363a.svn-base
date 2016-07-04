@@ -1,0 +1,15 @@
+//
+//  ConsultMedicineMyFavCell.h
+//  wenyao
+//
+//  Created by chenzhipeng on 15/3/3.
+//  Copyright (c) 2015年 xiezhenghong. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "QWBaseTableCell.h"
+
+@interface ConsultMedicineMyFavCell : QWBaseTableCell
+@property (weak, nonatomic) IBOutlet UILabel *lblTitle;
+@property (weak, nonatomic) IBOutlet UIImageView *imgSelect;
+@end

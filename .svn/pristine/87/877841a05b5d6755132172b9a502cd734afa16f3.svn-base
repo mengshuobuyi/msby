@@ -1,0 +1,209 @@
+
+/*!
+ @header API.h
+ @abstract 所有接口地址及相关常量
+ @author .
+ @version 1.00 2015/01/01  (1.00)
+ */
+//#import "API_Switch.h"
+//18860916425              123456
+//测试账号                  18675535684    123456  9a960552303f3306800aa95ee6bf0a19
+//uta环境测试账号            13861318715    840319
+//sit环境下                 13915531876    111111
+//jira
+
+#ifndef APP_API_h
+#define APP_API_h
+
+/*
+ SIT内网 IM地址 im.qw.com   端口5222
+ SIT内网 WEBAPI地址  http://m.api.qw.com
+ SIT外网 IM地址 im.sit.qwysfw.cn 端口5222
+ SIT外网 WEBA
+ P·I地址    http://m.api.sit.qwysfw.cn
+ UAT内网 IM地址 im.qwysfw.cn 端口5222
+ UAT内网 WEBAPI地址 http://api-m.qwysfw.cn
+ UAT外网 IM地址 im.qwysfw.cn 端口6222
+ UAT外网 WEBAPI地址 http://api-m.qwysfw.cn
+ */
+
+
+
+/**************************************************************************************
+ *                             打包前注意切换环境和端口                                   *
+ *************************************************************************************/
+
+/*
+ SIT外网 IM地址  im.sit.qwysfw.cn 端口5222
+ SIT外网 WEBAPI地址    http://m.api.sit.qwysfw.cn
+ */
+
+
+//WEBAPI：http://api-m.myquanwei.com
+//IM：    im.myquanwei.com   端口：5222（注意）
+
+#ifndef API_Switch_h
+//动态的生产环境
+//#define DE_BASE_URL                     @"http://api-m.myquanwei.com"
+//#define DE_H5_DOMAIN_URL                @"http://h5-api.myquanwei.com"
+//#define DE_ONCE_URL                     @"http://222.92.113.236:9300"
+//#define DE_TWICE_URL                    @"http://112.80.47.67:9300"
+//#define SHOW_NATIONWIDE                 @NO
+//#define SHOW_HTML                       @NO
+//#define DE_SHARE_URL                    @"http://m.myquanwei.com"
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+
+//动态的UAT环境
+//#define DE_BASE_URL                     @"http://api-m.qwysfw.cn"
+//#define DE_H5_DOMAIN_URL                @"http://h5-api.qwysfw.cn"
+//#define DE_ONCE_URL                     @"http://58.210.18.35:9300"
+//#define DE_TWICE_URL                    @"http://58.210.18.35:9300"
+//#define SHOW_NATIONWIDE                 @NO
+//#define SHOW_HTML                       @YES
+//#define DE_SHARE_URL                    @"http://m.qwysfw.cn"
+
+
+
+//动态的SIT内网环境
+//#define DE_BASE_URL                     @"http://m.api.qw.com"
+//#define DE_H5_DOMAIN_URL                @"http://h5-api.qw.com"
+//#define DE_ONCE_URL                     @"http://58.210.18.35:9400"
+//#define DE_TWICE_URL                    @"http://58.210.18.35:9400"
+//#define SHOW_NATIONWIDE                 @NO
+//#define SHOW_HTML                       @YES
+//#define DE_SHARE_URL                    @"http://m.sit.qwysfw.cn"
+
+
+//动态的sit外网环境
+//#define DE_BASE_URL                     @"http://m.api.sit.qwysfw.cn"
+//#define DE_H5_DOMAIN_URL                @"http://h5-api.sit.qwysfw.cn"
+//#define DE_ONCE_URL                     @"http://58.210.18.35:9400"
+//#define DE_TWICE_URL                    @"http://58.210.18.35:9400"
+//#define SHOW_NATIONWIDE                 @NO
+//#define SHOW_HTML                       @YES
+//#define DE_SHARE_URL                    @"http://m.sit.qwysfw.cn"
+
+
+//动态的PRE环境
+#define DE_BASE_URL                       @"http://api-m.pre.qw.com"
+#define DE_H5_DOMAIN_URL                  @"http://h5-api.pre.qw.com"
+#define DE_ONCE_URL                       @"http://192.168.0.44:9300"
+#define DE_TWICE_URL                      @"http://192.168.0.44:9300"
+#define SHOW_NATIONWIDE                   @NO
+#define SHOW_HTML                         @YES
+#define DE_SHARE_URL                      @"http://m.pre.qw.com"
+#define DEBUG                             1
+
+#endif
+
+#define BASE_URL_V2           (StrIsEmpty([[NSUserDefaults standardUserDefaults] objectForKey:@"APIDOMAIN"])?[NSString stringWithFormat:@"%@/",DE_BASE_URL]:[[NSUserDefaults standardUserDefaults] objectForKey:@"APIDOMAIN"])
+#define H5_DOMAIN_URL         (StrIsEmpty([[NSUserDefaults standardUserDefaults] objectForKey:@"H5DOMAIN"])?[NSString stringWithFormat:@"%@/",DE_H5_DOMAIN_URL]:[[NSUserDefaults standardUserDefaults] objectForKey:@"H5DOMAIN"])
+
+
+
+/**************************************************************************************
+ *                                打包前注意切换环境                                     *
+ *************************************************************************************/
+//增加了html5的某个前缀
+#define HTML5_DIRECT_URL                    [NSString stringWithFormat:@"%@app/html",BASE_URL_V2]
+//2.2.0版本增加的前缀
+#define HTML5_DIRECT_URL_WITH_VERSION       [NSString stringWithFormat:@"%@/v2.2.0",HTML5_DIRECT_URL]
+//223版本新增的前缀
+#define HTML5_DIRECT_URL_NEW_VERSION       [NSString stringWithFormat:@"%@/v223",HTML5_DIRECT_URL]
+//跳转到html5的页面的分享和基础的前缀
+#define H5_SHARE_URL                    [NSString stringWithFormat:@"%@QWWEB/v400/",H5_DOMAIN_URL]
+//V3.2.0版本分享的前缀
+#define H5_NEW_SHARE_URL                    [NSString stringWithFormat:@"%@/",DE_SHARE_URL]
+
+#define H5_BASE_URL                     [NSString stringWithFormat:@"%@QWAPP/v400/",H5_DOMAIN_URL]
+
+#define HTML5_URL                       [NSString stringWithFormat:@"%@app/",BASE_URL_V2]
+
+// 待删
+#define THEME_URL(APPEND)                  [NSString stringWithFormat:@"%@api/advice/share?adviceId=%@",BASE_URL_V2,APPEND]
+#define HealthInfoPageURL(ADVICEID,TOKEN,TYPE)                   [NSString stringWithFormat:@"%@html/message.html?id=%@&token=%@&from=%@",HTML5_URL,ADVICEID,TOKEN,TYPE]
+
+
+#define SHARE_URL_PROMOTION(APPEND)        [NSString stringWithFormat:@"%@html5/promotion.html?id=%@",BASE_URL_V2,APPEND]
+
+// MARK: 分享的URL
+#define SHARE_URL_STORE_WITHVERSION(APPEND)   [NSString stringWithFormat:@"%@web/store/html/store.html?id=%@&account=&accountType=",H5_SHARE_URL,APPEND]
+// 药房详情优惠活动分享
+#define SHARE_URL_STORE_WITHPROMOTION_WITHVERSION(APPEND,APPEND2,APPEND3)   [NSString stringWithFormat:@"%@html5/v2.2.0/activities.html?id=%@&packPromotionId=%@&device=%@&type=5",BASE_URL_V2,APPEND,APPEND2,APPEND3]
+// 药品详情分享-有优惠活动
+#define SHARE_URL_DRUGDETAIL_WITHPROMOTION_WITHVERSION(APPEND,APPEND2,APPEND3)   [NSString stringWithFormat:@"%@html5/v2.2.0/drugDetail.html?id=%@&promotionId=%@&type=2&device=%@",BASE_URL_V2,APPEND,APPEND2,APPEND3]
+// 普通优惠活动分享
+#define SHARE_URL_WITHACTIVITY(APPEND)   [NSString stringWithFormat:@"%@html5/v2.2.0/activity.html?id=%@",BASE_URL_V2,APPEND]
+// 药品详情分享
+#define SHARE_URL_DRUGDETAIL_WITHVERSION(APPEND,APPEND2)   [NSString stringWithFormat:@"%@html5/v2.2.0/drugDetail.html?id=%@&type=2&device=%@",BASE_URL_V2,APPEND,APPEND2]
+// 优惠券分享
+#define SHARE_URL_COUPON_WITHVERSION(APPEND,APPEND2,APPEND3)    [NSString stringWithFormat:@"%@web/coupon/coupon.html?id=%@&groupId=%@&type=1&device=%@",H5_SHARE_URL,APPEND,APPEND2,APPEND3]
+// 优惠商品使用成功的分享
+#define SHARE_URL_DRUGPROMOTION_WITHVERSION(APPEND)             [NSString stringWithFormat:@"%@html5/v2.2.0/giftBag_product.html?type=4&device=%@",BASE_URL_V2,APPEND]
+// 优惠券使用成功的分享
+#define SHARE_URL_COUPON_SUCCESS_WITHVERSION(APPEND)           [NSString stringWithFormat:@"%@html5/v2.2.0/giftBag_coupon.html?type=3&device=%@",BASE_URL_V2,APPEND]
+// 疾病刺激详情页分享
+#define SHARE_URL_DISEASE_WITHVERSION(APPEND,APPEND2)     [NSString stringWithFormat:@"%@html5/v2.2.0/disease.html?id=%@&device=%@",BASE_URL_V2,APPEND,APPEND2]
+// 症状刺激详情页分享
+#define SHARE_URL_SICKNESS_WITHVERSION(APPEND,APPEND2)   [NSString stringWithFormat:@"%@html5/v2.2.0/sickness.html?id=%@&device=%@",BASE_URL_V2,APPEND,APPEND2]
+// 专题正文的分享
+#define SHARE_URL_SUBJECT_WITHVERSION(APPEND)   [NSString stringWithFormat:@"%@html5/v2.2.0/subject.html?subjectId=%@",BASE_URL_V2,APPEND]
+// 专区索引页的分享
+#define SHARE_URL_DIVISION_WITHVERSION(APPEND,APPEND2)   [NSString stringWithFormat:@"%@html5/v2.2.0/division.html?posId=%@&device=%@",BASE_URL_V2,APPEND,APPEND2]
+// 慢病优惠券分享
+#define SHARE_URL_SLOWDISEASECOUPON_WITHVERSION(APPEND,APPEND2,APPEND3)    [NSString stringWithFormat:@"%@web/coupon/coupon.html?id=%@&groupId=%@&type=1&device=%@",H5_SHARE_URL,APPEND,APPEND2,APPEND3]
+// 普通优惠券分享
+#define SHARE_URL_COMMONCOUPON_WITHVERSION(APPEND,APPEND2,APPEND3)    [NSString stringWithFormat:@"%@web/coupon/coupon.html?id=%@&groupId=%@&type=1&device=%@",H5_SHARE_URL,APPEND,APPEND2,APPEND3]
+// 健康咨询分享
+#define SHARE_URL_HEALTHINFO_WITHVERSION(APPEND)    [NSString stringWithFormat:@"%@html5/v2.2.0/message.html?adviceId=%@",BASE_URL_V2,APPEND]
+// 领券中心列表分享
+#define SHARE_URL_GET_COUPONLIST_WITHVERSION    [NSString stringWithFormat:@"%@html5/v2.2.0/download.html",BASE_URL_V2]
+// 症状详情分享
+#define SHARE_URL_SYMPTOM_WITHVERSION(APPEND,APPEND2)               [NSString stringWithFormat:@"%@html5/v2.2.0/symptom.html?id=%@&device=%@",BASE_URL_V2,APPEND,APPEND2]
+// 我的－优惠券详情的分享（使用前）
+#define SHARE_URL_MY_COUPON_WITHVERSION(APPEND,APPEND2,APPEND3)         [NSString stringWithFormat:@"%@web/coupon/coupon.html?id=%@&groupId=%@&type=1&device=%@",H5_SHARE_URL,APPEND,APPEND2,APPEND3]
+// 我的－优惠商品详情的分享－直接跳到领券页（使用前）
+#define SHARE_URL_MY_DRUG_WITHVERSION(APPEND,APPEND2,APPEND3)         [NSString stringWithFormat:@"%@html5/v2.2.0/drugPromotion.html?id=%@&promotionId=%@&type=2&device=%@",BASE_URL_V2,APPEND,APPEND2,APPEND3]
+// 分享大转盘
+#define SHARE_URL_TURN_TABLE         [NSString stringWithFormat:@"%@web/turntable/html/turntable.html",H5_SHARE_URL]
+// 分享帖子详情
+#define SHARE_URL_POST_DETAIL(APPEND,APPEND2)        [NSString stringWithFormat:@"%@web/post_detail/html/postDetail.html?postId=%@&deviceCode=%@",H5_SHARE_URL,APPEND,APPEND2]
+// 微商商品详情分享
+#define SHARE_URL_WECHAT_PRODUCT(APPEND,APPEND2,APPEND3)      [NSString stringWithFormat:@"%@QWWAP/discount/html/goodsDetail.html?id=%@&branchId=%@&city=%@&refid=",H5_DOMAIN_URL,APPEND,APPEND2,APPEND3]
+// 慢病订阅详情URL
+#define DiseasePageURL(GUIDEID,TOKEN)       [NSString stringWithFormat:@"%@html/subscibe.html?drugGuideId=%@&token=%@",HTML5_URL,GUIDEID,TOKEN]
+
+#define APPEND                             [NSString stringWithFormat:@"%@%@",BASE_URL_V2,APPEND]
+#define API_APPEND_V2(APPEND)              [NSString stringWithFormat:@"%@%@",BASE_URL_V2,APPEND]
+
+#define WELCOME_MESSAGE                 @"欢迎注册问药App！关注家人健康，关注用药安全，吃药先“问药”，很有必要！"
+#define APP_VERSION                     ([[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"])
+
+#define UMENG_KEY                   @"5355fc9256240b418f014450"
+
+#define WECHAT_UNIFIEDORDER         @"https://api.mch.weixin.qq.com/pay/unifiedorder"
+
+#define ALERT_MESSAGE               @"当前身份已失效,请重新登录"
+#define APP_BEST_NAME               @"nickName"//@"APP_BEST_NAME"
+#define APP_EMPTY_STRING            @""
+#define APP_MESSAGE_MUSIC           @"appmessagemusic"
+#define APP_AVATAR_KEY              @"appavatarkey"
+#define APP_NICKNAME_KEY            @"appnicknamekey"
+#define VERSION_CHECK_DATE          @"versionNoticeDate"
+#define APP_DOMAIN_KEY              @"appdomainkey"
+#define APP_DOWNLOAD                @"https://itunes.apple.com/cn/app/wen-yao/id901262090?mt=8"
+#define APP_GESTURE_ENABLE          @"kgestureenable"
+#define UPDATE_GUIDE_Notification   @"update_guide_notification"
+#define CHANGED_GUIDE_Notification  @"CHANGED_GUIDE_Notification"
+#define NEED_UPDATE_AVATAR          @"NEED_UPDATE_AVATAR"
+#define PHARMACY_NEED_UPDATE        @"PHARMACY_NEED_UPDATE"
+#define OFFICIAL_MESSAGE            @"OFFICIAL_MESSAGE"
+#define APP_UPDATE_AFTER_THREE_DAYS @"App_update_three_days"
+#define APP_LAST_TIMESTAMP          @"App_last_timestamp"
+#define APP_LAST_SYSTEM_VERSION     @"App_last_systemVersion"
+#define APP_LAST_SYSTEM_VERSION_V2     @"App_last_systemVersion_v2"
+#define SERVER_ADDR                 @"http://m.qwysfw.cn"
+#define UPDATEUSER                  @"UPDATEUSER"
+
+#endif

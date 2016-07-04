@@ -1,0 +1,570 @@
+//
+//  MainViewController.m
+//  APP
+//
+//  Created by Martin.Liu on 15/12/29.
+//  Copyright © 2015年 carret. All rights reserved.
+//
+
+#import "MainViewController.h"
+#import "QWTabBar.h"
+#import "QWLocation.h"
+#import "LocationPermissionView.h"
+#import "LocationNotOpenView.h"
+#import "LocationLoadingView.h"
+#import "AppDelegate.h"
+#import "NotificationModel.h"
+#import "SVProgressHUD.h"
+#import "QWCustomedTabBar.h"
+#import "BranchChooseViewController.h"
+#import "ShowBranchChooseView.h"
+#import "QWUserDefault.h"
+#import "SwitchPharmactAnimationView.h"
+
+@interface MainViewController () <UITabBarControllerDelegate>
+
+@property (nonatomic, strong) MapInfoModel              *mapInfoModel;
+@property (nonatomic, strong) ShowBranchChooseView      *showBranchView;
+@property (nonatomic, strong) UIImageView               *businessCoverView;
+
+
+@end
+
+@implementation MainViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    _selectedTab = -1;
+#if TARGET_IPHONE_SIMULATOR
+    [QWGLOBALMANAGER setMapModel:[QWGLOBALMANAGER buildSuzhouAuditLocatinMapInfo]];
+#endif
+
+#if !TARGET_IPHONE_SIMULATOR
+    self.showBranchView = [[NSBundle mainBundle] loadNibNamed:@"ShowBranchChooseView" owner:self options:nil][0];
+    [QWGLOBALMANAGER readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) {
+        if(mapInfoModel.status == 3 && mapInfoModel.branchId.length > 0) {
+#endif
+            [self addChildViewController:self.tabbarOne];
+            [self.view addSubview:self.tabbarOne.view];
+            self.currentTabbar = self.tabbarOne;
+#if !TARGET_IPHONE_SIMULATOR
+        }else{
+            [self addChildViewController:self.tabbarTwo];
+            [self.view addSubview:self.tabbarTwo.view];
+            self.currentTabbar = self.tabbarTwo;
+            
+            MapInfoModel *lastLocation = [QWUserDefault getModelBy:kLastLocationSuccessAddressModel];
+            if(lastLocation.status == 3 && mapInfoModel.branchId.length == 0) {
+                self.mapInfoModel = lastLocation;
+                [self pushBranchChooseVC:NO];
+                return;
+            }
+        }
+        [self readNewLocation];
+    }];
+#endif
+}
+
+- (void)pushBranchChoose
+{
+    [self pushBranchChooseVC:YES];
+}
+
+- (void)pushBranchChooseVC:(BOOL)animate
+{
+    [self.showBranchView dismiss:nil];
+    BranchChooseViewController *viewController = [BranchChooseViewController new];
+    viewController.hidesBottomBarWhenPushed = YES;
+    viewController.mapInfoModel = self.mapInfoModel;
+    [self.currentTabbar.selectedViewController pushViewController:viewController animated:animate];
+}
+
+- (QWTabBar *)tabbarOne
+{
+    if (!_tabbarOne) {
+        _tabbarOne = [[QWTabBar alloc] initWithDelegate:self];
+        NSArray *items = [MainViewController tabbarOneItems];
+        [_tabbarOne addTabBarItem:items[0],items[1],items[2],items[3],items[4],nil];
+        // read cache
+//        [self updateCacheToItemArray:items];
+        QWCustomedTabBar *tabBar = (QWCustomedTabBar *)_tabbarOne.tabBar;
+        // refresh customTabBar
+        if ([tabBar isKindOfClass:[QWCustomedTabBar class]]) {
+            [tabBar changeStyleWithItemConfig:items];
+        }
+    }
+    return _tabbarOne;
+}
+
+- (QWTabBar *)tabbarTwo
+{
+    if (!_tabbarTwo) {
+        _tabbarTwo = [[QWTabBar alloc] initWithDelegate:self];
+        NSArray *items = [MainViewController tabbarTwoItems];
+        [_tabbarTwo addTabBarItem:items[0],items[1],items[2],items[3],items[4],nil];
+//        [self updateCacheToItemArray:items];
+        QWCustomedTabBar *tabBar = (QWCustomedTabBar *)_tabbarTwo.tabBar;
+        if ([tabBar isKindOfClass:[QWCustomedTabBar class]]) {
+            [tabBar changeStyleWithItemConfig:items];
+        }
+   }
+    for(UINavigationController *nav in _tabbarTwo.viewControllers) {
+        [nav.navigationBar setBarTintColor:RGBHex(qwColor4)];
+        CGRect rect = CGRectMake(0, 0, 1, 1);
+        UIGraphicsBeginImageContext(rect.size);
+        CGContextRef context = UIGraphicsGetCurrentContext();
+        CGContextSetFillColorWithColor(context,[RGBHex(qwColor4) CGColor]);
+        CGContextFillRect(context, rect);
+        UIImage * imge = [[UIImage alloc] init];
+        imge = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
+        
+        [nav.navigationBar setBackgroundImage:imge forBarMetrics:UIBarMetricsDefault];
+        [nav.navigationBar setShadowImage:[[UIImage alloc] init]];
+    }
+    return _tabbarTwo;
+}
+
+- (void)updateCacheToItemArray:(NSArray *)itemArr
+{
+    NSArray *arrCache = [QWTabbarItem getArrayFromDBWithWhere:nil];
+    for (QWTabbarItem *itemCache in arrCache) {
+        for (QWTabbarItem *item in itemArr) {
+            if ([itemCache.tag isEqualToString:item.tag]) {
+                item.title = itemCache.title;
+                item.titleNormalColor = itemCache.titleNormalColor;
+                item.titleSelectedColor = itemCache.titleSelectedColor;
+                item.picNormal = itemCache.picNormal;
+                item.picSelected = itemCache.picSelected;
+                break;
+            }
+        }
+    }
+}
+
+
++ (NSArray *)tabbarOneItems
+{
+    QWTabbarItem *bar1=[QWTabbarItem new];
+    bar1.title=@"首页";
+    bar1.clazz=@"HomePageViewController";//HomePageViewController
+    bar1.picNormal=@"icon_common_homepage_rest";
+    bar1.picSelected=@"icon_common_homepage_selected";
+    bar1.titleNormalColor = RGBHex(qwColor6);
+    bar1.titleSelectedColor = RGBHex(qwColor1);
+    bar1.tag=[NSString stringWithFormat:@"%i",Enum_TabBar_Items_HomePage];
+    
+    QWTabbarItem *bar2=[QWTabbarItem new];
+    bar2.title=@"分类";
+    bar2.clazz=@"BranchGoodListViewController";
+    bar2.picNormal=@"icon_common_classify_rest";
+    bar2.picSelected=@"icon_common_classify_selected";
+    bar2.titleNormalColor = RGBHex(qwColor6);
+    bar2.titleSelectedColor = RGBHex(qwColor1);
+    bar2.tag=[NSString stringWithFormat:@"%i",Enum_TabBar_Items_ConsultPharmacy];
+    
+    QWTabbarItem *bar3=[QWTabbarItem new];
+    bar3.title=@"购物车";
+    bar3.clazz=@"ShoppingCartViewController";//HealthInfoPageViewController
+    bar3.picNormal=@"icon_common_shopping_rest";
+    bar3.picSelected=@"icon_common_shopping_selected";
+    bar3.titleNormalColor = RGBHex(qwColor6);
+    bar3.titleSelectedColor = RGBHex(qwColor1);
+    bar3.tag=[NSString stringWithFormat:@"%i",Enum_TabBar_Items_ShoppingCart];
+    
+    QWTabbarItem *bar4=[QWTabbarItem new];
+    bar4.title=@"我的";
+    bar4.clazz=@"NewUserCenterViewController";//UserCenterPageViewController  //WYLocalNotifVC
+    bar4.picNormal=@"icon_common_personal_rest";
+    bar4.picSelected=@"icon_common_personal_selected";
+    bar4.titleNormalColor = RGBHex(qwColor6);
+    bar4.titleSelectedColor = RGBHex(qwColor1);
+    bar4.tag=[NSString stringWithFormat:@"%i",Enum_TabBar_Items_SellUseCenter];
+    
+    QWTabbarItem *specialBar=[QWTabbarItem new];
+    specialBar.title=@"健康圈";
+    specialBar.clazz=@"HealthCircleViewController";
+//    specialBar.clazz=@"QWBaseVC";//UserCenterPageViewController  //WYLocalNotifVC
+    specialBar.titleNormalColor = RGBHex(qwColor4);
+    specialBar.picNormal=@"icon_common_healthyring_rest";
+    specialBar.picSelected=@"icon_common_healthyring_selected";
+    specialBar.tag=[NSString stringWithFormat:@"%i",Enum_TabBar_Items_SPECIALTABBARITEMTAG];
+    return @[bar1,bar2,specialBar,bar3,bar4];
+}
+
++ (NSArray *)tabbarTwoItems
+{
+    QWTabbarItem *bar1=[QWTabbarItem new];
+    bar1.title=@"阅读";
+    bar1.clazz=@"HealthInfoMainViewController";//
+    bar1.picNormal=@"ic_nav_inf";
+    bar1.picSelected=@"ic_nav_inf_pressed";
+    bar1.titleNormalColor = RGBHex(qwColor6);
+    bar1.titleSelectedColor = RGBHex(qwColor1);
+    bar1.tag=[NSString stringWithFormat:@"%i",Enum_TabBar_Items_HealthInfo];
+    
+    QWTabbarItem *bar2=[QWTabbarItem new];
+    bar2.title=@"健康圈";
+    bar2.clazz=@"ForumHomeViewController";//
+    bar2.picNormal=@"ic_nav_quan";
+    bar2.picSelected=@"ic_nav_quan_pressde";
+    bar2.titleNormalColor = RGBHex(qwColor6);
+    bar2.titleSelectedColor = RGBHex(qwColor1);
+    bar2.tag=[NSString stringWithFormat:@"%i",Enum_TabBar_Items_ForumHome];
+    
+    QWTabbarItem *bar3=[QWTabbarItem new];
+    bar3.title=@"自查";
+    bar3.clazz=@"FinderMainViewController";//
+    bar3.picNormal=@"ic_nav_self";
+    bar3.picSelected=@"ic_nav_self_pressed";
+    bar3.titleNormalColor = RGBHex(qwColor6);
+    bar3.titleSelectedColor = RGBHex(qwColor1);
+    bar3.tag=[NSString stringWithFormat:@"%i",Enum_TabBar_Items_FinderMain];
+    
+    QWTabbarItem *bar4=[QWTabbarItem new];
+    bar4.title=@"我的";
+    bar4.clazz=@"NewUserCenterViewController";//  //WYLocalNotifVC
+    bar4.picNormal=@"ic_nav_my";
+    bar4.picSelected=@"ic_nav_my_pressed";
+    bar4.titleNormalColor = RGBHex(qwColor6);
+    bar4.titleSelectedColor = RGBHex(qwColor1);
+    bar4.tag=[NSString stringWithFormat:@"%i",Enum_TabBar_Items_ContentUseCenter];
+    
+    QWTabbarItem *specialBar=[QWTabbarItem new];
+    specialBar.title=@"";
+    specialBar.titleNormalColor = RGBHex(qwColor4);
+    specialBar.picNormal=@"icon_nav_dingwei";
+//    specialBar.picSelected=@"icon_nav_dingwei";
+    specialBar.clazz = @"LocationExcessiveViewController";
+    specialBar.tag=[NSString stringWithFormat:@"%li",(long)Enum_TabBar_Items_SPECIALTABBARITEMTAG];
+    return @[bar1,bar2,specialBar,bar3,bar4];
+}
+
+- (QWTabBar *)currentTabbar
+{
+    if (!_currentTabbar) {
+        _currentTabbar = self.tabbarOne;
+    }
+    return _currentTabbar;
+}
+
+- (void)showBusinessGuide
+{
+    [QWGLOBALMANAGER statisticsEventId:@"首次打开引导页" withLable:@"首次打开引导页" withParams:nil];
+    if(!_businessCoverView) {
+        _businessCoverView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, APP_W, SCREEN_H)];
+        if(IS_IPHONE_6) {
+            _businessCoverView.image = [UIImage imageNamed:@"iOS_HomePage_1334"];
+        }else if (IS_IPHONE_6P) {
+            _businessCoverView.image = [UIImage imageNamed:@"iOS_HomePage_2208"];
+        }else if(IS_IPHONE_5) {
+            _businessCoverView.image = [UIImage imageNamed:@"iOS_HomePage_1136"];
+        }else if (IS_IPHONE_4_OR_LESS) {
+            _businessCoverView.image = [UIImage imageNamed:@"iOS_HomePage_960"];
+        }
+        _businessCoverView.userInteractionEnabled = YES;
+        UITapGestureRecognizer *tagGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dismissGuideShow)];
+        [_businessCoverView addGestureRecognizer:tagGesture];
+    }
+    BOOL alreadyShow = [QWUserDefault getBoolBy:@"showBusinessGuide"];
+    if(!alreadyShow) {
+        [self.view addSubview:_businessCoverView];
+        
+    }
+}
+
+- (void)dismissGuideShow
+{
+    [QWGLOBALMANAGER statisticsEventId:@"首次打开引导页_明白了" withLable:@"首次打开引导页_明白了" withParams:nil];
+    [_businessCoverView removeFromSuperview];
+    [QWUserDefault setBool:YES key:@"showBusinessGuide"];
+}
+
+- (void)showLocationPremission
+{
+    if(APP_H <= 480) {
+        //4S 无法权限跳转
+        [SVProgressHUD showErrorWithStatus:@"请在系统设置中开启定位服务" duration:0.8];
+    }else{
+        LocationPermissionView *view = (LocationPermissionView *)[[NSBundle mainBundle] loadNibNamed:@"LocationPermissionView" owner:self options:nil][0];
+        [view showInView:[[UIApplication sharedApplication] keyWindow] animated:YES];
+    }
+}
+
+- (BOOL)tabBarController:(UITabBarController *)tabBarController shouldSelectViewController:(UIViewController *)viewController
+{
+    // 添加点击tab 事件统计
+    if(viewController.tabBarItem.tag == Enum_TabBar_Items_ForumHome)
+    {
+        [QWGLOBALMANAGER statisticsEventId:@"x_sy_qz" withLable:@"首页-圈子tab" withParams:nil];
+    }
+    if (self.currentTabbar == self.tabbarTwo && viewController.tabBarItem.tag == Enum_TabBar_Items_SPECIALTABBARITEMTAG) {
+        [QWGLOBALMANAGER statisticsEventId:@"x_sy_zy" withLable:@"首页-找药tab" withParams:nil];
+    }else if (self.currentTabbar == self.tabbarOne &&  viewController.tabBarItem.tag == Enum_TabBar_Items_HomePage) {
+        
+        [QWGLOBALMANAGER statisticsEventId:@"首页_首页tab" withLable:@"首页_首页tab" withParams:nil];
+    }
+    NSInteger itemRow = [tabBarController.viewControllers indexOfObject:viewController];
+
+    if(self.currentTabbar == _tabbarOne) {
+        NSMutableDictionary *setting = [NSMutableDictionary dictionary];
+        if(QWGLOBALMANAGER.weChatBusiness) {
+            setting[@"是否开通微商"] = @"是";
+        }else{
+            setting[@"是否开通微商"] = @"否";
+        }
+        if(itemRow == 3) {
+            [QWGLOBALMANAGER statisticsEventId:@"首页_购物车tab" withLable:@"首页_购物车tab" withParams:nil];
+            [QWGLOBALMANAGER postNotif:NotifShoppingCartUpdateEveryTime data:nil object:nil];
+        }else if(itemRow == 4){
+            [QWGLOBALMANAGER statisticsEventId:@"首页_我的tab" withLable:@"首页-我的tab" withParams:setting];
+        }else if (itemRow == 2) {
+            [QWGLOBALMANAGER statisticsEventId:@"首页_健康圈tab" withLable:@"首页_健康圈tab" withParams:nil];
+        }else if (itemRow == 1) {
+            [QWGLOBALMANAGER statisticsEventId:@"首页_分类tab" withLable:@"首页_分类tab" withParams:setting];
+        }else if (itemRow == 0) {
+            [QWGLOBALMANAGER statisticsEventId:@"x_yxsy" withLable:@"首页-营销" withParams:setting];
+        }
+    }else{
+        if(itemRow == 3){
+            [QWGLOBALMANAGER statisticsEventId:@"x_sy_fx" withLable:@"发现" withParams:nil];
+        }else if (itemRow == 0) {
+            NSMutableDictionary *tdParams = [NSMutableDictionary dictionary];
+            [QWGLOBALMANAGER statisticsEventId:@"x_sy_zx" withLable:@"资讯" withParams:tdParams];
+            [QWGLOBALMANAGER statisticsEventId:@"x_nrsy" withLable:@"首页-内容" withParams:tdParams];
+        }else if(itemRow == 4){
+            NSMutableDictionary *tdParams = [NSMutableDictionary dictionary];
+            tdParams[@"页面"] = @"内容";
+            [QWGLOBALMANAGER statisticsEventId:@"x_sy_wd" withLable:@"首页-我的tab" withParams:tdParams];
+            [QWGLOBALMANAGER statisticsEventId:@"x_sy_grzx" withLable:nil withParams:nil];
+        }
+    }
+    return YES;
+}
+
+- (void)tabBarController:(UITabBarController *)tabBarController didSelectViewController:(UIViewController *)viewController
+{
+    _selectedTab = tabBarController.selectedIndex;
+    
+    AppDelegate *app = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    if(tabBarController.selectedIndex == 2 && [app isMainTab]) {
+        [QWGLOBALMANAGER postNotif:NotiMessageOPLaunchingScreenDisappear data:nil object:nil];
+    }
+}
+
+// 封装的一个翻转到第一个tab效果
+- (void) transitionToTabBarOne
+{
+    if (self.currentTabbar != self.tabbarOne) {
+        self.tabbarOne.view.hidden = NO;
+        self.tabbarTwo.view.hidden = NO;
+        self.currentTabbar = _tabbarOne;
+        QWGLOBALMANAGER.tabBar = self.currentTabbar;   // 为了兼容以前的版本，防止出现意想不到的问题
+        [QWGLOBALMANAGER postNotif:NotifTabsWillTransition data:nil object:nil];
+        [self.tabbarTwo.view removeFromSuperview];
+        [self.view addSubview:self.tabbarOne.view];
+    }
+}
+
+- (void) transitionDidChange
+{
+    [[UIApplication sharedApplication] endIgnoringInteractionEvents];
+    if (self.currentTabbar == _tabbarOne) {
+        [QWGLOBALMANAGER postNotif:NotifTabsDidTransition data:nil object:nil];
+        _tabbarTwo.view.hidden = YES;
+    }
+    else if (self.currentTabbar == _tabbarTwo)
+    {
+        NSMutableDictionary *setting = [NSMutableDictionary dictionary];
+        if(QWGLOBALMANAGER.weChatBusiness) {
+            setting[@"是否开通微商"] = @"是";
+        }else{
+            setting[@"是否开通微商"] = @"否";
+        }
+        [QWGLOBALMANAGER statisticsEventId:@"x_sy_wy" withLable:@"首页-问药tab" withParams:setting];
+        [QWGLOBALMANAGER postNotif:NotifDidTransitionToTabbarTwo data:nil object:nil];
+        [QWGLOBALMANAGER postNotif:NotifTabsDidTransition data:nil object:nil];
+        _tabbarOne.view.hidden = YES;
+    }
+}
+
+// 封装的一个翻转到第二个tab效果
+- (void) transitionToTabBarTwo
+{
+    if (self.currentTabbar != self.tabbarTwo) {
+        self.tabbarOne.view.hidden = NO;
+        self.tabbarTwo.view.hidden = NO;
+        self.currentTabbar = _tabbarTwo;
+        QWGLOBALMANAGER.tabBar = self.currentTabbar; // 为了兼容以前的版本，防止出现意想不到的问题
+        [QWGLOBALMANAGER postNotif:NotifWillTransitionToTabbarTwo data:nil object:nil];
+        [QWGLOBALMANAGER postNotif:NotifTabsWillTransition data:nil object:nil];
+
+        [self.tabbarOne.view removeFromSuperview];
+        [self.view addSubview:self.tabbarTwo.view];
+    }
+}
+
+- (void)selectedViewControllerWithTag:(NSInteger)tag
+{
+    for (UIViewController* vc in self.tabbarOne.viewControllers) {
+        if (vc.tabBarItem.tag == tag) {
+            [self transitionToTabBarOne];
+            self.tabbarOne.selectedIndex = tag % 5;
+        }
+    }
+    for (UIViewController* vc in self.tabbarTwo.viewControllers) {
+        if (vc.tabBarItem.tag == tag) {
+            [self transitionToTabBarTwo];
+            self.tabbarTwo.selectedIndex = tag % 5;
+        }
+    }
+}
+
+- (void)getNotifType:(Enum_Notification_Type)type data:(id)data target:(id)obj
+{
+    if(type == NotifForcedTransferToContentScreen) {
+        if(self.currentTabbar == _tabbarOne) {
+            UIViewAnimationTransition transition = UIViewAnimationTransitionFlipFromLeft;
+            transition = UIViewAnimationTransitionFlipFromLeft;
+            self.tabbarOne.view.hidden = NO;
+            self.tabbarTwo.view.hidden = NO;
+            self.currentTabbar = _tabbarTwo;
+            QWGLOBALMANAGER.tabBar = self.currentTabbar;
+            [[UIApplication sharedApplication] beginIgnoringInteractionEvents];
+            [UIView beginAnimations:nil context:NULL];
+            [UIView setAnimationDuration:0.75f];
+            [UIView setAnimationTransition:transition forView:self.view cache:NO];
+            [UIView setAnimationDelegate:self];
+            [UIView setAnimationDidStopSelector:@selector(transitionDidChange)];
+            [self.view exchangeSubviewAtIndex:0 withSubviewAtIndex:1];
+            [UIView commitAnimations];
+        }
+    }else if(NotiMessageOPLaunchingScreenDisappear == type) {
+        [self readNewLocation];
+    }if (type == NotifTransitionToTabbarOne) {
+        [self transitionToTabBarOne];
+    }
+    if (type == NotifTransitionToTabbarTwo) {
+        [self transitionToTabBarTwo];
+    }
+    if(type == NotifCityHasChanged){
+        NSInteger naviVCIndex = Enum_TabBar_Items_ConsultPharmacy%5;
+        if (naviVCIndex < _tabbarOne.viewControllers.count) {
+            QWBaseNavigationController *Nav = _tabbarOne.viewControllers[naviVCIndex];
+            [Nav popToRootViewControllerAnimated:YES];
+        }
+    }else if (NotifLocationNeedReload == type) {
+        if([[((UINavigationController *)self.currentTabbar.selectedViewController).viewControllers lastObject] isKindOfClass:[BranchChooseViewController class]]) {
+            return;
+        }
+        [self resetLocation];
+    }else if (type == NotifHomepagePharmacyStoreChanged) {
+        SwitchPharmactAnimationView *switchView = [[NSBundle mainBundle] loadNibNamed:@"SwitchPharmactAnimationView" owner:self options:nil][0];
+        [switchView showInView:[[UIApplication sharedApplication] keyWindow] withbranchName:((MapInfoModel *)data).branchName];
+    }
+}
+
+- (void)resetLocation
+{
+    MapInfoModel *lastMapInfo = [QWUserDefault getModelBy:kLastLocationSuccessAddressModel];
+    [QWGLOBALMANAGER resetLocationInformation:^(MapInfoModel *mapInfoModel) {
+        NSString *newCityName = mapInfoModel.city;
+        self.mapInfoModel = mapInfoModel;
+        if([newCityName isEqualToString:lastMapInfo.city]) {
+            //仅更新本地地理位置
+            [QWGLOBALMANAGER updateMapInfoModelLocation:self.mapInfoModel];
+        }else{
+            //弹提示框
+            if(self.currentTabbar == self.tabbarOne) {
+                if(mapInfoModel.status == 3) {
+                    //已开通提醒
+                    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:@"您所在城市发生变化是否选择切换到附近药房?" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"切换", nil];
+                    alert.tag = 1008;
+                    [alert show];
+                }else{
+                    //未开通提醒
+                    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"" message:@"您所在城市发生变化是否选择切换城市?" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"切换", nil];
+                    alert.tag = 1009;
+                    [alert show];
+                }
+            }else{
+                if(mapInfoModel.status == 3) {
+                    [self.showBranchView showInView:self.view animated:YES];
+                    [self.showBranchView.chooseButton addTarget:self action:@selector(pushBranchChoose) forControlEvents:UIControlEventTouchUpInside];
+                }else{
+                    [QWGLOBALMANAGER saveLastLocationInfo:self.mapInfoModel];
+                }
+            }
+        }
+    }];
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if(alertView.tag == 1008) {
+        if(buttonIndex == 1) {
+            [QWGLOBALMANAGER saveLastLocationInfo:self.mapInfoModel];
+            [self pushBranchChooseVC:YES];
+        }else if(buttonIndex == 0){
+            [QWUserDefault setModel:[QWGLOBALMANAGER getMapInfoModel] key:kLastLocationSuccessAddressModel];
+        }
+    }else if(alertView.tag == 1009) {
+        if(buttonIndex == 1) {
+            [QWGLOBALMANAGER saveLastLocationInfo:self.mapInfoModel];
+            [self transitionToTabBarTwo];
+        }else if(buttonIndex == 0){
+            [QWUserDefault setModel:[QWGLOBALMANAGER getMapInfoModel] key:kLastLocationSuccessAddressModel];
+        }
+    }
+}
+
+- (void)updateMapInfoLocation
+{
+    [QWGLOBALMANAGER updateMapInfoModelLocation:self.mapInfoModel];
+}
+
+
+- (void)readNewLocation
+{
+    if(![QWLocation locationServicesAvailable]) {
+        //跳转至设置界面打开后,此提醒未关闭,check
+        [self showLocationPremission];
+    }else{
+        [QWGLOBALMANAGER resetLocationInformation:^(MapInfoModel *mapInfoModel) {
+            if(mapInfoModel.status == 3) {
+                self.mapInfoModel = mapInfoModel;
+                if(self.currentTabbar == self.tabbarTwo) {
+                    
+                    NSUserDefaults *userDefault = [NSUserDefaults standardUserDefaults];
+                    if([[userDefault objectForKey:@"showGuide"] boolValue] == YES) {
+                        //引导页显示之后,才做定位
+                        [self.showBranchView showInView:self.view animated:YES];
+                        [self.showBranchView.chooseButton addTarget:self action:@selector(pushBranchChoose) forControlEvents:UIControlEventTouchUpInside];
+                        
+                    }else{
+                        [userDefault setObject:[NSNumber numberWithBool:YES] forKey:@"showGuide"];
+                        [self pushBranchChooseVC:NO];
+                    }
+                }
+            }
+        }];
+    }
+}
+
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+ #pragma mark - Navigation
+ 
+ // In a storyboard-based application, you will often want to do a little preparation before navigation
+ - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+ // Get the new view controller using [segue destinationViewController].
+ // Pass the selected object to the new view controller.
+ }
+ */
+
+@end

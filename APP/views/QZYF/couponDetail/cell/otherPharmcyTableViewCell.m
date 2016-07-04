@@ -1,0 +1,57 @@
+//
+//  myConsultTableViewCell.m
+//  APP
+//
+//  Created by 李坚 on 15/8/24.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "otherPharmcyTableViewCell.h"
+#import "CouponModel.h"
+
+@implementation otherPharmcyTableViewCell
+
+- (void)awakeFromNib {
+    
+    [self.starView setImagesDeselected:@"star_none" partlySelected:@"star_half" fullSelected:@"star_full" andDelegate:nil];
+    self.starView.userInteractionEnabled = NO;
+    
+//    UIView *line = [[UIView alloc]initWithFrame:CGRectMake(0, self.frame.size.height - 0.5, APP_W, 0.5)];
+//    line.backgroundColor = RGBHex(qwColor10);
+//    [self addSubview:line];
+}
+
+
++ (CGFloat)getCellHeight:(id)data{
+    
+    return 86.0f;
+}
+
+- (void)setCell:(id)data{
+    self.useButton.hidden=YES;
+    CouponBranchVoModel *vo = data;
+    self.branchName.text = vo.branchName;
+    self.address.text = vo.address;
+    self.distance.text =[NSString stringWithFormat:@"%@", vo.distance];
+    [self.starView displayRating:[vo.stars floatValue]/2];
+    self.branchId = vo.branchId;
+
+}
+
+- (void)setMyCell:(id)data{
+    self.useButton.hidden=NO;
+    CouponBranchVoModel *vo = data;
+    self.branchName.text = vo.branchName;
+    self.address.text = vo.address;
+    self.distance.text =[NSString stringWithFormat:@"%@", vo.distance];
+    [self.starView displayRating:[vo.stars floatValue]/2];
+    self.branchId = vo.branchId;
+}
+
+- (IBAction)getUseAction:(id)sender {
+    
+    
+    
+}
+
+@end

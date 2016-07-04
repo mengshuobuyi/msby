@@ -1,0 +1,113 @@
+
+//
+//  NoticeViewController.m
+//  APP
+//
+//  Created by  ChenTaiyu on 16/6/24.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "NoticeViewController.h"
+#import "Consult.h"
+#import "SVProgressHUD.h"
+#import "MsgBoxNoticeCell.h"
+
+@interface NoticeViewController () <UITableViewDataSource, UITableViewDelegate>
+
+@property (nonatomic, strong) NSArray *dataArr;
+@property (nonatomic, strong) UITableView *tableView;
+
+@end
+
+@implementation NoticeViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.title = @"消息通知";
+    self.edgesForExtendedLayout = UIRectEdgeNone;
+    self.tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, 320, 500) style:UITableViewStylePlain];
+    [self.view addSubview:self.tableView];
+    self.tableView.delegate = self;
+    self.tableView.dataSource = self;
+    self.tableView.backgroundView = nil;
+    self.tableView.backgroundColor = [UIColor clearColor];
+    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    self.view.backgroundColor = RGB(242, 244, 247);
+    MsgBoxNoticeListModelR *modelR = [MsgBoxNoticeListModelR new];
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    modelR.view = @"100";
+    [Consult getMsgBoxNoticeListWithParam:modelR success:^(MsgBoxNoticeListModel *responModel) {
+        NSMutableArray *arrM = [NSMutableArray array];
+        for (int i = 0; i< 10; i++) {
+            MsgBoxNoticeItemModel *item = [MsgBoxNoticeItemModel new];
+            item.id = @"12345";
+            item.title = @"XXXXXXXXX店asdbasdgsalihdaskhsalkhdlsakhdsaldsaldsagdasjhlgdsagsagsadsadga";
+            item.content = @"您购买的XXXX有XX条饮食禁忌";
+            item.formatShowTime = @"2012-12-12";
+            item.unread = @"0";
+            item.time = @"149812312312";
+            item.objId = @"";
+            item.objType = @"";
+            item.imgUrl = @"iiamsdsa";
+            [arrM addObject:item];
+        }
+        self.dataArr = [arrM copy];
+        [self.tableView reloadData];
+        
+    } failure:^(HttpException *e) {
+        [SVProgressHUD showErrorWithStatus:@"网络错误" duration:0.5];
+    }];
+    
+}
+
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return self.dataArr.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    MsgBoxNoticeItemModel *model = self.dataArr[indexPath.row];
+    
+    UITableViewCell *retCell = nil;
+    if (model.imgUrl.length) {
+        MsgBoxNoticeCell *cell = [tableView dequeueReusableCellWithIdentifier:@"MsgBoxNoticeCell"];
+        if (!cell) {
+            cell = [MsgBoxNoticeCell cell];
+        }
+        [cell setCell:model];
+        retCell = cell;
+    } else {
+        MsgBoxNoticeCell2 *cell = [tableView dequeueReusableCellWithIdentifier:@"MsgBoxNoticeCell2"];
+        if (!cell) {
+            cell = [MsgBoxNoticeCell2 cell];
+        }
+        [cell setCell:model];
+        retCell = cell;
+    }
+    return retCell;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 120.0f;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    MsgBoxNoticeItemModel *model = self.dataArr[indexPath.row];
+    if (model.imgUrl.length) {
+        return [MsgBoxNoticeCell getCellHeightWithModel:self.dataArr[indexPath.row]];
+    } else {
+        return [MsgBoxNoticeCell2 getCellHeightWithModel:self.dataArr[indexPath.row]];
+    }
+    return UITableViewAutomaticDimension;
+}
+
+@end

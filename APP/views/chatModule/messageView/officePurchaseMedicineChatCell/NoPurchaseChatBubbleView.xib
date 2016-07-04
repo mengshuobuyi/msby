@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="NoPurchaseChatBubbleView">
+            <rect key="frame" x="0.0" y="0.0" width="300" height="159"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="3ny-d1-ens">
+                    <rect key="frame" x="10" y="10" width="280" height="139"/>
+                    <subviews>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="药品的捷安杰姐夫的数据福克斯的姐夫束带结发 的技术分开始大姐夫束带结发是的发生的借款方式的法术打击" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="6Hh-xF-8Cc" userLabel="contentLable" customClass="MLEmojiLabel">
+                            <rect key="frame" x="0.0" y="0.0" width="280" height="139"/>
+                            <constraints>
+                                <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="15" id="R7f-9G-QjP"/>
+                            </constraints>
+                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                            <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                    </subviews>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstAttribute="bottom" secondItem="6Hh-xF-8Cc" secondAttribute="bottom" id="SAC-Ui-yo8"/>
+                        <constraint firstItem="6Hh-xF-8Cc" firstAttribute="leading" secondItem="3ny-d1-ens" secondAttribute="leading" id="fuz-IC-boS"/>
+                        <constraint firstItem="6Hh-xF-8Cc" firstAttribute="top" secondItem="3ny-d1-ens" secondAttribute="top" id="g6w-jl-7KU"/>
+                        <constraint firstAttribute="trailing" secondItem="6Hh-xF-8Cc" secondAttribute="trailing" id="zd7-mc-qK6"/>
+                    </constraints>
+                </view>
+            </subviews>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="3ny-d1-ens" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="10" id="5WA-7m-c9P"/>
+                <constraint firstItem="3ny-d1-ens" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="10" id="I1e-bB-tnA"/>
+                <constraint firstAttribute="bottom" secondItem="3ny-d1-ens" secondAttribute="bottom" constant="10" id="lNl-Nf-GKB"/>
+                <constraint firstAttribute="trailing" secondItem="3ny-d1-ens" secondAttribute="trailing" constant="10" id="mRE-Mr-K6j"/>
+            </constraints>
+            <nil key="simulatedStatusBarMetrics"/>
+            <nil key="simulatedTopBarMetrics"/>
+            <nil key="simulatedBottomBarMetrics"/>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="contentLable" destination="6Hh-xF-8Cc" id="yAf-3D-t8t"/>
+            </connections>
+            <point key="canvasLocation" x="317" y="273.5"/>
+        </view>
+    </objects>
+</document>

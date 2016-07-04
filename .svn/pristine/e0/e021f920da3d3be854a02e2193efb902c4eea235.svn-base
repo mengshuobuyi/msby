@@ -1,0 +1,277 @@
+//
+//  Store.m
+//  APP
+//
+//  Created by qw on 15/3/6.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "Store.h"
+#import "AppraiseModel.h"
+#import "ActivityModel.h"
+@implementation Store
+
+//根据药店账号获取机构信息
++ (void)queryBranhGroupByStoreAccWithParams:(NSDictionary *)param
+                                    success:(void(^)(id))success
+                                    failure:(void(^)(HttpException * e))failure
+{
+    [[HttpClient sharedInstance] get:NW_QueryBranhGroupByStoreAcc
+                               params:param
+                              success:^(id resultObj) {
+                                  NSArray* array = [GroupModel parseArray:resultObj[@"list"]];
+                                  
+                                  if (success) {
+                                      success(array);
+                                  }
+                            }
+                              failure:^(HttpException *e) {
+                                  DebugLog(@"%@",e);
+                                  if (failure) {
+                                      failure(e);
+                                  }
+                              }];
+}
+
++ (void)getPharmacyNearbyWithPara:(StoreOfferNameModelR *)para
+                          success:(void(^)(id result))success
+                          failure:(void(^)(HttpException *err))failure
+{
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] get:SearchRecommendStore
+                               params:[para dictionaryModel]
+                              success:^(id resultObj) {
+                                  NSMutableArray *keyarr = [NSMutableArray array];
+                                  [keyarr addObject:NSStringFromClass([RecommendStoreModel class])];
+                                  [keyarr addObject:NSStringFromClass([StoreNearByTagModel class])];
+                                  NSMutableArray *valuearr = [NSMutableArray array];
+                                  [valuearr addObject:@"list"];
+                                  [valuearr addObject:@"tags"];
+                                  StoreNearByListModel *model =   [StoreNearByListModel parse:resultObj ClassArr:keyarr Elements:valuearr];
+                                  if (success) {
+                                      success(model);
+                                  }
+                              }
+                              failure:^(HttpException *e) {
+                                  DebugLog(@"%@",e);
+                                  if (failure) {
+                                      failure(e);
+                                  }
+                              }];
+}
+
+/**
+ *  @brief 开通城市检查
+ *
+ *  add by Meng
+ */
++ (void)storeSearchOpenCityCheckWithPara:(StoreSearchOpenCityCheckModelR *)param
+                                 success:(void (^)(id result))success
+                                 failure:(void(^)(HttpException *e))failure
+{
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] get:Store_checkOpencity params:[param dictionaryModel] success:^(id responseObj) {
+        StoreSearchOpenCityCheckModel *model = [StoreSearchOpenCityCheckModel parse:responseObj];
+        
+        model = [StoreSearchOpenCityCheckModel parse:responseObj];
+        if (success) {
+            success(model);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+/**
+ *  @brief 附近药店
+ *
+ *  fixed by lijian（2.2.0修改）
+ */
++ (void)getNearByStoreWithParam:(StoreSearchRegionModelR *)param withPromotion:(BOOL)promotion
+                           success:(void (^)(id))success
+                           failure:(void(^)(HttpException *e))failure
+{
+    HttpClientMgr.progressEnabled = NO;
+    NSString *url = BranchLbs;
+    //根据promotion判断请求的是普通药房还是优惠药房
+    if(promotion == YES){
+        url = BranchPromotionLbs;
+    }else{
+        url = BranchLbs;
+    }
+    
+    [[HttpClient sharedInstance] get:url params:[param dictionaryModel] success:^(id responseObj) {
+        if (success) {
+            success(responseObj);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+/**
+ *  @brief 关键字搜索药店
+ *
+ *  add by lijian（2.2.0修改）
+ */
++ (void)searchStoreWithParam:(StoreSearchRegionModelR *)param
+                        success:(void (^)(id))success
+                        failure:(void(^)(HttpException *e))failure
+{
+    [[HttpClient sharedInstance] get:BranchLbs params:[param dictionaryModel] success:^(id responseObj) {
+        
+        if (success) {
+            success(responseObj);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+
+
+//投诉药店 StoreComplaint
++ (void)complaintWithParams:(StoreComplainModelR *)param
+                    success:(void(^)(id))success
+                    failure:(void(^)(HttpException * e))failure
+{
+    [[HttpClient sharedInstance] post:PostComplaintById params:[param dictionaryModel] success:^(id Obj) {
+        
+        StoreModel *model=[StoreModel parse:Obj];
+        
+        if (success) {
+            success(model);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+
++ (void)storeSearchWithParams:(id)param
+                    success:(void(^)(id resultObj))success
+                    failure:(void(^)(HttpException * e))failure
+{
+    
+    [[HttpClient sharedInstance] getWithoutProgress:UnopenNormalMall params:[param dictionaryModel] success:^(id responseObj) {
+        NSMutableArray *keyArr = [NSMutableArray array];
+        NSMutableArray *valueArr = [NSMutableArray array];
+        [keyArr addObject:NSStringFromClass([StoreNearByTagModel class])];
+        [valueArr addObject:@"tags"];
+        StoreNearByModel *storeModel = [StoreNearByModel parse:responseObj ClassArr:keyArr Elements:valueArr];
+        
+        if (success) {
+            success(storeModel);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+//药房详情活动轮播 add by lijian 2.2.0
++ (void)queryBranchActivitiesWithParams:(id)param
+                    success:(void(^)(id resultObj))success
+                    failure:(void(^)(HttpException * e))failure{
+    
+    [HttpClientMgr getWithoutProgress:BranchActivities params:[param dictionaryModel] success:^(id responseObj) {
+        
+        NSMutableArray *keyArr = [NSMutableArray array];
+        [keyArr addObject:NSStringFromClass([BranchActivityVo class])];
+        NSMutableArray *valueArr = [NSMutableArray array];
+        [valueArr addObject:@"list"];
+        
+        BranchActivityModel *model =   [BranchActivityModel parse:responseObj ClassArr:keyArr Elements:valueArr];
+        if (success) {
+            success(model);
+        }
+    } failure:^(HttpException *e) {
+        
+        if (failure) {
+            failure(e);
+        }
+    }];
+
+}
+
+
++ (void)queryBranchActivityWithParams:(id)param
+                      success:(void(^)(id resultObj))success
+                      failure:(void(^)(HttpException * e))failure
+{
+    [HttpClientMgr getWithoutProgress:GetActivities params:[param dictionaryModel] success:^(id responseObj) {
+        
+        NSMutableArray *keyArr = [NSMutableArray array];
+        [keyArr addObject:NSStringFromClass([ActivityDataModel class])];
+
+        NSMutableArray *valueArr = [NSMutableArray array];
+        [valueArr addObject:@"list"];
+        
+        
+        ActivityBodyModel *model =   [ActivityBodyModel parse:responseObj ClassArr:keyArr Elements:valueArr];
+        if (success) {
+            success(model);
+        }
+        
+    } failure:^(HttpException *e) {
+        
+        if (failure) {
+            failure(e);
+        }
+    }];
+    
+}
+
+
++ (void)QueryComplaintTypeWithParams:(StoreComplaintTypeModelR *)param
+                             success:(void(^)(id resultObj))success
+                             failure:(void(^)(HttpException * e))failure
+{
+    [[HttpClient sharedInstance] get:GetQueryTypes params:[param dictionaryModel] success:^(id Obj) {
+        
+        NSMutableArray *keyArray = [NSMutableArray array];
+        [keyArray addObject:NSStringFromClass([StoreComplaintTypeModel class])];
+        
+        NSMutableArray *valueArray = [NSMutableArray array];
+        [valueArray addObject:@"list"];
+        
+        
+        StoreModel *model=[StoreModel parse:Obj ClassArr:keyArray Elements:valueArray];
+        
+        if (success) {
+            success(model);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
++ (void)branchSearchPromotionWithParams:(NSDictionary *)param
+                                success:(void(^)(id))success
+                                failure:(void(^)(HttpException * e))failure
+{
+    [HttpClientMgr get:BranchSearchPromotion params:param success:^(id responseObj) {
+        
+        if (success) {
+            success(responseObj);
+        }
+        
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+
+@end

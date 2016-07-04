@@ -1,0 +1,532 @@
+//
+//  PharmacyDetailViewController.m
+//  APP
+//  微商药房详情-药房Tab V3.2.0开始此页面只用于显示微商药房
+//  使用接口如下:
+//  h5/branch/openMicroMallBranch 开通微商药房详情，获取到数据后Post通知到MallStoreMainVC
+
+//  Created by 李坚 on 16/1/4.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "StorePharmacyDetailViewController.h"
+#import "ServiceStyleTableViewCell.h"
+#import "AutoScrollView.h"
+#import "PharmacyEvaluateListViewController.h"
+#import "ConsultStore.h"
+#import "Coupon.h"
+#import "LoginViewController.h"
+#import "Favorite.h"
+#import "SVProgressHUD.h"
+#import "PharmacyStoreMapViewController.h"
+#import "MarketDetailViewController.h"
+#import "CouponPharmacyDeailViewController.h"
+#import "WeiStoreTableViewCell.h"
+#import "PharmacyStoreDetailViewController.h"
+#import "EvaluationViewController.h"
+#import "ChatViewController.h"
+#import "RCDraggableButton.h"
+#import "CommentTableViewCell.h"
+#import "VFourCouponQuanTableViewCell.h"
+#import "OnlinePayTikTableViewCell.h"
+#import "ReportConsultViewController.h"
+#import "ChatChooserViewController.h"
+
+static NSString *const ServiceCellIdentifier = @"ServiceStyleTableViewCell";
+static NSString *const CellIdentifier = @"UITableViewCell";
+NSString *ConsultPharmacyIdentifier = @"ConsultCouponTableViewCell";
+static NSString *const storeCellIdentifier = @"WeiStoreTableViewCell";
+static NSString *const CommentCellIdentifier = @"CommentTableViewCell";
+static NSString *const CouponCellIdentifier = @"VFourCouponQuanTableViewCell";
+static NSString *const OnlineCellIdentifier = @"OnlinePayTikTableViewCell";
+
+@interface StorePharmacyDetailViewController ()<UITableViewDataSource,UITableViewDelegate,AutoScrollViewDelegate,UIActionSheetDelegate>{
+    
+    AutoScrollView *autoScrollView;
+    PharmacyDetailHeaderView *headerView;
+    MallDetailHeaderView     *mallHeaderView;
+    BranchDetailVO *branchDetail;
+    UIImageView *noticeImageView;
+    UIImageView *arrow;
+//    RCDraggableButton *avatar;
+
+}
+@property (weak, nonatomic) IBOutlet UITableView *mainTableView;
+@property (nonatomic, strong) NSMutableArray *noticeArray;
+@property (nonatomic, strong) NSMutableArray *couponQuanList;
+@end
+
+@implementation StorePharmacyDetailViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    _mainTableView.clipsToBounds = YES;
+    _noticeArray = [NSMutableArray new];
+    _couponQuanList = [NSMutableArray new];
+    autoScrollView = [[AutoScrollView alloc]initWithFrame:CGRectMake(40, 0, APP_W, 40)];
+    autoScrollView.ButtonColor= RGBHex(qwColor6);
+    autoScrollView.delegate = self;
+    [self setupTableView];
+    [self loadStoreDetail];
+    
+}
+
+- (void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    ((QWBaseNavigationController *)self.navigationController).canDragBack = NO;
+    
+}
+
+- (void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    
+    ((QWBaseNavigationController *)self.navigationController).canDragBack = YES;
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - 咨询按钮Action
+- (void)branchChatAction:(id)sender {
+    
+    if(!QWGLOBALMANAGER.loginStatus) {
+        LoginViewController *loginViewController = [[LoginViewController alloc] initWithNibName:@"LoginViewController" bundle:nil];
+        [self.navigation pushViewController:loginViewController animated:YES];
+        return;
+    }
+    
+    //咨询按钮点击逻辑，fixed at V3.2.0 by lijian
+    if(branchDetail == nil || (![branchDetail.online boolValue] && !branchDetail.hasExpert)){
+        //药房既无药师也没有砖家，toast提示
+        [SVProgressHUD showErrorWithStatus:@"本店暂无法为您提供咨询服务"];
+    }else{
+        //有砖家，跳转咨询中间页面
+        if(branchDetail.hasExpert){
+            ChatChooserViewController *chooseVC = [[ChatChooserViewController alloc]initWithNibName:@"ChatChooserViewController" bundle:nil];
+            chooseVC.branchId = branchDetail.id;
+            chooseVC.online     = [branchDetail.online boolValue];
+            [self.navigation pushViewController:chooseVC animated:YES];
+        }else{//没有砖家，直接点对点聊天
+            ChatViewController *chatVC = [[UIStoryboard storyboardWithName:@"ChatViewController" bundle:[NSBundle mainBundle]] instantiateViewControllerWithIdentifier:@"ChatViewController"];
+            chatVC.sendConsultType = Enum_SendConsult_Common;
+            chatVC.branchId = branchDetail.id;
+            if(StrIsEmpty(branchDetail.shortName)){
+                chatVC.branchName = branchDetail.name;
+            }else{
+                chatVC.branchName = branchDetail.shortName;
+            }
+            [self.navigation pushViewController:chatVC animated:YES];
+        }
+    }
+}
+
+#pragma mark - 拨打电话方法
+- (void)PhoneAction:(id)sender{
+    
+    if(branchDetail.links.count > 0 && ![branchDetail.links[0] isEqualToString:@""]){
+        UIActionSheet *actionSheet = [[UIActionSheet alloc]initWithTitle:nil delegate:self cancelButtonTitle:@"取消" destructiveButtonTitle:nil otherButtonTitles:nil];
+        for(NSString *str in branchDetail.links){
+            [actionSheet addButtonWithTitle:str];
+        }
+        
+        [actionSheet showInView:self.view];
+    }else{
+        
+    }
+    
+}
+
+#pragma mark - 跑马灯列表HTTP请求
+- (void)loadNotices{
+    
+    BranchEvluationModelR *modelR = [[BranchEvluationModelR alloc]init];
+    modelR.branchId = self.branchId;
+    HttpClientMgr.progressEnabled = NO;
+    
+    [ConsultStore BranchNoticesList:modelR success:^(BranchActivityNoticeListVo *model) {
+        [_noticeArray removeAllObjects];
+        [_noticeArray addObjectsFromArray:model.notices];
+        if(_noticeArray.count > 0){
+            autoScrollView.dataArray = _noticeArray;
+            [autoScrollView setupNewView];
+            [self.mainTableView reloadData];
+        }
+    } failure:^(HttpException *e) {
+        
+        
+    }];
+}
+
+#pragma mark - 药房详情HTTP请求
+- (void)loadStoreDetail{
+    
+    MallProductSearchModelR *modelR = [[MallProductSearchModelR alloc]init];
+    modelR.branchId = self.branchId;
+    HttpClientMgr.progressEnabled = YES;
+    
+    [ConsultStore MallBranchDetail:modelR success:^(BranchDetailVO *model) {
+        
+        if([model.apiStatus intValue] == 0){
+            branchDetail = model;
+            [self setupMallHeaderView];
+            [_mainTableView reloadData];
+        }else{
+            [self showInfoView:model.apiMessage image:@"ic_img_fail"];
+            [QWGLOBALMANAGER postNotif:NotifBranchDetailRequestFail data:branchDetail object:nil];
+        }
+    } failure:^(HttpException *e) {
+        [QWGLOBALMANAGER postNotif:NotifBranchDetailRequestFail data:branchDetail object:nil];
+        if(e.errorCode!=-999){
+            if(e.errorCode == -1001){
+                [self showInfoView:kWarning215N26 image:@"ic_img_fail"];
+            }else{
+                [self showInfoView:kWarning39 image:@"ic_img_fail"];
+            }
+        }
+    }];
+}
+
+#pragma mark - TableView UI
+- (void)setupTableView{
+    
+    _mainTableView.backgroundColor = RGBHex(qwColor11);
+    _mainTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    [_mainTableView registerNib:[UINib nibWithNibName:ServiceCellIdentifier bundle:nil] forCellReuseIdentifier:ServiceCellIdentifier];
+    [_mainTableView registerNib:[UINib nibWithNibName:ConsultPharmacyIdentifier bundle:nil] forCellReuseIdentifier:ConsultPharmacyIdentifier];
+    [_mainTableView registerClass:[UITableViewCell class] forCellReuseIdentifier:CellIdentifier];
+    [_mainTableView registerNib:[UINib nibWithNibName:CommentCellIdentifier bundle:nil] forCellReuseIdentifier:CommentCellIdentifier];
+    [_mainTableView registerNib:[UINib nibWithNibName:CouponCellIdentifier bundle:nil] forCellReuseIdentifier:CouponCellIdentifier];
+    [_mainTableView registerNib:[UINib nibWithNibName:OnlineCellIdentifier bundle:nil] forCellReuseIdentifier:OnlineCellIdentifier];
+    
+    
+    //咨询按钮创建 fixed by lijian at V3.1.1
+//    avatar = [[RCDraggableButton alloc] initWithFrame:CGRectMake(APP_W-78, SCREEN_H-160, 45, 45)];
+//    [avatar setBackgroundImage:[UIImage imageNamed:@"img_btn_advisory"] forState:UIControlStateNormal];
+//    [self.view addSubview:avatar];//加载图片
+//    UITapGestureRecognizer *singleTap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(chatAction:)];
+//    [avatar addGestureRecognizer:singleTap];//点击图片事件
+//    [self.view addSubview:avatar];//加载图片
+//    avatar.hidden = YES;
+
+    
+}
+
+- (void)setupMallHeaderView{
+    
+    [QWGLOBALMANAGER postNotif:NotifBranchDetailRequestSuccess data:branchDetail object:nil];
+    if(mallHeaderView == nil){
+        mallHeaderView = [MallDetailHeaderView getView];
+        mallHeaderView.frame = CGRectMake(0, 0, APP_W, 101.0f);
+      
+        [mallHeaderView.phoneBtn addTarget:self action:@selector(PhoneAction:) forControlEvents:UIControlEventTouchUpInside];
+        [mallHeaderView.addressBtn addTarget:self action:@selector(AddressAction:) forControlEvents:UIControlEventTouchUpInside];
+        [mallHeaderView.chatBtn addTarget:self action:@selector(branchChatAction:) forControlEvents:UIControlEventTouchUpInside];
+        _mainTableView.tableHeaderView = mallHeaderView;
+    }
+  
+    if(StrIsEmpty(branchDetail.address)){
+        mallHeaderView.addressLabel.text = @"暂无地址";
+    }else{
+        mallHeaderView.addressLabel.text = branchDetail.address;
+    }
+    
+    
+    //判断online字段决定聊天功能是否可以使用改变对应icon
+    //fixed by lijian at V3.2.0，图标永远都是亮的，只在点击的时候做逻辑处理
+//    if([branchDetail.online boolValue]){
+        [mallHeaderView.chatImageView setImage:[UIImage imageNamed:@"btn_img_advisory_nearby"]];
+//    }else{
+//        [mallHeaderView.chatImageView setImage:[UIImage imageNamed:@"btn_img_advisorygray"]];
+//    }
+    
+    //判断link字段决定电话功能改变对应icon
+    if(branchDetail.links.count > 0 && ![branchDetail.links[0] isEqualToString:@""]){
+        [mallHeaderView.phoneImageView setImage:[UIImage imageNamed:@"btn_img_phone"]];
+    }else{
+        [mallHeaderView.phoneImageView setImage:[UIImage imageNamed:@"btn_img_phonegray"]];
+    }
+
+}
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex{
+    
+    [QWGLOBALMANAGER statisticsEventId:@"x_yfxq_dh" withLable:@"药房详情" withParams:[NSMutableDictionary dictionaryWithDictionary:@{@"药房名":branchDetail.name}]];
+    if(buttonIndex == 0){
+        return;
+    }else{
+        [QWGLOBALMANAGER statisticsEventId:@"x_dnyp_xzdh" withLable:nil withParams:nil];
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[NSString stringWithFormat:@"tel://%@",branchDetail.links[buttonIndex - 1]]]];
+    }
+}
+#pragma mark - 点击地址方法
+- (void)AddressAction:(id)sender{
+    
+    if (!StrIsEmpty(branchDetail.lat) && !StrIsEmpty(branchDetail.lng)) {
+        [QWGLOBALMANAGER statisticsEventId:@"x_yfxq_dw" withLable:@"药房详情" withParams:[NSMutableDictionary dictionaryWithDictionary:@{@"药房名":branchDetail.name,@"地址":branchDetail.address}]];
+        
+        StoreNearByModel *mapStoreModel = [StoreNearByModel new];
+        mapStoreModel.latitude = branchDetail.lat;
+        mapStoreModel.longitude = branchDetail.lng;
+        mapStoreModel.province = @"";
+        mapStoreModel.city = @"";
+        mapStoreModel.addr = branchDetail.address;
+        
+        PharmacyStoreMapViewController *pharmacyMapViewController = [[PharmacyStoreMapViewController alloc] init];
+        pharmacyMapViewController.mapStoreModel = mapStoreModel;
+        [self.navigation pushViewController:pharmacyMapViewController animated:YES];
+    }
+}
+
+#pragma mark - AutoScrollViewDelegate
+- (void)didSelectedButtonAtIndex:(NSInteger)index{
+    
+    BranchActivityNoticeVo *VO = _noticeArray[index];
+    [QWGLOBALMANAGER statisticsEventId:@"x_yfxq_gg" withLable:@"药房详情公告" withParams:nil];
+    if([VO.type intValue] == 1){
+        [QWGLOBALMANAGER statisticsEventId:@"x_yfxq_hd" withLable:@"药房详情" withParams:[NSMutableDictionary dictionaryWithDictionary:@{@"活动内容":VO.title}]];
+        MarketDetailViewController *marketDetailViewController = nil;
+        marketDetailViewController = [[MarketDetailViewController alloc] initWithNibName:@"MarketDetailViewController" bundle:nil];
+        NSMutableDictionary *infoDict = [NSMutableDictionary dictionary];
+        infoDict[@"activityId"] = VO.id;
+        infoDict[@"groupId"] = self.branchId;
+        marketDetailViewController.infoDict = infoDict;
+        marketDetailViewController.userType = 1;
+        [self.navigation pushViewController:marketDetailViewController animated:YES];
+    }
+    if([VO.type intValue] == 2){
+        
+        CouponPharmacyDeailViewController *couponPharmacy = [[CouponPharmacyDeailViewController alloc]initWithNibName:@"CouponPharmacyDeailViewController" bundle:nil];
+        couponPharmacy.storeId = self.branchId;
+        couponPharmacy.activityId = VO.id;
+        [self.navigation pushViewController:couponPharmacy animated:YES];
+    }
+}
+
+#pragma mark - UITableViewDelegate
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
+   
+    if(section == 0){
+        
+        return 0.0f;
+        
+    }else if(section == 1){
+        if(branchDetail.supportOnlineTrading){
+            return 8.0f;
+        }else{
+            return 0.0f;
+        }
+    }else{
+        return 8.0f;
+    }
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
+    
+    if(section == 0){
+        return nil;
+    }else{
+        UIView *view = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, 8.0f)];
+        view.backgroundColor = RGBHex(qwColor11);
+        return view;
+    }
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
+     return 4;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    if(!branchDetail){
+        return 0;
+    }
+
+    
+    switch (section) {
+        //快递、送货上门、到店取货
+        case 0:
+        {
+           
+            return branchDetail.postTips.count;
+        }
+            break;
+        //支持在线支付
+        case 1:{
+            if(branchDetail.supportOnlineTrading){
+                return 1;
+            }else{
+                return 0;
+            }
+        }
+            break;
+        //药店评价
+        case 2:{
+            return 1;
+        }
+            break;
+        //报错
+        case 3:{
+            return 1;
+        }
+            break;
+
+        default:
+            return 0;
+            break;
+    }
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    switch (indexPath.section) {
+            //快递、送货上门、到店取货
+        case 0:
+        {
+            return [ServiceStyleTableViewCell getCellHeight:nil];
+        }
+            
+            break;
+            //支持在线支付
+        case 1:{
+            return [OnlinePayTikTableViewCell getCellHeight];
+        }
+            break;
+            //药店评价
+        case 2:{
+            return [CommentTableViewCell getCellHeight:nil];
+        }
+            break;
+            //报错
+        case 3:{
+            return [OnlinePayTikTableViewCell getCellHeight];
+        }
+            break;
+        default:{
+            return 0.0f;
+        }
+            break;
+    }
+}
+
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    
+    if(indexPath.section == 0){
+        
+        ServiceStyleTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:ServiceCellIdentifier];
+        PostTipVo *vo;
+        vo = branchDetail.postTips[indexPath.row];
+        [cell setCell:vo];
+        if(branchDetail.postTips.count > 0 && indexPath.row != (branchDetail.postTips.count - 1)){
+            [cell addSpeatorLine];
+        }
+        
+        return cell;
+    }else if(indexPath.section == 1){
+        
+        OnlinePayTikTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:OnlineCellIdentifier];
+        cell.leftImageView.hidden = NO;
+        cell.mainLabel.text = @"该药房支持在线支付";
+        cell.LabelLeftConstant.constant = 41.0f;
+        cell.rightArrowImageView.hidden = YES;
+        return cell;
+        
+    }else if(indexPath.section == 2){
+        
+        CommentTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CommentCellIdentifier];
+        cell.serviceScoreLabel.text = [NSString stringWithFormat:@"%.1f",[branchDetail.serviceStars floatValue]];
+        cell.serviceScoreLabel.textColor = RGBHex(qwColor3);
+        cell.goodScoreLabel.text = [NSString stringWithFormat:@"%.1f",[branchDetail.deliveryStars floatValue]];
+        cell.goodScoreLabel.textColor = RGBHex(qwColor3);
+        
+        return cell;
+    }else{
+        OnlinePayTikTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:OnlineCellIdentifier];
+        cell.mainLabel.text = @"投诉";
+        cell.leftImageView.hidden = YES;
+        cell.LabelLeftConstant.constant = 15.0f;
+        cell.rightArrowImageView.hidden = NO;
+        return cell;
+    }
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    switch (indexPath.section) {
+    case 2:{
+        [self EvaluateAction:nil];
+    }
+        break;
+    case 3:{
+        [self reportBranchAction];
+    }
+        break;
+    default:
+        return;
+        break;
+    }
+}
+
+#pragma mark - 点击评价Action
+- (void)EvaluateAction:(id)sender{
+    
+    PharmacyEvaluateListViewController *vcList = [[PharmacyEvaluateListViewController alloc] initWithNibName:@"PharmacyEvaluateListViewController" bundle:nil];
+    vcList.pharmacyID = self.branchId;
+    [self.navigation pushViewController:vcList animated:YES];
+}
+
+#pragma mark - 点击报错Action
+- (void)reportBranchAction{
+    
+    ReportConsultViewController *VC = [[ReportConsultViewController alloc]initWithNibName:@"ReportConsultViewController" bundle:nil];
+    VC.branchId = self.branchId;
+    VC.branchName = branchDetail.name;
+    VC.objType = 3;
+    [self.navigation pushViewController:VC animated:YES];
+}
+
+@end
+
+@implementation PharmacyDetailHeaderView
+
++ (PharmacyDetailHeaderView *)getView{
+    
+    NSBundle *bundle = [NSBundle mainBundle];
+    NSArray *xibArray = [bundle loadNibNamed:@"StorePharmacyDetailViewController" owner:nil options:nil];
+    for(UIView *view in xibArray){
+        if([view isKindOfClass:[PharmacyDetailHeaderView class]]){
+            
+            return (PharmacyDetailHeaderView *)view;
+        }
+    }
+    return nil;
+}
+- (void)awakeFromNib{
+    [super awakeFromNib];
+
+    [self.ratView setImagesDeselected:@"star_none" partlySelected:@"star_half" fullSelected:@"star_full" andDelegate:nil];
+}
+@end
+
+
+@implementation MallDetailHeaderView
++ (MallDetailHeaderView *)getView{
+    
+    NSBundle *bundle = [NSBundle mainBundle];
+    NSArray *xibArray = [bundle loadNibNamed:@"StorePharmacyDetailViewController" owner:nil options:nil];
+    for(UIView *view in xibArray){
+        if([view isKindOfClass:[MallDetailHeaderView class]]){
+            return (MallDetailHeaderView *)view;
+        }
+    }
+    return nil;
+}
+- (void)awakeFromNib{
+    [super awakeFromNib];
+
+}
+
+@end
+

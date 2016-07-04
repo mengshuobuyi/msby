@@ -1,0 +1,13 @@
+//
+//  PharmacyGoodsListViewController.h
+//  APP
+//
+//  Created by 李坚 on 15/12/31.
+//  Copyright © 2015年 carret. All rights reserved.
+//
+
+#import "QWBaseVC.h"
+
+@interface PharmacyGoodsListViewController : QWBaseVC
+
+@end

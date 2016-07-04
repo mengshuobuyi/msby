@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15F34" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="85" id="KGk-i7-Jjw" customClass="ConsultTableViewCell">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="85"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="84"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="ZJv-38-49m" customClass="QWImageView">
+                        <rect key="frame" x="15" y="16" width="54" height="52"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="54" id="Dlg-p2-jmz"/>
+                            <constraint firstAttribute="height" constant="52" id="qcT-IG-tHJ"/>
+                        </constraints>
+                    </imageView>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="JlF-fo-fyV" customClass="RatingView">
+                        <rect key="frame" x="80" y="37" width="100" height="16"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="100" id="Lbk-pj-R9T"/>
+                            <constraint firstAttribute="height" constant="16" id="fa6-IQ-pPd"/>
+                        </constraints>
+                    </view>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="btn_img_location" translatesAutoresizingMaskIntoConstraints="NO" id="QV6-bT-prN">
+                        <rect key="frame" x="80" y="66" width="11" height="11"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="11" id="EGR-ht-Eyh"/>
+                            <constraint firstAttribute="height" constant="11" id="Xv6-Qg-DQz"/>
+                        </constraints>
+                    </imageView>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="NSU-Wh-nTc">
+                        <rect key="frame" x="95" y="61" width="72" height="21"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="21" id="7nt-GU-02f"/>
+                            <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="72" id="Qq0-1O-FDz"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="11"/>
+                        <color key="textColor" red="0.76078431372549016" green="0.76078431372549016" blue="0.76078431372549016" alpha="1" colorSpace="calibratedRGB"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="100元代金券" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="juR-g7-Tgs">
+                        <rect key="frame" x="212" y="54" width="93" height="21"/>
+                        <constraints>
+                            <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="93" id="1KZ-Dp-xDP"/>
+                            <constraint firstAttribute="height" constant="21" id="cx8-Pf-brm"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                        <color key="textColor" red="1" green="0.61568627450980395" blue="0.035294117647058823" alpha="1" colorSpace="calibratedRGB"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Uhm-21-Uf7">
+                        <rect key="frame" x="80" y="8" width="65" height="21"/>
+                        <constraints>
+                            <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="65" id="5Iv-CA-sqB"/>
+                            <constraint firstAttribute="height" constant="21" id="jFK-Oh-GAP"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                        <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="img_bg_v" translatesAutoresizingMaskIntoConstraints="NO" id="0uD-fS-xiy">
+                        <rect key="frame" x="153" y="11" width="15" height="15"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="15" id="aHQ-sG-r6h"/>
+                            <constraint firstAttribute="width" constant="15" id="vcW-NQ-7gf"/>
+                        </constraints>
+                    </imageView>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="QV6-bT-prN" firstAttribute="leading" secondItem="ZJv-38-49m" secondAttribute="trailing" constant="11" id="3ka-nb-TAh"/>
+                    <constraint firstItem="NSU-Wh-nTc" firstAttribute="top" secondItem="JlF-fo-fyV" secondAttribute="bottom" constant="8" id="45p-i5-k2o"/>
+                    <constraint firstItem="Uhm-21-Uf7" firstAttribute="leading" secondItem="ZJv-38-49m" secondAttribute="trailing" constant="11" id="9rW-6S-NE9"/>
+                    <constraint firstItem="QV6-bT-prN" firstAttribute="centerY" secondItem="NSU-Wh-nTc" secondAttribute="centerY" id="AKr-Ml-Gf7"/>
+                    <constraint firstItem="0uD-fS-xiy" firstAttribute="centerY" secondItem="Uhm-21-Uf7" secondAttribute="centerY" id="Cz7-FU-zev"/>
+                    <constraint firstItem="NSU-Wh-nTc" firstAttribute="leading" secondItem="QV6-bT-prN" secondAttribute="trailing" constant="4" id="GTR-8J-aeF"/>
+                    <constraint firstAttribute="centerY" secondItem="ZJv-38-49m" secondAttribute="centerY" id="I0f-Ig-uPm"/>
+                    <constraint firstAttribute="centerY" secondItem="JlF-fo-fyV" secondAttribute="centerY" constant="-3" id="LFT-Qx-e9T"/>
+                    <constraint firstItem="ZJv-38-49m" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="15" id="LJB-EB-bte"/>
+                    <constraint firstAttribute="trailing" secondItem="juR-g7-Tgs" secondAttribute="trailing" constant="15" id="Ogd-zd-icL"/>
+                    <constraint firstItem="JlF-fo-fyV" firstAttribute="top" secondItem="Uhm-21-Uf7" secondAttribute="bottom" constant="8" id="YaI-Es-1vc"/>
+                    <constraint firstAttribute="trailingMargin" relation="greaterThanOrEqual" secondItem="0uD-fS-xiy" secondAttribute="trailing" id="cIU-r6-LXP"/>
+                    <constraint firstAttribute="bottom" secondItem="juR-g7-Tgs" secondAttribute="bottom" constant="9" id="gMo-Br-Mo8"/>
+                    <constraint firstItem="0uD-fS-xiy" firstAttribute="leading" secondItem="Uhm-21-Uf7" secondAttribute="trailing" constant="8" id="iCe-q8-Nlm"/>
+                    <constraint firstItem="JlF-fo-fyV" firstAttribute="leading" secondItem="ZJv-38-49m" secondAttribute="trailing" constant="11" id="wdC-SO-7Ol"/>
+                </constraints>
+            </tableViewCellContentView>
+            <connections>
+                <outlet property="VImage" destination="0uD-fS-xiy" id="DqA-Gj-Aoe"/>
+                <outlet property="consultName" destination="Uhm-21-Uf7" id="bmL-Ro-lpK"/>
+                <outlet property="distance" destination="NSU-Wh-nTc" id="meO-7L-Mib"/>
+                <outlet property="logoImage" destination="ZJv-38-49m" id="fOm-c0-x66"/>
+                <outlet property="promotionLabel" destination="juR-g7-Tgs" id="n0f-iF-LJr"/>
+                <outlet property="ratView" destination="JlF-fo-fyV" id="T1d-CE-wvg"/>
+            </connections>
+            <point key="canvasLocation" x="294" y="316.5"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="btn_img_location" width="11" height="11"/>
+        <image name="img_bg_v" width="15" height="15"/>
+    </resources>
+</document>

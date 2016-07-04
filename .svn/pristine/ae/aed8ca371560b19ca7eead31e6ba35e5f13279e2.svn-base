@@ -1,0 +1,78 @@
+//
+//  MbrModel.m
+//  APP
+//
+//  Created by Yan Qingyang on 15/2/14.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "MbrModel.h"
+
+@implementation mbrLogin
+
+@end
+
+@implementation mbrTPALogin
+
+@end
+
+@implementation mbrValidCodeLogin
+
+@end
+
+@implementation mbrBaseInfo
+
+@end
+
+@implementation mbrUser
+
+@end
+
+@implementation mbrMemberInfo
+@synthesize userToken;
+@synthesize availableScore;
+@synthesize birthday;
+@synthesize email;
+@synthesize headImageUrl;
+@synthesize mobile;
+@synthesize name;
+@synthesize nickName;
+@synthesize passportId;
+@synthesize sex;
+
++ (NSString *)getPrimaryKey
+{
+    return @"userToken";
+}
+@end
+
+@implementation msgModel
+@end
+@implementation MyInviterModel
+@end
+@implementation UserInfoTagModel
+
+@end
+@implementation HasNewVO
+
+@end
+
+@implementation InviterInfoModel
+
+@end
+
+@implementation ServiceTelModel
+
+@end
+
+@implementation MyRecommendListVo
+
+@end
+
+@implementation MyRecommendVo
+
+@end
+
+@implementation VerifyCodeSwitchModel
+
+@end

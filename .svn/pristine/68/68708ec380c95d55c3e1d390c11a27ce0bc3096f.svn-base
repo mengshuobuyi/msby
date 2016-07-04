@@ -1,0 +1,242 @@
+//
+//  SymptomMainViewController.m
+//  APP
+//
+//  Created by qwfy0006 on 15/3/11.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "SymptomMainViewController.h"
+#import "BodyPartViewController.h"
+#import "FinderSearchViewController.h"
+#import "SymptomViewController.h"
+#import "MessageBoxListViewController.h"
+#import "LoginViewController.h"
+#import "BodyPartHalfViewController.h"
+
+@interface SymptomMainViewController ()<UISearchBarDelegate,UITextFieldDelegate,QCSlideSwitchViewDelegate>
+
+@property (nonatomic, strong) NSMutableArray   *menuList;
+@property (nonatomic ,strong) UISearchBar *searchBar;
+@property (strong, nonatomic) UIViewController *currentViewController;
+
+
+
+@end
+
+@implementation SymptomMainViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    self.title = @"症状";
+    self.menuList = [NSMutableArray arrayWithCapacity:2];
+    UIBarButtonItem *searchItem = [[UIBarButtonItem alloc] initWithTitle:@"搜索" style:UIBarButtonItemStylePlain target:self action:@selector(searchItemClick)];
+    self.navigationItem.rightBarButtonItem = searchItem;
+    [self setupViewController];
+    [self setupSilderView];
+
+#pragma 按钮的调整
+    
+    self.slideSwitchView.userInteractionEnabled = YES;
+    self.slideSwitchView.tabItemNormalColor = RGBHex(qwColor4);
+    
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    [self setRightItems];
+    if(self.currentViewController)
+    {
+        [self.currentViewController viewWillAppear:animated];
+    }
+    ((QWBaseNavigationController *)self.navigationController).canDragBack = NO;
+    
+}
+
+-(void)popVCAction:(id)sender {
+    [super popVCAction:sender];
+    [QWGLOBALMANAGER statisticsEventId:@"x_zz_1_fh" withLable:@"症状" withParams:nil];
+}
+
+-(void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    ((QWBaseNavigationController *)self.navigationController).canDragBack = YES;
+}
+
+-(void)setRightItems{
+    UIView *zzBarItems = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 120, 55)];
+    UIButton *searchButton = [[UIButton alloc] initWithFrame:CGRectMake(28, 0, 55, 55)];
+    [searchButton setImage:[UIImage imageNamed:@"icon_navigation_search_common"]  forState:UIControlStateNormal];
+    [searchButton addTarget:self action:@selector(rightBarbuttonClick) forControlEvents:UIControlEventTouchDown];
+    [zzBarItems addSubview:searchButton];
+    
+    UIBarButtonItem *fixed = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
+//    fixed.width = -20;
+//    self.navigationItem.rightBarButtonItems = @[fixed,[[UIBarButtonItem alloc] initWithCustomView:zzBarItems]];
+    fixed.width = -48;
+    self.navigationItem.rightBarButtonItems = @[fixed,[[UIBarButtonItem alloc] initWithCustomView:zzBarItems]];
+ 
+   
+}
+
+
+- (void)rightBarbuttonClick{
+    FinderSearchViewController * searchViewController = [[FinderSearchViewController alloc] initWithNibName:@"FinderSearchViewController" bundle:nil];
+    searchViewController.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:searchViewController animated:YES];
+}
+
+- (void)setupSearchBar
+{
+    UIView *titleView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 240, 44)];
+    [titleView setBackgroundColor:[UIColor clearColor]];
+    self.searchBar = [[UISearchBar alloc] initWithFrame:CGRectMake(0, 5, 222.5, 34)];
+    self.searchBar.backgroundColor = [UIColor clearColor];
+    self.searchBar.placeholder = @"输入症状名、疾病名或药品名";
+    self.searchBar.delegate = self;
+    [titleView addSubview:self.searchBar];
+    self.navigationItem.titleView = titleView;
+    
+    if (iOSv7) {
+        UIView* barView = [self.searchBar.subviews objectAtIndex:0];
+        [[barView.subviews objectAtIndex:0] removeFromSuperview];
+        UITextField* searchField = [barView.subviews objectAtIndex:0];
+        searchField.delegate = self;
+        searchField.font = fontSystem(kFontS4);
+        [searchField setReturnKeyType:UIReturnKeySearch];
+    }
+}
+
+- (void)setupViewController
+{
+    
+//    if(HIGH_RESOLUTION){
+//        BodyPartViewController *bodyViewController = [[BodyPartViewController alloc] initWithNibName:@"BodyPartViewController" bundle:nil];
+//        self.currentViewController = bodyViewController;
+//        bodyViewController.title = @"部位查找";
+//        SymptomViewController *symptomWikipedia = [[SymptomViewController alloc] init];
+//        symptomWikipedia.requestType = wikiSym;
+//        bodyViewController.containerViewController = self;
+//        symptomWikipedia.containerViewController = self;
+//        self.currentViewController = symptomWikipedia;
+//        [self.menuList addObject:bodyViewController];
+//        [self.menuList addObject:symptomWikipedia];
+//    }else{
+//        BodyPartHalfViewController *bodyViewController = [[BodyPartHalfViewController alloc] initWithNibName:@"BodyPartViewController-480" bundle:nil];
+//        self.currentViewController = bodyViewController;
+//        bodyViewController.title = @"部位查找";
+//        SymptomViewController *symptomWikipedia = [[SymptomViewController alloc] init];
+//        symptomWikipedia.requestType = wikiSym;
+//        bodyViewController.containerViewController = self;
+//        symptomWikipedia.containerViewController = self;
+//        self.currentViewController = symptomWikipedia;
+//        [self.menuList addObject:bodyViewController];
+//        [self.menuList addObject:symptomWikipedia];
+//    }
+   
+    BodyPartViewController *bodyViewController = [[BodyPartViewController alloc] initWithNibName:@"BodyPartViewController" bundle:nil];
+    self.currentViewController = bodyViewController;
+    bodyViewController.title = @"部位查找";
+    
+    SymptomViewController *symptomWikipedia = [[SymptomViewController alloc] init];
+    symptomWikipedia.requestType = wikiSym;
+    bodyViewController.containerViewController = self;
+    symptomWikipedia.containerViewController = self;
+    self.currentViewController = symptomWikipedia;
+    
+    [self.menuList addObject:bodyViewController];
+    [self.menuList addObject:symptomWikipedia];
+    
+   
+}
+
+- (void)searchItemClick{
+    [self.searchBar resignFirstResponder];
+}
+
+- (void)setupSilderView
+{
+    self.slideSwitchView = [[QCSlideSwitchView alloc]initWithFrame:CGRectMake(0, 0, APP_W, APP_H-NAV_H)];
+    self.slideSwitchView.tabItemNormalColor = RGBHex(qwColor7);
+    [self.slideSwitchView.rigthSideButton.titleLabel setFont:fontSystem(kFontS4)];
+    self.slideSwitchView.topScrollView.frame = CGRectMake(0, 0, APP_W, 40);
+    [self.slideSwitchView.topScrollView setBackgroundColor:RGBHex(qwColor4)];
+    
+    UIView *line = [[UIView alloc]initWithFrame:CGRectMake(0, 35, APP_W, 0.5)];
+    line.backgroundColor = RGBHex(qwColor9);
+    [self.view addSubview:line];
+    
+    self.slideSwitchView.tabItemSelectedColor = RGBHex(qwColor1);
+    self.slideSwitchView.slideSwitchViewDelegate = self;
+    self.slideSwitchView.rootScrollView.scrollEnabled = YES;
+    self.slideSwitchView.shadowImage = [[UIImage imageNamed:@"blue_line_and_shadow"]
+                                        stretchableImageWithLeftCapWidth:59.0f topCapHeight:0.0f];
+    [self.slideSwitchView buildUI];
+    [self.view addSubview:self.slideSwitchView];
+}
+
+#pragma mark - 滑动tab视图代理方法
+- (NSUInteger)numberOfTab:(QCSlideSwitchView *)view
+{
+    return [self.menuList count];
+}
+
+- (UIViewController *)slideSwitchView:(QCSlideSwitchView *)view viewOfTab:(NSUInteger)number
+{
+    return self.menuList[number];
+}
+
+- (void)slideSwitchView:(QCSlideSwitchView *)view willselectTab:(NSUInteger)number{
+    [self.searchBar resignFirstResponder];
+}
+
+- (void)slideSwitchView:(QCSlideSwitchView *)view didselectTab:(NSUInteger)number
+{
+    
+    if(self.currentViewController == self.menuList[number])
+        return;
+    self.currentViewController = self.menuList[number];
+    
+    if (number == 0) {
+        [(BodyPartViewController*)self.currentViewController refresh];
+    }
+    else
+    {
+        [(SymptomViewController*)self.currentViewController refresh];
+    }
+    
+
+    
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+}
+
+#pragma mark - UITextFieldDelegate
+- (BOOL)textFieldShouldBeginEditing:(UITextField *)textField
+{
+//    SearchSliderViewController * searchViewController = [[SearchSliderViewController alloc] init];
+//    searchViewController.currentSelectedViewController = symptomViewController;
+//    searchViewController.hidesBottomBarWhenPushed = YES;
+//    [self.navigationController pushViewController:searchViewController animated:NO];
+    return NO;
+}
+
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event{
+    [self.searchBar resignFirstResponder];
+}
+
+@end

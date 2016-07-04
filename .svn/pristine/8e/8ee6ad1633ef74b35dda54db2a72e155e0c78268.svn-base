@@ -1,0 +1,20 @@
+//
+//  ConsultPharmacyViewController.h
+//  APP
+//
+//  Created by 李坚 on 15/12/31.
+//  Copyright © 2015年 carret. All rights reserved.
+//
+
+#import "QWBaseVC.h"
+#import "AppDelegate.h"
+
+@interface ConsultPharmacyViewController : QWBaseVC
+
+//如果上个页面定位城市未开通 传过来cityCloseInfoModel
+@property (nonatomic ,strong) MapInfoModel *cityCloseInfoModel;
+
+@property (assign, nonatomic) NSInteger segementIndex;
+
+
+@end

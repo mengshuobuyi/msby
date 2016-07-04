@@ -1,0 +1,29 @@
+//
+//  newConsultPharmacyViewController.h
+//  APP
+//
+//  Created by 李坚 on 15/8/17.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "QWBaseVC.h"
+#import "AppDelegate.h"
+
+typedef enum  Enum_Data {
+    Enum_Data_All   = 0,                   //所有药房
+    Enum_Data_Promotion   = 1,                //优惠药房
+}Data_Type;
+
+@interface newConsultPharmacyViewController : QWBaseVC<UITableViewDelegate,UITableViewDataSource>
+
+@property (nonatomic ,assign) Data_Type dataType;
+//从首页过来
+@property (nonatomic ,assign) BOOL comeFromHomePage;
+
+//如果上个页面定位城市未开通 传过来cityCloseInfoModel
+@property (nonatomic ,strong) MapInfoModel *cityCloseInfoModel;
+
+@property (assign, nonatomic) NSInteger segementIndex;
+
+@end

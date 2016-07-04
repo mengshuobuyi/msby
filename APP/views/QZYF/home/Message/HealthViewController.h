@@ -1,0 +1,15 @@
+//
+//  HealthViewController.h
+//  APP
+//
+//  Created by  ChenTaiyu on 16/6/23.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "QWBaseVC.h"
+
+@interface HealthViewController : QWBaseVC
+
+- (void)refreshConsultList;
+
+@end

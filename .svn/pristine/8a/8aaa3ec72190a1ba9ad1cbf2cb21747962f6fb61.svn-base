@@ -1,0 +1,604 @@
+//
+//  ConsultStore.m
+//  APP
+//
+//  Created by 李坚 on 16/1/5.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "ConsultStore.h"
+#import "MallCartModel.h"
+#import "QWGlobalManager.h"
+
+@implementation ConsultStore
+/**
+ *  收藏药房(check是否被收藏) add by lijian
+ *  V4.0
+ */
++ (void)checkCollectBranch:(NSString *)branchId
+                   success:(void(^)(id))success
+                   failure:(void(^)(HttpException * e))failure
+{
+    if(StrIsEmpty(branchId)){
+        return;
+    }
+    FavoriteCollectR *modelR = [FavoriteCollectR new];
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    modelR.objId = branchId;
+    
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] get:FavoriteCollectCheck params:[modelR dictionaryModel]success:^(id resultObj) {
+        BaseAPIModel *model = [BaseAPIModel parse:resultObj];
+        if (success) {
+            success(model);
+        }
+    }failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+/**
+ *  收藏药房(添加收藏) add by lijian
+ *  V4.0
+ */
++ (void)CollectBranch:(NSString *)branchId
+              success:(void(^)(id))success
+              failure:(void(^)(HttpException * e))failure
+{
+    if(StrIsEmpty(branchId)){
+        return;
+    }
+    FavoriteCollectR *modelR = [FavoriteCollectR new];
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    modelR.objId = branchId;
+    modelR.objType = @"7";
+    
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] post:FavoriteCollect params:[modelR dictionaryModel]success:^(id resultObj) {
+        BaseAPIModel *model = [BaseAPIModel parse:resultObj];
+        if (success) {
+            success(model);
+        }
+    }failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+/**
+ *  收藏药房(取消收藏) add by lijian
+ *  V4.0
+ */
++ (void)CancelCollectBranch:(NSString *)branchId
+                    success:(void(^)(id))success
+                    failure:(void(^)(HttpException * e))failure
+{
+    if(StrIsEmpty(branchId)){
+        return;
+    }
+    FavoriteCollectR *modelR = [FavoriteCollectR new];
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    modelR.objId = branchId;
+    
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] post:FavoriteCollectCancel params:[modelR dictionaryModel]success:^(id resultObj) {
+        BaseAPIModel *model = [BaseAPIModel parse:resultObj];
+        if (success) {
+            success(model);
+        }
+    }failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+/**
+ *  我关注的药房列表 add by lijian
+ *  V4.0
+ */
++ (void)CollectedBranchList:(FavoriteModelR *)modelR
+                    success:(void(^)(id))success
+                    failure:(void(^)(HttpException * e))failure
+{
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] get:FvoriteBranch params:[modelR dictionaryModel]success:^(id resultObj) {
+        
+        NSMutableArray *keyArray = [NSMutableArray array];
+        [keyArray addObject:NSStringFromClass([MicroMallBranchVo class])];
+        [keyArray addObject:NSStringFromClass([BranchProductPromotionVo class])];
+        NSMutableArray *valueArray = [NSMutableArray array];
+        [valueArray addObject:@"branchs"];
+        [valueArray addObject:@"promotions"];
+        
+        MicroMallBranchListVo *branchList = [MicroMallBranchListVo parse:resultObj ClassArr:keyArray Elements:valueArray];
+        
+        if (success) {
+            success(branchList);
+        }
+    }failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+/**
+ *  根据商品编码关联药房下是否有售数据请求 add by lijian
+ *  V4.0
+ */
++ (void)CodeAtBranchIsSale:(BranchProModelR *)model success:(void (^)(BranchProVo *))success failure:(void (^)(HttpException *))failure{
+    
+    [[HttpClient sharedInstance] get:MallDrugIsSale params:[model dictionaryModel] success:^(id obj) {
+
+        BranchProVo *result= [BranchProVo parse:obj];
+        
+        if (success) {
+            success(result);
+        }
+    } failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+/**
+ *  连锁药房列表数据请求 add by lijian
+ *  V4.0
+ */
++ (void)ChainBranchs:(NearByStoreModelR *)model success:(void (^)(MicroMallBranchListVo *))success failure:(void (^)(HttpException *))failure{
+    
+    [[HttpClient sharedInstance] get:ChainBranch params:[model dictionaryModel] success:^(id obj) {
+        
+        NSMutableArray *keyArray = [NSMutableArray array];
+        [keyArray addObject:NSStringFromClass([MicroMallBranchVo class])];
+        [keyArray addObject:NSStringFromClass([BranchProductPromotionVo class])];
+        NSMutableArray *valueArray = [NSMutableArray array];
+        [valueArray addObject:@"branchs"];
+        [valueArray addObject:@"promotions"];
+        
+        MicroMallBranchListVo *branchList = [MicroMallBranchListVo parse:obj ClassArr:keyArray Elements:valueArray];
+        
+        if (success) {
+            success(branchList);
+        }
+    } failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+/**
+ *  药房详情公告 add by lijian
+ *  V3.1
+ */
++ (void)branchContent:(CategoryModelR *)model success:(void (^)(BranchNoticeVO *))success failure:(void (^)(HttpException *))failure{
+    
+    [[HttpClient sharedInstance] get:BranchNotice params:[model dictionaryModel] success:^(id obj) {
+
+        BranchNoticeVO *categoryVO = [BranchNoticeVO parse:obj];
+        
+        if (success) {
+            success(categoryVO);
+        }
+        
+    } failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+/**
+ *  微商店内商品分类List add by lijian
+ *  V3.1
+ */
++ (void)MallClassifyList:(CategoryModelR *)model success:(void (^)(DrugClassifyList *))success failure:(void (^)(HttpException *))failure{
+    
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] get:BranchClassify params:[model dictionaryModel] success:^(id obj) {
+        
+        NSMutableArray *keyArray = [NSMutableArray array];
+        [keyArray addObject:NSStringFromClass([DrugClassifyVO class])];
+        NSMutableArray *valueArray = [NSMutableArray array];
+        [valueArray addObject:@"list"];
+        
+        DrugClassifyList *categoryVO = [DrugClassifyList parse:obj ClassArr:keyArray Elements:valueArray];
+        
+        if (success) {
+            success(categoryVO);
+        }
+        
+    } failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+/**
+ *  微商店内商品根据分类获取相关药品列表(普通商品，分页) add by lijian
+ *  这里使用谢正鸿MallCartModel
+ *  V3.1
+ */
++ (void)MallProductByClassify:(CategoryNormalProductModelR *)model success:(void (^)(BranchProductList *))success failure:(void (^)(HttpException *))failure{
+    
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] get:BranchProductClassify params:[model dictionaryModel] success:^(id obj) {
+        
+        NSMutableArray *keyArray = [NSMutableArray array];
+        [keyArray addObject:NSStringFromClass([CartProductVoModel class])];
+        [keyArray addObject:NSStringFromClass([CartPromotionVoModel class])];
+        
+        NSMutableArray *valueArray = [NSMutableArray array];
+        [valueArray addObject:@"list"];
+        [valueArray addObject:@"promotions"];
+        
+        BranchProductList *categoryVO = [BranchProductList parse:obj ClassArr:keyArray Elements:valueArray];
+        
+        if (success) {
+            success(categoryVO);
+        }
+        
+    } failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+/**
+ *  微商店内商品获取套餐列表(不分页) add by lijian
+ *  V3.1
+ */
++ (void)MallProductByPackage:(CategoryModelR *)model success:(void (^)(CartPackageList *))success failure:(void (^)(HttpException *))failure{
+    
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] get:BranchProductPackage params:[model dictionaryModel] success:^(id obj) {
+        
+        NSMutableArray *keyArray = [NSMutableArray array];
+        [keyArray addObject:NSStringFromClass([CartComboVoModel class])];
+        [keyArray addObject:NSStringFromClass([ComboProductVoModel class])];
+        
+        NSMutableArray *valueArray = [NSMutableArray array];
+        [valueArray addObject:@"list"];
+        [valueArray addObject:@"druglist"];
+
+        CartPackageList *categoryVO = [CartPackageList parse:obj ClassArr:keyArray Elements:valueArray];
+        
+        if (success) {
+            success(categoryVO);
+        }
+        
+    } failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+/**
+ *  热门微商药房列表数据请求 add by lijian
+ *  V3.0
+ */
++ (void)MallBranchs:(NearByStoreModelR *)model success:(void (^)(MicroMallBranchListVo *))success failure:(void (^)(HttpException *))failure{
+
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] get:MallBranch params:[model dictionaryModel] success:^(id obj) {
+        
+        NSMutableArray *keyArray = [NSMutableArray array];
+        [keyArray addObject:NSStringFromClass([MicroMallBranchVo class])];
+        [keyArray addObject:NSStringFromClass([BranchProductPromotionVo class])];
+        NSMutableArray *valueArray = [NSMutableArray array];
+        [valueArray addObject:@"branchs"];
+        [valueArray addObject:@"promotions"];
+        
+        MicroMallBranchListVo *branchList = [MicroMallBranchListVo parse:obj ClassArr:keyArray Elements:valueArray];
+        
+        if (success) {
+            success(branchList);
+        }
+    } failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+
+/**
+ *  微商药房搜索请求 add by lijian
+ *  V3.0
+ */
++ (void)MallSearch:(MallSearchModelR *)model success:(void (^)(MicroMallBranchListVo *))success failure:(void (^)(HttpException *))failure{
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] get:MallBranchSearch params:[model dictionaryModel] success:^(id obj) {
+        
+        NSMutableArray *keyArray = [NSMutableArray array];
+        [keyArray addObject:NSStringFromClass([MicroMallBranchVo class])];
+        NSMutableArray *valueArray = [NSMutableArray array];
+        [valueArray addObject:@"branchs"];
+        
+        MicroMallBranchListVo *branchList = [MicroMallBranchListVo parse:obj ClassArr:keyArray Elements:valueArray];
+        
+        if (success) {
+            success(branchList);
+        }
+    } failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+
+/**
+ *  根据编码搜索详情 add by lijian
+ *  V3.0
+ */
++ (void)MedicineDetailByCode:(ProductByCodeModelR *)model success:(void (^)(BranchProductVo *))success failure:(void (^)(HttpException *))failure{
+    
+    HttpClientMgr.progressEnabled = YES;
+    [[HttpClient sharedInstance] get:ProductDetailByCode params:[model dictionaryModel] success:^(id obj) {
+        
+        NSMutableArray *keyArray = [NSMutableArray array];
+        [keyArray addObject:NSStringFromClass([MicroMallBranchVo class] )];
+        [keyArray addObject:NSStringFromClass([BranchProductPromotionVo class])];
+        NSMutableArray *valueArray = [NSMutableArray array];
+        [valueArray addObject:@"branchs"];
+        [valueArray addObject:@"promotions"];
+        
+        BranchProductVo *productVo = [BranchProductVo parse:obj ClassArr:keyArray Elements:valueArray];
+        
+        if (success) {
+            success(productVo);
+        }
+    } failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+
+}
+
+
+/**
+ *  新的附近可售药房 add by lijian
+ *  V3.0
+ */
++ (void)BranchListByCode:(ProductByCodeBranchModelR *)model success:(void (^)(OnSaleBranchListVo *))success failure:(void (^)(HttpException *))failure{
+    
+    [[HttpClient sharedInstance] get:NewNearBranch params:[model dictionaryModel] success:^(id obj) {
+        
+        NSMutableArray *keyArray = [NSMutableArray array];
+        [keyArray addObject:NSStringFromClass([MicroMallBranchVo class] )];
+        [keyArray addObject:NSStringFromClass([BranchProductPromotionVo class])];
+        NSMutableArray *valueArray = [NSMutableArray array];
+        [valueArray addObject:@"branchs"];
+        [valueArray addObject:@"promotions"];
+        
+        OnSaleBranchListVo *productVo = [OnSaleBranchListVo parse:obj ClassArr:keyArray Elements:valueArray];
+        
+        if (success) {
+            success(productVo);
+        }
+    } failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+    
+}
+
+/**
+ *  店内药品详情 add by lijian
+ *  V3.0
+ */
++ (void)StoreProductDetail:(ProductModelR *)model success:(void (^)(MicroMallBranchProductVo *))success failure:(void (^)(HttpException *))failure{
+    
+    [[HttpClient sharedInstance] get:ProductDetail params:[model dictionaryModel] success:^(id obj) {
+        
+        NSMutableArray *keyArray = [NSMutableArray array];
+        [keyArray addObject:NSStringFromClass([MicroMallBranchVo class])];
+        [keyArray addObject:NSStringFromClass([ProductInstructionsVo class])];
+        [keyArray addObject:NSStringFromClass([MicroMallBranchVo class])];
+        [keyArray addObject:NSStringFromClass([BranchProductPromotionVo class])];
+        [keyArray addObject:NSStringFromClass([CartComboVoModel class])];
+        [keyArray addObject:NSStringFromClass([ComboProductVoModel class])];
+        
+        NSMutableArray *valueArray = [NSMutableArray array];
+        [valueArray addObject:@"branchs"];
+        [valueArray addObject:@"instructions"];
+        [valueArray addObject:@"branch"];
+        [valueArray addObject:@"promotions"];
+        [valueArray addObject:@"combos"];
+        [valueArray addObject:@"druglist"];
+        
+        MicroMallBranchProductVo *ProductVo = [MicroMallBranchProductVo parse:obj ClassArr:keyArray Elements:valueArray];
+        
+        if (success) {
+            success(ProductVo);
+        }
+        
+    } failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+/**
+ *  投诉药房原因列表 add by lijian
+ *  V3.0
+ */
++ (void)reportReasonList:(ReportReasonModelR *)model success:(void (^)(ComplaintReasonList *))success failure:(void (^)(HttpException *))failure{
+    
+    HttpClientMgr.progressEnabled = YES;
+    [[HttpClient sharedInstance] get:ComplaintReason params:[model dictionaryModel] success:^(id obj) {
+        
+        NSMutableArray *keyArray = [NSMutableArray array];
+        [keyArray addObject:NSStringFromClass([ComplaintReasonVO class])];
+
+        NSMutableArray *valueArray = [NSMutableArray array];
+        [valueArray addObject:@"list"];
+
+        ComplaintReasonList *ReasonVo = [ComplaintReasonList parse:obj ClassArr:keyArray Elements:valueArray];
+        
+        if (success) {
+            success(ReasonVo);
+        }
+        
+    } failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+
+/**
+ *  举报药房 add by lijian
+ *  V3.0
+ */
++ (void)reportBranch:(ReportBranchModelR *)model success:(void (^)(BaseAPIModel *))success failure:(void (^)(HttpException *))failure{
+    
+    HttpClientMgr.progressEnabled = YES;
+    [[HttpClient sharedInstance] post:ComplaintBranch params:[model dictionaryModel] success:^(id obj) {
+        
+        BaseAPIModel *reportVO = [BaseAPIModel parse:obj];
+        
+        if (success) {
+            success(reportVO);
+        }
+        
+    } failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+/**
+ *  微商药房详情Tab add by lijian
+ *  V3.0
+ */
++ (void)MallBranchDetail:(MallProductSearchModelR *)model success:(void (^)(BranchDetailVO *))success failure:(void (^)(HttpException *))failure{
+    
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] get:OpenMicroMall params:[model dictionaryModel] success:^(id obj) {
+        
+        NSMutableArray *keyArray = [NSMutableArray array];
+        [keyArray addObject:NSStringFromClass([PostTipVo class])];
+        [keyArray addObject:NSStringFromClass([BranchDetailVO class])];
+        [keyArray addObject:NSStringFromClass([BranchProductPromotionVo class])];
+        
+        NSMutableArray *valueArray = [NSMutableArray array];
+        [valueArray addObject:@"postTips"];
+        [valueArray addObject:@"branchs"];
+        [valueArray addObject:@"promotions"];
+        
+        BranchDetailVO *detailVo = [BranchDetailVO parse:obj ClassArr:keyArray Elements:valueArray];
+        
+        if (success) {
+            success(detailVo);
+        }
+        
+    } failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+/**
+ *  药房下专家列表 add by lijian
+ *  V3.2.0
+ */
++ (void)branchExpertList:(GroupModelR *)model success:(void (^)(ExpertListVo *))success failure:(void (^)(HttpException *))failure{
+    
+    [[HttpClient sharedInstance] get:QueryExpertByBranchId params:[model dictionaryModel] success:^(id obj) {
+        
+        NSMutableArray *keyArray = [NSMutableArray array];
+        [keyArray addObject:NSStringFromClass([MbrInfoVo class])];
+        NSMutableArray *valueArray = [NSMutableArray array];
+        [valueArray addObject:@"expertList"];
+             
+        ExpertListVo *ProductVo = [ExpertListVo parse:obj ClassArr:keyArray Elements:valueArray];
+        
+        if (success) {
+            success(ProductVo);
+        }
+        
+    } failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+/**
+ *  微商店药房详情首页 add by xiezhenghong
+ *  V4.0.0
+ */
++ (void)MallBranchIndexNew:(CategoryModelR *)model success:(void (^)(MicroMallBranchNewIndexVo *))success failure:(void (^)(HttpException *))failure
+{
+    HttpClientMgr.progressEnabled = NO;
+    [[HttpClient sharedInstance] get:QueryBranchIndexNew params:[model dictionaryModel] success:^(id obj) {
+        
+        NSMutableArray *keyArray = [NSMutableArray array];
+        [keyArray addObject:NSStringFromClass([BranchBannerVo class])];
+        [keyArray addObject:NSStringFromClass([ComboVo class])];
+        [keyArray addObject:NSStringFromClass([ComboProductVo class])];
+        [keyArray addObject:NSStringFromClass([RedemptionVo class])];
+        [keyArray addObject:NSStringFromClass([CategoryVo class])];
+        [keyArray addObject:NSStringFromClass([BranchProductVo class])];
+        [keyArray addObject:NSStringFromClass([BranchProductPromotionVo class])];
+        
+        NSMutableArray *valueArray = [NSMutableArray array];
+        [valueArray addObject:@"banners"];
+        [valueArray addObject:@"combos"];
+        [valueArray addObject:@"druglist"];
+        [valueArray addObject:@"redemptions"];
+        [valueArray addObject:@"categorys"];
+        [valueArray addObject:@"products"];
+        [valueArray addObject:@"promotions"];
+        
+        
+        MicroMallBranchNewIndexVo *categoryVO = [MicroMallBranchNewIndexVo parse:obj ClassArr:keyArray Elements:valueArray];
+        
+        if (success) {
+            success(categoryVO);
+        }
+        
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+
+
+@end

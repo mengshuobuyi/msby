@@ -1,0 +1,53 @@
+//
+//  MsgBoxHealthCell.h
+//  APP
+//
+//  Created by  ChenTaiyu on 16/6/23.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "UIResponder+Router.h"
+#import "MLEmojiLabel.h"
+
+extern NSString *const kRouterEventMsgBoxHealthCellLink;
+extern NSString *const kRouterEventMsgBoxHealthCellActionBtn;
+
+@class MsgBoxHealthItemModel;
+
+@interface MsgBoxHealthDietTipsCell : UITableViewCell
++ (CGFloat)getCellHeightWithModel:(MsgBoxHealthItemModel *)model;
++ (instancetype)cellWithModel:(MsgBoxHealthItemModel *)model;
+@end
+
+@interface MsgBoxHealthCell : UITableViewCell
++ (instancetype)cell;
+@property (weak, nonatomic) IBOutlet UILabel *titleLabel;
+@property (weak, nonatomic) IBOutlet UILabel *subTitleLabel;
+@property (weak, nonatomic) IBOutlet UIView *midSeperator;
+@end
+
+@interface MsgBoxHealthCell2 : UITableViewCell
++ (instancetype)cell;
+@property (weak, nonatomic) IBOutlet UILabel *contentTitleLabel;
+@property (weak, nonatomic) IBOutlet UILabel *contentLabel;
+@property (weak, nonatomic) IBOutlet UIView *bottomSeperator;
+@end
+
+@interface MsgBoxHealthCell3 : UITableViewCell
++ (instancetype)cell;
+- (void)setCell:(id)obj;
++ (CGFloat)getCellHeightWithModel:(MsgBoxHealthItemModel *)model;
+@end
+
+@interface MsgBoxHealthCell4 : UITableViewCell
++ (instancetype)cell;
+- (void)setCell:(id)obj;
++ (CGFloat)getCellHeightWithModel:(MsgBoxHealthItemModel *)model;
+@end
+
+@interface MsgBoxHealthCell5 : UITableViewCell
++ (instancetype)cell;
+- (void)setCell:(id)obj;
++ (CGFloat)getCellHeightWithModel:(MsgBoxHealthItemModel *)model;
+@end

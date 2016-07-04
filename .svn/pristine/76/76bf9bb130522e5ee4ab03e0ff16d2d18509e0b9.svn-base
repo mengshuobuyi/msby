@@ -1,0 +1,171 @@
+//
+//  HealthViewController.m
+//  APP
+//
+//  Created by  ChenTaiyu on 16/6/23.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "HealthViewController.h"
+#import "Consult.h"
+#import "SVProgressHUD.h"
+#import "MsgBoxHealthCell.h"
+
+@interface HealthViewController () <UITableViewDataSource, UITableViewDelegate>
+
+@property (nonatomic, strong) NSArray *dataArr;
+@property (nonatomic, strong) UITableView *tableView;
+
+@end
+
+@implementation HealthViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    __weak typeof (self) weakSelf = self;
+    [self enableSimpleRefresh:self.tableView block:^(SRRefreshView *sender) {
+        if(QWGLOBALMANAGER.currentNetWork == NotReachable)
+        {
+            [SVProgressHUD showErrorWithStatus:@"网络未连接，请稍后再试" duration:0.8f];
+            return;
+        }
+        [weakSelf refreshConsultList];
+    }];
+    
+    self.title = @"健康指南";
+    self.edgesForExtendedLayout = UIRectEdgeNone;
+    self.tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, 320, 500) style:UITableViewStylePlain];
+    [self.view addSubview:self.tableView];
+    self.tableView.delegate = self;
+    self.tableView.dataSource = self;
+    self.tableView.backgroundView = nil;
+    self.tableView.backgroundColor = [UIColor clearColor];
+    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    self.view.backgroundColor = RGB(242, 244, 247);
+    
+    [self refreshConsultList];
+}
+
+- (void)refreshConsultList
+{
+    MsgBoxHealthListModelR *modelR = [MsgBoxHealthListModelR new];
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    modelR.view = @"100";
+    [Consult getMsgBoxHealthListWithParam:modelR success:^(MsgBoxHealthListModel *responModel) {
+        self.dataArr = responModel.notices;
+        if (!self.dataArr.count) {
+            [self showInfoView:@"暂无消息通知" image:@"ic_img_fail"];
+        }
+        [self.tableView reloadData];
+        
+    } failure:^(HttpException *e) {
+        [SVProgressHUD showErrorWithStatus:@"网络错误" duration:0.5];
+    }];
+}
+
+- (void)viewInfoClickAction:(id)sender
+{
+    [self refreshConsultList];
+}
+
+- (NSArray *)fakeData
+{
+    NSMutableArray *arrM = [NSMutableArray array];
+    for (int i = 0; i< 10; i++) {
+        MsgBoxHealthItemModel *item = [MsgBoxHealthItemModel new];
+        item.id = @"12345";
+        item.title = @"XXXXXXXXX店asdbasdgsalihdaskhsalkhdlsakhdsaldsaldsagdasjhlgdsagsagsadsadga";
+        item.content = @"您购买的XXXX有XX条饮食禁忌";
+        item.formatShowTime = @"2012-12-12";
+        item.unread = @"0";
+        item.time = @"149812312312";
+        item.tags = @[@{@"proName":@"AAAAA", @"taboo":@"不能AAAA……………………不能AAAA……………………不能AAAA……………………不能AAAA……………………不能AAAA……………………不能AAAA……………………不能AAAA……………………不能AAAA……………………不能AAAA……………………"}, @{@"proName":@"BBBBB", @"taboo":@"不能BBBB……………………不能BBBB……………………不能BBBB……………………不能BBBB……………………不能BBBB……………………不能BBBB……………………不能BBBB……………………不能BBBB……………………"}, @{@"proName":@"CCCCC", @"taboo":@"不能CCCC……………………不能CCCC……………………不能CCCC……………………不能CCCC……………………不能CCCC……………………不能CCCC……………………不能CCCC……………………"}]; //???: json? array?
+        NSInteger ran = arc4random()%4 + 7;
+        item.source = @(ran).stringValue; //来源：7.慢病订阅 8.用药指导 9.购药提醒 10.食物禁忌
+        [arrM addObject:item];
+    }
+    return [arrM copy];
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return self.dataArr.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    MsgBoxHealthItemModel *model = self.dataArr[indexPath.row];
+    
+    UITableViewCell *retCell = nil;
+    NSInteger source = model.source.integerValue;
+    if (source == 10) {
+        MsgBoxHealthDietTipsCell *cell = [tableView dequeueReusableCellWithIdentifier:@"MsgBoxHealthDietTipsCell"];
+        cell = [MsgBoxHealthDietTipsCell cellWithModel:self.dataArr[0]];
+        retCell = cell;
+    } else if (source == 7) {
+        MsgBoxHealthCell3 *cell = [tableView dequeueReusableCellWithIdentifier:@"MsgBoxHealthCell3"];
+        if (!cell) {
+            cell = [MsgBoxHealthCell3 cell];
+        }
+        [cell setCell:model];
+        retCell = cell;
+    } else if (source == 9) {
+        MsgBoxHealthCell4 *cell = [tableView dequeueReusableCellWithIdentifier:@"MsgBoxHealthCell4"];
+        if (!cell) {
+            cell = [MsgBoxHealthCell4 cell];
+        }
+        [cell setCell:model];
+        retCell = cell;
+    } else if (source == 8) {
+        MsgBoxHealthCell5 *cell = [tableView dequeueReusableCellWithIdentifier:@"MsgBoxHealthCell5"];
+        if (!cell) {
+            cell = [MsgBoxHealthCell5 cell];
+        }
+        [cell setCell:model];
+        retCell = cell;
+    }
+    return retCell;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 120.0f;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    MsgBoxHealthItemModel *model = self.dataArr[indexPath.row];
+    NSInteger source = [model source].integerValue;
+    if (source == 10) {
+        return [MsgBoxHealthDietTipsCell getCellHeightWithModel:self.dataArr[indexPath.row]];
+    } else {
+//        if (iOSv8) {
+//            return UITableViewAutomaticDimension;
+//        } else {
+            if (source == 7) {
+                return [MsgBoxHealthCell3 getCellHeightWithModel:model];
+            }
+            if (source == 9) {
+                return [MsgBoxHealthCell4 getCellHeightWithModel:model];
+            }
+            if (source == 8) {
+                return [MsgBoxHealthCell5 getCellHeightWithModel:model];
+            }
+//        }
+    }
+    return UITableViewAutomaticDimension;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+}
+
+
+@end

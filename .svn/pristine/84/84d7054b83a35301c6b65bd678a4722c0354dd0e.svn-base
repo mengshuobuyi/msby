@@ -1,0 +1,696 @@
+//
+//  MsgCouponListViewController.m
+//  APP
+//
+//  Created by PerryChen on 8/18/15.
+//  Copyright (c) 2015 carret. All rights reserved.
+//
+
+#import "MsgCouponListViewController.h"
+#import "MsgNotifyCouponCell.h"
+#import "CouponNotiBaseModel.h"
+#import "CouponNotiListModelR.h"
+#import "CouponNotiListRequest.h"
+#import "SVProgressHUD.h"
+#import "QWGlobalManager.h"
+#import "QWUnreadCountModel.h"
+#import "ReturnIndexView.h"
+#import "MyCouponQuanViewController.h"
+#import "WebDirectViewController.h"
+#import "MyCouponDrugViewController.h"
+#import "MyCouponDrugDetailViewController.h"
+#import "CouponPharmacyDeailViewController.h"
+#import "MyCouponDetailViewController.h"
+#import "DetailSubscriptionListViewController.h"
+#import "CenterCouponDetailViewController.h"
+#import "PostDetailViewController.h"
+#import "MGSwipeButton.h"
+#import "DietTipsListViewController.h"
+#import "MsgBoxNoticeCell.h"
+#import "QWMessage.h"
+#import "Consult.h"
+#import "AboutWenYaoViewController.h"
+#import "NewPersonInformationViewController.h"
+#import "CreditRecordViewController.h"
+
+@interface MsgCouponListViewController ()<MGSwipeTableCellDelegate>
+@property (weak, nonatomic) IBOutlet UITableView *tbViewContent;
+@property (strong, nonatomic) NSMutableArray *arrCouponList;
+@property (strong, nonatomic) NSMutableArray *arrServer;
+@property (nonatomic, assign) BOOL isScrolling;
+@property (nonatomic, strong) ReturnIndexView *indexView;
+@property (nonatomic, assign) BOOL isClickedCell;
+@end
+
+@implementation MsgCouponListViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    __weak typeof (self) weakSelf = self;
+    self.arrCouponList = [@[] mutableCopy];
+//    [self setUpRightItem];
+    [self enableSimpleRefresh:self.tbViewContent block:^(SRRefreshView *sender) {
+        if(QWGLOBALMANAGER.currentNetWork == NotReachable)
+        {
+            [SVProgressHUD showErrorWithStatus:@"网络未连接，请稍后再试" duration:0.8f];
+            return;
+        }
+        [weakSelf refreshConsultList];
+    }];
+    
+    self.tbViewContent.backgroundView = nil;
+    self.tbViewContent.backgroundColor = [UIColor clearColor];
+    self.tbViewContent.separatorStyle = UITableViewCellSeparatorStyleNone;
+    self.view.backgroundColor = RGB(242, 244, 247);
+    
+    [self getCachedMessages];
+    [self.tbViewContent reloadData];
+    //224版本新增品牌活动优惠商品
+//    self.navigationItem.title = @"优惠券通知列表";
+     self.navigationItem.title = @"消息通知";
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    //    [self getCachedMessages];
+    [self.tbViewContent reloadData];
+    //    [self.tbViewContent headerBeginRefreshing];
+    [self refreshConsultList];
+    self.isClickedCell = NO;
+}
+- (void)setUpRightItem
+{
+    UIBarButtonItem *fixed = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
+    fixed.width = -6;
+    
+    UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"icon-unfold.PNG"] style:UIBarButtonItemStylePlain target:self action:@selector(returnIndex)];
+    self.navigationItem.rightBarButtonItems = @[fixed,rightItem];
+}
+- (void)returnIndex
+{
+    self.indexView = [[ReturnIndexView alloc] initWithImage:@[@"icon_homepage_news"] title:@[@"首页"]];
+    self.indexView.delegate = self;
+    [self.indexView show];
+}
+- (void)RetunIndexView:(ReturnIndexView *)ReturnIndexView didSelectedIndex:(NSIndexPath *)indexPath
+{
+    [self.indexView hide];
+    if (indexPath.row == 0) {
+        [self.navigationController popToRootViewControllerAnimated:YES];
+        [self performSelector:@selector(delayPopToHome) withObject:nil afterDelay:0.01];
+    }
+}
+
+- (void)delayPopToHome
+{
+    [QWGLOBALMANAGER.tabBar setSelectedIndex:0];
+}
+
+- (void)setReadAllMsg
+{
+    MsgBoxListSetReadTypeModelR *modelR = [MsgBoxListSetReadTypeModelR new];
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    modelR.type = @"2";
+    [Consult setReadMsgBoxListByTypeWithParam:modelR success:^(BaseAPIModel *responModel) {
+        [QWGLOBALMANAGER noticeUnreadLocalWithType:MsgBoxListMsgTypeNotice sessionID:nil isRead:YES];
+    } failure:^(HttpException *e) {
+        
+    }];
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+}
+#pragma mark - cache methods
+- (void)getCachedMessages
+{
+    self.arrCouponList = [NSMutableArray arrayWithArray:[MsgBoxNoticeItemModel getArrayFromDBWithWhere:nil WithorderBy:@" time desc"]];
+}
+
+#pragma mark - Http service
+- (void)refreshConsultList
+{
+    //全量拉取
+    MsgBoxNoticeListModelR *modelR = [MsgBoxNoticeListModelR new];
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    modelR.view = @"10";
+    
+    [Consult getMsgBoxNoticeListWithParam:modelR success:^(MsgBoxNoticeListModel *responModel) {
+        [self.tbViewContent headerEndRefreshing];
+        MsgBoxNoticeListModel *listModel =  (MsgBoxNoticeListModel *)responModel;
+        [self removeInfoView];
+        if (listModel.messages.count > 0) {
+            [self.arrServer removeAllObjects];
+            self.arrServer = [listModel.messages mutableCopy];
+            [self syncDBtoLatest:listModel];
+            [self getCachedMessages];
+        } else {
+            [self.arrServer removeAllObjects];
+        }
+        [self showinfoViewIfNeeded];
+        [self.tbViewContent reloadData];
+        [QWGLOBALMANAGER noticeUnreadLocalWithType:MsgBoxListMsgTypeNotice sessionID:nil isRead:YES];
+//        [self setReadAllMsg];
+    } failure:^(HttpException *e) {
+        [self.tbViewContent headerEndRefreshing];
+    }];
+
+}
+
+- (void)showinfoViewIfNeeded
+{
+    if (!self.arrServer.count) {
+        [self showInfoView:@"暂无消息通知~" image:@"ic_img_fail"];
+    } else {
+        [self removeInfoView];
+    }
+}
+
+- (void)viewInfoClickAction:(id)sender
+{
+    [self refreshConsultList];
+}
+
+- (void)syncDBtoLatest:(MsgBoxNoticeListModel *)listModel
+{
+    [MsgBoxNoticeItemModel syncDBWithObjArray:listModel.messages];
+}
+
+- (NSIndexPath *)indexPathForCellContainingView:(UIView *)view {
+    while (view != nil) {
+        if ([view isKindOfClass:[UITableViewCell class]]) {
+            return [self.tbViewContent indexPathForCell:(UITableViewCell *)view];
+        } else {
+            view = [view superview];
+        }
+    }
+    return nil;
+}
+
+#pragma mark - UITableView methods
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    MsgBoxNoticeItemModel *model = self.arrCouponList[indexPath.row];
+    
+    UITableViewCell *retCell = nil;
+    if (model.imgUrl.length || model.objType.integerValue == MsgBoxNoticeTypeCoupon) {
+        MsgBoxNoticeCell *cell = [tableView dequeueReusableCellWithIdentifier:@"MsgBoxNoticeCell"];
+        if (!cell) {
+            cell = [MsgBoxNoticeCell cell];
+        }
+        [cell setCell:model];
+//        cell.swipeDelegate = self;
+        retCell = cell;
+    } else {
+        MsgBoxNoticeCell2 *cell = [tableView dequeueReusableCellWithIdentifier:@"MsgBoxNoticeCell2"];
+        if (!cell) {
+            cell = [MsgBoxNoticeCell2 cell];
+        }
+        [cell setCell:model];
+//        cell.swipeDelegate = self;
+        retCell = cell;
+    }
+    return retCell;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView estimatedHeightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 100.0f;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    MsgBoxNoticeItemModel *model = self.arrCouponList[indexPath.row];
+    if (model.imgUrl.length) {
+        return [MsgBoxNoticeCell getCellHeightWithModel:self.arrCouponList[indexPath.row]];
+    } else {
+        return [MsgBoxNoticeCell2 getCellHeightWithModel:self.arrCouponList[indexPath.row]];
+    }
+    return UITableViewAutomaticDimension;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return self.arrCouponList.count;
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 1;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    //消息通知列表
+    if (self.isClickedCell) {
+        return;
+    }//防止多次点击
+    if (QWGLOBALMANAGER.loginStatus) {
+        MsgBoxNoticeItemModel* msg = self.arrCouponList[indexPath.row];
+        if(msg) {
+            NSMutableDictionary *tdParams = [NSMutableDictionary dictionary];
+            [QWGLOBALMANAGER statisticsEventId:@"消息_消息通知_点击列表" withLable:@"消息_消息通知_点击列表" withParams:tdParams];
+
+            //  add  bys shen  大坏蛋 神马注释都不写
+//cj
+// type (int, optional) = ['']: 优惠类型：1.优惠券 2.优惠商品,
+// status (int, optional) = ['']: 优惠状态：1.快过期 2.已下架
+            NSInteger type = msg.objType.integerValue;
+            if (type == MsgBoxNoticeOldTypeCoupon || type == MsgBoxNoticeTypeCoupon) {//优惠券
+                // TODO: 可能缺字段
+                if (type == MsgBoxNoticeOldTypeCoupon) {
+                    if ([msg.status intValue] == 1) {//快过期进优惠券详情
+                        //fixed at 11.17 by lijian
+                        MyCouponDetailViewController *VC = [[MyCouponDetailViewController alloc]init];
+                        VC.myCouponId = msg.myCouponId;
+                        VC.hidesBottomBarWhenPushed = YES;
+                        [self.navigationController pushViewController:VC animated:YES];
+                    }else if([msg.status intValue] == 2){//已下架进列表页面
+                        MyCouponQuanViewController *myCouponQuan = [[MyCouponQuanViewController alloc]init];
+                        myCouponQuan.hidesBottomBarWhenPushed = YES;
+                        myCouponQuan.popToRootView = NO;
+                        [self.navigationController pushViewController:myCouponQuan animated:YES];
+                    }
+                } else {
+//                        if ([msg.status intValue] == 1) {//快过期进优惠券详情
+                            //fixed at 11.17 by lijian
+                            MyCouponDetailViewController *VC = [[MyCouponDetailViewController alloc]init];
+                            VC.myCouponId = msg.myCouponId;
+                            VC.hidesBottomBarWhenPushed = YES;
+                            [self.navigationController pushViewController:VC animated:YES];
+//                        }else if([msg.status intValue] == 2){//已下架进列表页面
+//                            MyCouponQuanViewController *myCouponQuan = [[MyCouponQuanViewController alloc]init];
+//                            myCouponQuan.hidesBottomBarWhenPushed = YES;
+//                            myCouponQuan.popToRootView = NO;
+//                            [self.navigationController pushViewController:myCouponQuan animated:YES];
+//                        }
+                }
+              
+            }else if (type == MsgBoxNoticeOldTypeGoodsSales){//优惠商品
+                if ([msg.status intValue] == 1) {//快过期进优惠商品详情
+                    MyCouponDrugDetailViewController *drugDetail = [[MyCouponDrugDetailViewController alloc]init];
+                    drugDetail.proDrugId = msg.myCouponId;
+                    [self.navigationController pushViewController:drugDetail animated:YES];
+                    
+                }else if([msg.status intValue] == 2){
+                    MyCouponDrugViewController * myCouponDrug = [[MyCouponDrugViewController alloc]init];
+                    myCouponDrug.hidesBottomBarWhenPushed = YES;
+                    myCouponDrug.popToRootView = NO;
+                    [self.navigationController pushViewController:myCouponDrug animated:YES];
+                }
+            }else if (type == MsgBoxNoticeOldTypeMemberPromote){//会员营销
+                
+                DDLogVerbose(@"H5跳转URL:%@",msg.url);
+                
+                WebDirectViewController *serverInfo = [[UIStoryboard storyboardWithName:@"WebDirect" bundle:nil] instantiateViewControllerWithIdentifier:@"WebDirectViewController"];
+                //外链Model
+                WebDirectLocalModel *modelLocal = [WebDirectLocalModel new];                
+                modelLocal.url = msg.url;
+                modelLocal.typeLocalWeb = WebLocalTypeOuterLink;
+                serverInfo.isOtherLinks = YES;
+//                modelLocal.title = @"优惠活动";
+                [serverInfo setWVWithLocalModel:modelLocal];
+                
+                serverInfo.hidesBottomBarWhenPushed = YES;
+                [self.navigationController pushViewController:serverInfo animated:YES];
+            }
+            else if (type == MsgBoxNoticeOldTypeOPOutLink || type == MsgBoxNoticeTypeOPOutLink){//外链
+                if (type == MsgBoxNoticeOldTypeOPOutLink) {
+                    [self jumpToOtherWebview:msg.url titl:msg.showTitle];
+                } else {
+                    [self jumpToOtherWebview:msg.href titl:msg.showTitle];
+                }
+            }
+            else if (type == MsgBoxNoticeOldTypeOPNews || type == MsgBoxNoticeTypeOPNews){//资讯
+                if (type == MsgBoxNoticeOldTypeOPNews) {
+                    [self jumpToHealthInfoPage:msg.objId withType:msg.contentType];
+                } else {
+                    // TODO: 可能缺字段
+                    [self jumpToHealthInfoPage:msg.objId withType:msg.contentType];
+                }
+            }
+            else if (type == MsgBoxNoticeOldTypeOPTopic || type == MsgBoxNoticeTypeOPTopic){//专题
+                if (type == MsgBoxNoticeOldTypeOPTopic) {
+                    [self jumpToOtherWebview:msg.url titl:msg.showTitle];
+                } else {
+                    [self jumpToOtherWebview:msg.href titl:msg.showTitle];
+                }
+            }
+            else if (type == MsgBoxNoticeOldTypeOPShopSales || type == MsgBoxNoticeTypeOPShopSales){//优惠活动
+                if (type == MsgBoxNoticeOldTypeOPShopSales) {
+                    [self jumpToCouponActivity:msg.branchId activityID:msg.objId];
+                } else {
+                    // TODO: 可能缺字段
+                    [self jumpToCouponActivity:msg.branchId activityID:msg.objId];
+                }
+            }
+            else if (type == MsgBoxNoticeOldTypeOPCoupon || type == MsgBoxNoticeTypeOPCoupon){//优惠券
+                if (type == MsgBoxNoticeOldTypeOPCoupon) {
+                    [self jumpToCouponTicket:msg.objId];
+                } else {
+                    [self jumpToCouponTicket:msg.objId];
+                }
+            }
+            else if (type == MsgBoxNoticeOldTypeOPGoodsSales || type == MsgBoxNoticeTypeOPGoodsSales){//优惠商品
+                if (type == MsgBoxNoticeOldTypeOPGoodsSales) {
+                    [self jumpToCouponProduct:msg.objId];
+                } else {
+                    [self jumpToCouponProduct:msg.objId];
+                }
+            }
+            else if (type == MsgBoxNoticeOldTypeSlowDiease){//慢病订阅
+                [self jumpToSlowDiseaseVC:msg.drugGuideId withTitle:msg.attentionName];
+            }
+            else if (type == MsgBoxNoticeOldTypeOPTopicDetail || type == MsgBoxNoticeTypeOPNewsTopic){//专题详情
+                if (type == MsgBoxNoticeOldTypeOPTopicDetail) {
+                    [self jumpToSpecDetailWithId:msg.objId];
+                } else {
+                    [self jumpToSpecDetailWithId:msg.objId];
+                }
+            }
+            else if (type == MsgBoxNoticeOldTypeOPPostDetail || type == MsgBoxNoticeTypeOPPostDetail){//帖子详情
+                if (type == MsgBoxNoticeOldTypeOPPostDetail) {
+                    [self jumpToPostDetailWithId:msg.objId];
+                } else {
+                    [self jumpToPostDetailWithId:msg.objId];
+                }
+            }
+            else if(type == MsgBoxNoticeOldTypeDietDetail) {// 用药小贴士
+                [self jumpToDietDetailWithModel:msg];
+            }
+            else if (type == MsgBoxNoticeTypeReport) {// 意见反馈
+                [self jumpToAboutWenyao];
+            }
+            else if (type == MsgBoxNoticeTypeRebindPhone) {// 手机换绑
+                [self jumpToPersonalInfoDetail];
+            }
+            else if (type == MsgBoxNoticeTypeCreditStore) {// 积分商城
+//              @"/QWYH/web/integral_mall/html/records.html";
+                [self jumpToCreditDetails];
+            }
+            else if (type == MsgBoxNoticeTypeGoodsCredit) {// 商品积分
+                [self jumpToCreditExchangeList];
+            }
+            
+            //通知过来的类型
+            //                    外链   类型 15
+            //                    资讯   类型 13
+            //                    专题          类型14
+            //                    优惠活动   类型16
+            //                    优惠券                类型11
+            //                    优惠商品               类型12
+            //                    慢病订阅    类型 8
+            //                    专题详情    类型 28
+            //                    帖子详情    类型 29
+            //                    用药小贴士  类型30
+        }
+        self.isClickedCell = YES;
+    }
+}
+
+- (void)getNotifType:(Enum_Notification_Type)type data:(id)data target:(id)obj
+{
+    if (type == NotiMessageUpdateMsgCouponList) {
+        [self getCachedMessages];
+        [self.tbViewContent reloadData];
+    } else if (type == NotiReleaseTimer) {
+    }
+    else if (type == NotiMsgBoxNeedFetchNewData) { // 有新消息，拉数据
+        NSArray *type = data[@"types"];
+        if ([type containsObject:@(MsgBoxListMsgTypeNotice)]) {
+            [self refreshConsultList];
+        }
+    }
+}
+
+
+
+-(NSArray *) createRightButtons: (int) number
+{
+    NSMutableArray * result = [NSMutableArray array];
+    NSString* titles[2] = {@"删除"};
+    UIColor * colors[2] = {[UIColor redColor]};
+    for (int i = 0; i < number; ++i)
+    {
+        MGSwipeButton * button = [MGSwipeButton buttonWithTitle:titles[i] backgroundColor:colors[i] callback:^BOOL(MGSwipeTableCell * sender){
+            return YES;
+        }];
+        if(i == 1) {
+            [button setTitleColor:RGBHex(qwColor5) forState:UIControlStateNormal];
+        }
+        [result addObject:button];
+    }
+    return result;
+}
+
+
+/**
+ *  跳转健康资讯
+ *
+ *  @param healthID    健康资讯id
+ *  @param contentType 健康资讯类型
+ */
+- (void)jumpToHealthInfoPage:(NSString *)healthID withType:(NSString *)contentType
+{
+    WebDirectViewController *vcWebDirect = [[UIStoryboard storyboardWithName:@"WebDirect" bundle:nil] instantiateViewControllerWithIdentifier:@"WebDirectViewController"];
+    WebHealthInfoModel *modelHealth = [[WebHealthInfoModel alloc] init];
+    WebDirectLocalModel *modelLocal = [[WebDirectLocalModel alloc] init];
+    modelHealth.msgID = healthID;
+    modelHealth.contentType = contentType;
+    modelLocal.modelHealInfo = modelHealth;
+    modelLocal.typeLocalWeb = WebPageToWebTypeInfo;
+    [vcWebDirect setWVWithLocalModel:modelLocal];
+    vcWebDirect.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:vcWebDirect animated:YES];
+}
+
+/**
+ *  跳转外链
+ *
+ *  @param url   外链URL
+ *  @param title 外链标题
+ */
+-(void)jumpToOtherWebview:(NSString *)url titl:(NSString *)title
+{
+    WebDirectViewController *vcWebDirect = [[UIStoryboard storyboardWithName:@"WebDirect" bundle:nil] instantiateViewControllerWithIdentifier:@"WebDirectViewController"];
+    WebDirectLocalModel *modelLocal = [[WebDirectLocalModel alloc] init];
+    if (![url hasPrefix:@"http"]) {
+        url = [NSString stringWithFormat:@"%@%@",H5_BASE_URL,url];
+    }
+    modelLocal.url = url;
+    vcWebDirect.isOtherLinks = YES;
+    modelLocal.typeLocalWeb = WebLocalTypeOuterLink;
+    [vcWebDirect setWVWithLocalModel:modelLocal];
+    vcWebDirect.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:vcWebDirect animated:YES];
+}
+
+/**
+ *  跳转促销活动
+ *
+ *  @param branchID   商户ID
+ *  @param activityID 活动ID
+ */
+- (void)jumpToCouponActivity:(NSString *)branchID activityID:(NSString *)activityID
+{
+    CouponPharmacyDeailViewController *couponPharmacy = [[CouponPharmacyDeailViewController alloc]initWithNibName:@"CouponPharmacyDeailViewController" bundle:nil];
+    couponPharmacy.storeId = branchID;
+    couponPharmacy.activityId = activityID;
+    couponPharmacy.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:couponPharmacy animated:YES];
+}
+
+/**
+ *  跳转代金券详情
+ *
+ *  @param objId 代金券ID
+ */
+- (void)jumpToCouponTicket:(NSString *)objId
+{
+    CenterCouponDetailViewController *vcDetail =[[CenterCouponDetailViewController alloc] initWithNibName:@"CenterCouponDetailViewController" bundle:nil];
+    vcDetail.couponId=objId;
+    vcDetail.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:vcDetail animated:YES];
+}
+
+/**
+ *  跳转优惠商品详情
+ *
+ *  @param objeID 优惠商品id
+ */
+- (void)jumpToCouponProduct:(NSString *)objeID
+{
+    WebDirectViewController *vcWebMedicine = [[UIStoryboard storyboardWithName:@"WebDirect" bundle:nil] instantiateViewControllerWithIdentifier:@"WebDirectViewController"];
+    
+    MapInfoModel *modelMap = [QWUserDefault getObjectBy:APP_MAPINFOMODEL];
+    WebDrugDetailModel *modelDrug = [WebDrugDetailModel new];
+    modelDrug.modelMap = modelMap;
+    modelDrug.proDrugID = @"";
+    modelDrug.promotionID = objeID;
+    modelDrug.showDrug = @"0";
+    WebDirectLocalModel *modelLocal = [WebDirectLocalModel new];
+    modelLocal.title = @"优惠商品";
+    modelLocal.modelDrug = modelDrug;
+    modelLocal.typeLocalWeb = WebPageToWebTypeMedicine;
+    [vcWebMedicine setWVWithLocalModel:modelLocal];
+    [self.navigationController pushViewController:vcWebMedicine animated:YES];
+}
+
+/**
+ *  跳转慢病订阅详情
+ *
+ *  @param diseaseID 疾病ID
+ *  @param title     疾病标题
+ */
+- (void)jumpToSlowDiseaseVC:(NSString *)diseaseID withTitle:(NSString *)title
+{
+    DetailSubscriptionListViewController *detailSubscriptionViewController = [[DetailSubscriptionListViewController alloc] init];
+    DrugGuideListModel *modelDrug = [[DrugGuideListModel alloc] init];
+    modelDrug.guideId = diseaseID;
+    modelDrug.title = title;
+    [DrugGuideListModel updateObjToDB:modelDrug WithKey:modelDrug.guideId];
+    detailSubscriptionViewController.modelDrugGuide = modelDrug;
+    [self.navigationController pushViewController:detailSubscriptionViewController animated:YES];
+}
+
+/**
+ *  跳转到专题详情页面
+ *
+ *  @param specId 专题id
+ */
+- (void)jumpToSpecDetailWithId:(NSString *)specId
+{
+    WebDirectViewController *vcWebDirect = [[UIStoryboard storyboardWithName:@"WebDirect" bundle:nil] instantiateViewControllerWithIdentifier:@"WebDirectViewController"];
+    WebDirectLocalModel *modelLocal = [[WebDirectLocalModel alloc] init];
+    modelLocal.url = [NSString stringWithFormat:@"%@QWYH/web/message/html/subject.html?id=%@",H5_BASE_URL,specId];
+    modelLocal.typeLocalWeb = WebLocalTypeOuterLink;
+    modelLocal.typeTitle = WebTitleTypeOnlyShare;
+    vcWebDirect.isOtherLinks = YES;
+    [vcWebDirect setWVWithLocalModel:modelLocal];
+    vcWebDirect.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:vcWebDirect animated:YES];
+}
+
+/**
+ *  跳转到帖子详情页面
+ *
+ *  @param postId 帖子id
+ */
+- (void)jumpToPostDetailWithId:(NSString *)postId
+{
+
+    PostDetailViewController* postDetailVC = (PostDetailViewController*)[[UIStoryboard storyboardWithName:@"Forum" bundle:nil] instantiateViewControllerWithIdentifier:@"PostDetailViewController"];
+    postDetailVC.hidesBottomBarWhenPushed = YES;
+    postDetailVC.postId = postId;
+    [self.navigationController pushViewController:postDetailVC animated:YES];
+}
+
+- (void)jumpToDietDetailWithModel:(MsgBoxNoticeItemModel *)couponModel
+{
+    WebDirectViewController *vcWebDirect = [[UIStoryboard storyboardWithName:@"WebDirect" bundle:nil] instantiateViewControllerWithIdentifier:@"WebDirectViewController"];
+    WebDirectLocalModel *modelLocal = [[WebDirectLocalModel alloc] init];
+    modelLocal.url = [NSString stringWithFormat:@"%@QWYH/web/news/html/taboo.html?id=%@",H5_BASE_URL,couponModel.objId];
+    modelLocal.typeLocalWeb = WebLocalTypeOuterLink;
+    modelLocal.title = @"饮食小贴士";
+    modelLocal.typeTitle = WebTitleTypeNone;
+    vcWebDirect.isOtherLinks = YES;
+    [vcWebDirect setWVWithLocalModel:modelLocal];
+    vcWebDirect.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:vcWebDirect animated:YES];
+    [QWGLOBALMANAGER statisticsEventId:@"x_swjj" withLable:@"食物禁忌详情页" withParams:nil];
+//    DietTipsListViewController *dietListVC = [[DietTipsListViewController alloc] initWithNibName:@"DietTipsListViewController" bundle:nil];
+//    dietListVC.orderId = couponModel.objId;
+//    dietListVC.hidesBottomBarWhenPushed = YES;
+//    [self.navigationController pushViewController:dietListVC animated:YES];
+}
+
+- (void)jumpToAboutWenyao
+{
+    [QWGLOBALMANAGER statisticsEventId:@"x_sz_gywy" withLable:@"设置" withParams:nil];
+    AboutWenYaoViewController *aboutWenyaoViewController = [[AboutWenYaoViewController alloc] init];
+    aboutWenyaoViewController.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:aboutWenyaoViewController animated:YES];
+}
+
+- (void)jumpToPersonalInfoDetail
+{
+    [QWGLOBALMANAGER statisticsEventId:@"我的_个人资料" withLable:nil withParams:nil];
+    NewPersonInformationViewController *personInfoViewController = [[NewPersonInformationViewController alloc]  init];
+    personInfoViewController.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:personInfoViewController animated:YES];
+}
+
+- (void)jumpToCreditDetails
+{
+    //积分明细    segue 已配置
+    [QWGLOBALMANAGER statisticsEventId:@"我的积分_积分明细" withLable:@"我的-积分-积分明细" withParams:[NSMutableDictionary dictionaryWithDictionary:@{@"用户等级":StrFromInt(QWGLOBALMANAGER.configure.mbrLvl)}]];
+    CreditRecordViewController* creditRecordVC = [[UIStoryboard storyboardWithName:@"Credit" bundle:nil] instantiateViewControllerWithIdentifier:@"CreditRecordViewController"];
+    [self.navigationController pushViewController:creditRecordVC animated:YES];
+}
+
+- (void)jumpToCreditExchangeList
+{
+    WebDirectViewController *vcWebMedicine = [[UIStoryboard storyboardWithName:@"WebDirect" bundle:nil] instantiateViewControllerWithIdentifier:@"WebDirectViewController"];
+    WebDirectLocalModel *modelLocal = [WebDirectLocalModel new];
+    modelLocal.typeLocalWeb = WebLocalTypeExchangeList;
+    modelLocal.title = @"兑换记录";
+    [vcWebMedicine setWVWithLocalModel:modelLocal];
+    vcWebMedicine.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:vcWebMedicine animated:YES];
+}
+
+#pragma mark -
+#pragma mark MGSwipeTableCellDelegate
+// TODO: 保留?
+-(NSArray*) swipeTableCell:(MGSwipeTableCell*)cell
+  swipeButtonsForDirection:(MGSwipeDirection)direction
+             swipeSettings:(MGSwipeSettings*)swipeSettings
+         expansionSettings:(MGSwipeExpansionSettings*)expansionSettings;
+{
+    
+    if (direction == MGSwipeDirectionRightToLeft)
+    {
+        
+        return [self createRightButtons:1];
+        
+    }
+    return nil;
+}
+
+-(BOOL) swipeTableCell:(MGSwipeTableCell*)cell tappedButtonAtIndex:(NSInteger)index direction:(MGSwipeDirection)direction fromExpansion:(BOOL)fromExpansion
+{
+    
+            NSIndexPath *  indexPath = [self.tbViewContent indexPathForCell:cell];
+    //删除事件
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+        
+        [SVProgressHUD showErrorWithStatus:@"网络未连接，请重试" duration:0.8f];
+        
+        return NO;
+    }
+    MsgBoxNoticeItemModel  *boxModel = nil;
+    
+    boxModel = self.arrCouponList[indexPath.row];
+    
+    RemoveByCustomerCounponR *model = [RemoveByCustomerCounponR new];
+    model.messageId = boxModel.id;
+    [CouponNotiListRequest removeByCustomer:model success:^(id responModel) {
+        [MsgBoxNoticeItemModel deleteObjFromDBWithKey:[NSString stringWithFormat:@"%@",boxModel.id]];
+        [self.arrCouponList removeObject:boxModel];
+        [self.tbViewContent reloadData];
+        if (self.arrCouponList.count == 0) {
+            [self showInfoView:@"暂无消息通知~" image:@"ic_img_fail"];
+        }
+    } failure:^(HttpException *e) {
+        
+    }];
+    
+//    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"确定要删除该通知吗？" message:nil delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
+//    alertView.delegate = self;
+//    alertView.tag = indexPath.row;
+//    [alertView show];
+    return YES;
+}
+
+@end

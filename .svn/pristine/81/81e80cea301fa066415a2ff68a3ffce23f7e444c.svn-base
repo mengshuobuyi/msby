@@ -1,0 +1,998 @@
+//
+//  SearchViewController.m
+//  APP
+//
+//  Created by 李坚 on 15/8/17.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "SearchViewController.h"
+#import "Drug.h"
+#import "Search.h"
+#import "Store.h"
+#import "SVProgressHUD.h"
+#import "SearchDisease_SymptomListViewController.h"
+#import "PharmacyStoreDetailViewController.h"
+#import "SearchMedicineListViewController.h"
+#import "KeyWordSearchTableViewCell.h"
+
+@interface SearchViewController ()<UISearchBarDelegate,UITableViewDataSource,UITableViewDelegate>
+{
+    UIView *headerView;             //热门搜索,热词
+    UITextField* m_searchField;     //顶部搜索框
+    
+    NSMutableArray *historyArray;   //历史搜索数组pageNumber==Enum_Page_First
+    NSMutableArray *secondArray;    //pageNumber==Enum_Page_Second
+    NSMutableArray *thirdArray;     //pageNumber==Enum_Page_Third
+    
+    int currentPage;                //分页加载
+    
+    NSInteger thirdSectionNumber;   //选中的某个section
+    NSString *sectionClickType;     //判断 搜索某个section的接口
+}
+    //@property (weak, nonatomic) IBOutlet UIImageView *backImage;                //搜索框左边的返回按钮 现在隐藏掉了不显示
+
+@end
+
+@implementation SearchViewController
+@synthesize pageNumber;
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    pageNumber = Enum_Page_First;
+    
+    self.searchView.frame = CGRectMake(0, 0, APP_W, 44);
+    self.searchBarView.tintColor = [UIColor blueColor];
+    self.searchBarView.backgroundColor = RGBHex(qwColor1);
+    self.searchBarView.placeholder = kWarning4;
+    self.searchBarView.delegate = self;
+    currentPage = 1;
+    
+//搜索框左边的返回按钮 现在隐藏掉了不显示
+//    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(popAction:)];
+//    [self.backImage addGestureRecognizer:tap];
+    
+    historyArray = [[NSMutableArray alloc] initWithArray:getHistoryConfig(@"SearchHistory")];
+    secondArray = [NSMutableArray new];
+    thirdArray = [NSMutableArray array];
+    
+    if(!self.isHideBranchList){
+        //热门搜索关键词
+       // if(QWGLOBALMANAGER.hotWord.searchHintMsg == nil || [QWGLOBALMANAGER.hotWord.searchHintMsg isEqualToString:@""]){
+        if(StrIsEmpty(QWGLOBALMANAGER.hotWord.searchHintMsg)){
+            self.searchBarView.placeholder = @"搜索药/病/症/药房";
+        }else{
+            self.searchBarView.placeholder = QWGLOBALMANAGER.hotWord.searchHintMsg;
+        }
+        
+        if(QWGLOBALMANAGER.currentNetWork != kNotReachable){
+            [self setupHeaderView:QWGLOBALMANAGER.hotWord.searchWords];
+        }
+    }else{
+        //热门搜索关键词
+        //if(QWGLOBALMANAGER.hotWord.searchHintMsg == nil || [QWGLOBALMANAGER.hotWord.searchHintMsg isEqualToString:@""]){
+        if(StrIsEmpty(QWGLOBALMANAGER.hotWord.searchHintMsg)){
+            self.searchBarView.placeholder = @"搜索药/病/症";
+        }else{
+            self.searchBarView.placeholder = QWGLOBALMANAGER.hotWord.searchHintMsg;
+        }
+        
+        if(QWGLOBALMANAGER.currentNetWork != kNotReachable){
+            [self setupHeaderView:QWGLOBALMANAGER.hotWord.searchWords];
+        }
+    }
+    
+
+    self.mainTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    self.mainTableView.backgroundColor = RGBHex(qwColor11);
+    self.mainTableView.dataSource = self;
+    self.mainTableView.delegate = self;
+    [self.mainTableView addStaticImageHeader];
+    self.searchBarView.tintColor = [UIColor blueColor];
+    if (iOSv7) {
+        UIView* barView = [self.searchBarView.subviews objectAtIndex:0];
+        [[barView.subviews objectAtIndex:0] removeFromSuperview];
+        UITextField* searchField = [barView.subviews objectAtIndex:0];
+        searchField.font = [UIFont systemFontOfSize:13.0f];
+        [searchField setReturnKeyType:UIReturnKeySearch];
+        m_searchField = searchField;
+    } else {
+        [[self.searchBarView.subviews objectAtIndex:0] removeFromSuperview];
+        UITextField* searchField = [self.searchBarView.subviews objectAtIndex:0];
+        searchField.delegate = self;
+        searchField.font = [UIFont systemFontOfSize:13.0f];
+        [searchField setReturnKeyType:UIReturnKeySearch];
+        m_searchField = searchField;
+    }
+}
+
+- (void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    
+    //搜索输入框置为焦点
+    [self.searchBarView becomeFirstResponder];
+    
+    self.LeadingSearchBarConstant.constant = 8.0f;
+    [self.navigationController.navigationBar addSubview:self.searchView];
+}
+
+- (void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    
+    [self.searchBarView resignFirstResponder];
+    [self.searchView removeFromSuperview];
+    
+}
+
+#pragma mark - 热门搜索词模块
+
+//建立First_Page的热搜词汇UI
+- (void)setupHeaderView:(NSArray *)array{
+    
+    
+    if(array == nil || array.count == 0){
+        return;
+    }
+    
+    headerView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, 150)];
+    headerView.backgroundColor = RGBHex(qwColor4);
+    UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(15.0f, 9, 100, 21)];
+    label.font = fontSystem(kFontS4);
+    label.text = @"热门搜索";
+    label.textColor = RGBHex(qwColor8);
+    [headerView addSubview:label];
+    
+    UIView *seperate = [[UIView alloc]initWithFrame:CGRectMake(0, 39, APP_W, 0.5)];
+    seperate.backgroundColor = RGBHex(qwColor10);
+    [headerView addSubview:seperate];
+    
+    int count = 0;
+    float FrameOfY = 40;
+    float Kfont = kFontS4;
+    float btnX = 15.0f;
+    
+
+    for(hotKeyword *word in array){
+        
+        if(APP_W - btnX < Kfont * (word.word.length + 1)){
+            UIView *seperate = [[UIView alloc]initWithFrame:CGRectMake(0, FrameOfY + 41.0f, APP_W, 0.5)];
+            seperate.backgroundColor = RGBHex(qwColor10);
+            [headerView addSubview:seperate];
+            
+            FrameOfY += 41.0f;
+            btnX = 15.0f;
+
+        }
+        
+        UIButton *btn = [[UIButton alloc]initWithFrame:CGRectMake(btnX, FrameOfY, Kfont * (word.word.length), 41.0f)];
+        
+        btnX += Kfont * (word.word.length) + 14;
+//        btn.backgroundColor = [UIColor blackColor];
+        [btn setTitle:word.word forState:UIControlStateNormal];
+        [btn setTitleColor:RGBHex(qwColor7) forState:UIControlStateNormal];
+        btn.titleLabel.font = fontSystem(Kfont);
+        [btn addTarget:self action:@selector(hotBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        UIView *line = [[UIView alloc]initWithFrame:CGRectMake(btnX, btn.frame.origin.y + 9, 0.5, 23.0f)];
+        line.backgroundColor = RGBHex(qwColor10);
+        
+        btnX += 14;
+        [headerView addSubview:btn];
+        
+        if(count + 1 != array.count){
+            hotKeyword *kw = array[count + 1];
+            if(APP_W - btnX > Kfont * (kw.word.length + 1)){
+                if(count + 1 != array.count){
+                    [headerView addSubview:line];
+                }
+            }
+        }
+        count ++;
+    }
+    CGRect ret = headerView.frame;
+    ret.size.height = FrameOfY + 40.5;
+    headerView.frame = ret;
+    
+    UIView *line = [[UIView alloc]initWithFrame:CGRectMake(0,headerView.frame.size.height - 0.5, APP_W, 0.5)];
+    line.backgroundColor = RGBHex(qwColor10);
+    [headerView addSubview:line];
+    
+    self.mainTableView.tableHeaderView = headerView;
+    
+}
+
+//热搜词汇点击触发函数
+- (void)hotBtnClick:(UIButton *)btn{
+    self.searchBarView.text = btn.titleLabel.text;
+    [self loadDataWithKeyWord:self.searchBarView.text];
+}
+
+
+#pragma mark - 清空历史搜索按钮点击触发函数
+- (void)onClearBtnTouched:(id)sender{
+    
+    [historyArray removeAllObjects];
+    setHistoryConfig(@"SearchHistory", nil);
+    [self.mainTableView reloadData];
+}
+
+
+#pragma mark - popViewController
+- (IBAction)cancelAction:(id)sender {
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+
+//#pragma mark - 用于从Third_Page返回Second_Page，后来需求删除
+////搜索框左边的返回按钮 现在隐藏掉了不显示
+//- (void)popAction:(id)sender{
+//    
+//    if(pageNumber == Enum_Page_Second){
+//
+//        [self backToFirst];
+//    }
+//    
+//    if(pageNumber == Enum_Page_Third){
+//        pageNumber = Enum_Page_Second;
+//        [self.mainTableView reloadData];
+//    }
+//}
+
+#pragma mark - 用户点击键盘搜索，主要用于搜索默认词汇
+- (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar{
+    
+    if([self.searchBarView.text isEqualToString:@""]){
+        //if(QWGLOBALMANAGER.hotWord.searchHintMsg == nil || [QWGLOBALMANAGER.hotWord.searchHintMsg isEqualToString:@""]){
+        if(StrIsEmpty(QWGLOBALMANAGER.hotWord.searchHintMsg)){
+            return;
+        }else{
+            [self loadDataWithKeyWord:QWGLOBALMANAGER.hotWord.searchHintMsg];
+        }
+    }else{
+        [self loadDataWithKeyWord:self.searchBarView.text];
+    }
+    
+}
+
+#pragma mark - 分页加载更多
+- (void)loadMoreData{
+    
+    currentPage++;
+    if(thirdSectionNumber != 3)
+    {
+        [self requestSerachKeywordData:self.searchBarView.text andType:[NSString stringWithFormat:@"%ld",(long)thirdSectionNumber]];
+    }else{
+        [self requestBranchData:self.searchBarView.text];
+    }
+}
+
+#pragma mark - Section被点击（当pageNumber=Enum_Page_Second时）
+- (void)SectionClick:(UIButton *)btn{
+    
+    if(pageNumber == Enum_Page_Second){
+        
+        thirdSectionNumber = btn.tag;
+
+        currentPage = 1;
+
+        [self.mainTableView addFooterWithTarget:self action:@selector(loadMoreData)];
+        pageNumber = Enum_Page_Third;
+        KeywordVO *vo = secondArray[btn.tag];
+        // 关键词搜索类型 0:商品, 1:疾病, 2:症状 3:药店
+        sectionClickType = vo.type;
+        
+        if([vo.type intValue] != 3){
+            [self requestSerachKeywordData:self.searchBarView.text andType:vo.type];
+        }else{
+            
+            [self requestBranchData:self.searchBarView.text];
+        }
+    }
+}
+
+#pragma mark - 3:药店 第三层搜索使用该请求，thirdArray生成
+- (void)requestBranchData:(NSString *)keyWord{
+    
+    [[QWGlobalManager sharedInstance] readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) {
+        
+        searchStoreModelR *modelR = [searchStoreModelR new];
+        modelR.keyword = keyWord;
+        modelR.currPage = [NSString stringWithFormat:@"%d",currentPage];
+        modelR.pageSize = @"10";
+        
+        if(mapInfoModel){
+            
+            modelR.province = mapInfoModel.province;
+            modelR.city = mapInfoModel.city;
+        }else{
+            modelR.province = @"江苏省";
+            modelR.city = @"苏州市";
+        }
+        [Store searchStoreWithParam:modelR success:^(id obj) {
+            
+            NSMutableArray *keyArr = [NSMutableArray array];
+            [keyArr addObject:NSStringFromClass([SearchStorehModel class])];
+            
+            NSMutableArray *valueArr = [NSMutableArray array];
+            [valueArr addObject:@"list"];
+            
+            StoreNearByListModel *listModel = [StoreNearByListModel parse:obj ClassArr:keyArr Elements:valueArr];
+            
+            if(currentPage == 1){
+                [thirdArray removeAllObjects];
+            }
+            [thirdArray addObjectsFromArray:listModel.list];
+            
+            [self.mainTableView reloadData];
+            [self.mainTableView footerEndRefreshing];
+            
+        } failure:^(HttpException *e) {
+            
+            
+        }];
+    }];
+    
+    
+}
+
+#pragma mark - 0:商品, 1:疾病, 2:症状 第三层搜索使用该请求，thirdArray生成
+- (void)requestSerachKeywordData:(NSString *)keyWord andType:(NSString *)type{
+    
+    DrugSearchModelR *modelR = [DrugSearchModelR new];
+    modelR.keyword = keyWord;
+    modelR.type = type;
+    modelR.currPage = @(currentPage);
+    modelR.pageSize = @(10);
+    
+    [Drug getsearchKeywordsWithParam:modelR Success:^(id DFUserModel) {
+        
+        GetSearchKeywordsModel *model = DFUserModel;
+        
+        if(currentPage == 1){
+            [thirdArray removeAllObjects];
+        }
+        [thirdArray addObjectsFromArray:model.list];
+        
+        [self.mainTableView reloadData];
+        [self.mainTableView footerEndRefreshing];
+        
+    } failure:^(HttpException *e) {
+        
+    }];
+}
+
+#pragma mark - SearchBarView代理
+- (void)searchBarTextDidBeginEditing:(UISearchBar *) searchBar
+{
+    UITextField *searchBarTextField = nil;
+    NSArray *views = ([[[UIDevice currentDevice] systemVersion] floatValue] < 7.0) ? searchBar.subviews : [[searchBar.subviews objectAtIndex:0] subviews];
+    for (UIView *subview in views)
+    {
+        if ([subview isKindOfClass:[UITextField class]])
+        {
+            searchBarTextField = (UITextField *)subview;
+            break;
+        }
+    }
+    searchBarTextField.enablesReturnKeyAutomatically = NO;
+}
+
+- (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText{
+    
+    if([searchText isEqualToString:@" "]){
+        searchBar.text = @"";
+        return;
+    }
+    
+    if([searchBar.text isEqualToString:@""]){
+        [HttpClientMgr cancleAllRequest];
+        [self backToFirst];
+        return;
+    }else{
+        [self loadDataWithKeyWord:searchBar.text];
+    }
+}
+
+
+#pragma mark - 关键字搜索请求，SecondArray生成
+- (void)loadDataWithKeyWord:(NSString *)keyWord
+{
+
+    
+    
+    KeywordModelR *modelR = [KeywordModelR new];
+    
+   
+    modelR.keyword = keyWord;
+  
+    
+    MapInfoModel *mapInfoModel = [QWUserDefault getObjectBy:APP_MAPINFOMODEL];
+    if(mapInfoModel){
+        //if(mapInfoModel.city && ![mapInfoModel.city isEqualToString:@""]){
+        if(!StrIsEmpty(mapInfoModel.city)){
+            modelR.city = mapInfoModel.city;
+        }
+        //if(mapInfoModel.province && ![mapInfoModel.province isEqualToString:@""]){
+        if(!StrIsEmpty(mapInfoModel.province)){
+            modelR.province = mapInfoModel.province;
+        }
+    }
+
+    
+    [self removeInfoView];
+    [Search searchByKeyword:modelR success:^(KeywordModel *obj) {
+
+        [secondArray removeAllObjects];
+        [secondArray addObjectsFromArray:obj.list];
+        
+        //当从自查页面进入时，需要隐藏掉搜索到的药房信息
+        if(self.isHideBranchList){
+            for(KeywordVO *vo in secondArray){
+                if([vo.type intValue] == 3){
+                    [secondArray removeObject:vo];
+                }
+            }
+        }
+        
+        BOOL infoView = NO;
+        for(KeywordVO *vo in secondArray){
+            if(vo.keywords == nil || vo.keywords.count == 0){
+               
+            }else{
+                infoView = YES;
+            }
+        }
+        
+        [self GoToSecond];
+        
+        if(!infoView){
+            [self showInfoView:@"没有搜索结果" image:@"ic_img_fail"];
+            return;
+        }
+        
+        
+        
+    } failure:^(HttpException *e) {
+
+//        [SVProgressHUD showErrorWithStatus:@"Failure！" duration:0.5];
+    }];
+    
+}
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView{
+    
+    [self.searchBarView resignFirstResponder];
+}
+
+
+#pragma mark - TableViewDelegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
+    if(pageNumber == Enum_Page_First){
+        return 1;
+    }
+    if(pageNumber == Enum_Page_Second){
+        return secondArray.count;
+    }
+    if(pageNumber == Enum_Page_Third){
+        return 1;
+    }
+    return 0;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
+    if(pageNumber == Enum_Page_First){
+        if(historyArray.count > 0){
+            return 49.0f;
+        }else{
+            return 0.0f;
+        }
+    }
+    if(pageNumber == Enum_Page_Second){
+        KeywordVO *ko = secondArray[section];
+        if(ko.keywords.count == 0){
+            return 0.0f;
+        }
+        if(section == 0){
+            return 44.0f;
+        }else{
+            return 51.0f;
+        }
+    }
+    if(pageNumber == Enum_Page_Third){
+        return 44.0f;
+    }
+    return 0;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
+    if(pageNumber == Enum_Page_First){
+        
+        if(historyArray.count > 0)
+        {
+            UIView *headView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, APP_W, 49)];
+          
+            headView.backgroundColor = [UIColor whiteColor];
+            headView.clipsToBounds = YES;
+            
+            UIView *line = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, 7.0f)];
+            line.backgroundColor = RGBHex(qwColor11);
+            [headView addSubview:line];
+            
+            UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, 200, 21)];
+            label.text = @"搜索历史";
+            label.textColor = RGBHex(qwColor8);
+            label.font = fontSystem(14.0f);
+            CGRect rect = label.frame;
+            rect.origin.x = 15.0f;
+            rect.origin.y = 17.5f;
+            label.frame = rect;
+            [headView addSubview:label];
+            
+            UIView *line1 = [[UIView alloc]initWithFrame:CGRectMake(0, headView.frame.size.height - 0.5, APP_W, 0.5f)];
+            line1.backgroundColor = RGBHex(qwColor10);
+            [headView addSubview:line1];
+            
+            return headView;
+        }
+        else
+        {
+            return nil;
+        }
+    }
+    else if(pageNumber == Enum_Page_Second)
+    {
+        UIView *headView = [[UIView alloc] init];
+        if(section == 0){
+            headView.frame = CGRectMake(0, 0, APP_W, 44);
+        }else{
+            headView.frame = CGRectMake(0, 0, APP_W, 51);
+        }
+        headView.backgroundColor = [UIColor whiteColor];
+        headView.clipsToBounds = YES;
+        UILabel *label1 = [[UILabel alloc]initWithFrame:CGRectMake(15, 0, 200, 21)];
+        NSString *str;
+        NSString *keyWord = [self.searchBarView.text isEqualToString:@""]?QWGLOBALMANAGER.hotWord.searchHintMsg:self.searchBarView.text;
+      
+        if(section == 0)
+            str = [NSString stringWithFormat:@"%@相关药品",keyWord];
+        if(section == 1)
+            str = [NSString stringWithFormat:@"%@相关疾病",keyWord];
+        if(section == 2)
+            str = [NSString stringWithFormat:@"%@相关症状",keyWord];
+        if(section == 3)
+            str = [NSString stringWithFormat:@"%@相关药房",keyWord];
+        
+        label1.text = str;
+        
+        label1.textColor = RGBHex(qwColor8);
+        label1.font = fontSystem(14.0f);
+        
+       
+        UIImage *image = [UIImage imageNamed:@"arr_right.png"];
+        UILabel *answer = [[UILabel alloc]initWithFrame:CGRectMake(APP_W - 100 - image.size.width - 25, 0, 100, 21)];
+        answer.textAlignment = NSTextAlignmentRight;
+        UIImageView *rightImage = [[UIImageView alloc]initWithImage:image];
+        if(pageNumber == Enum_Page_Third){
+            rightImage.hidden = YES;
+            answer.hidden = YES;
+        }else{
+            rightImage.hidden = NO;
+            answer.hidden = NO;
+        }
+
+        KeywordVO *ko = secondArray[section];
+        if(ko.keywords.count == 0){
+            return nil;
+        }
+        answer.text = [NSString stringWithFormat:@"约%@个结果",ko.resultCount];
+        answer.textColor = RGBHex(qwColor8);
+        answer.font = fontSystem(kFontS5);
+        
+        CGRect labelRect = label1.frame;
+        CGRect answerRect = answer.frame;
+        labelRect.origin.x = 15.0f;
+        if(section != 0){
+            UIView *line = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, 7.0f)];
+            line.backgroundColor = RGBHex(qwColor11);
+            [headView addSubview:line];
+            UIView *line1 = [[UIView alloc]initWithFrame:CGRectMake(0, 7.0, APP_W, 0.5f)];
+            line1.backgroundColor = RGBHex(qwColor10);
+            [headView addSubview:line1];
+            labelRect.origin.y = 16.5f;
+            answerRect.origin.y = 16.5f;
+        }else{
+            labelRect.origin.y = 11.5f;
+            answerRect.origin.y = 11.5f;
+        }
+        label1.frame = labelRect;
+        answer.frame = answerRect;
+        [headView addSubview:label1];
+        [headView addSubview:answer];
+        UIView *line1;
+        if(section != 0){
+            line1 = [[UIView alloc]initWithFrame:CGRectMake(0, 48.5, APP_W, 0.5f)];
+            line1.backgroundColor = RGBHex(qwColor10);
+            [headView addSubview:line1];
+            
+        }else{
+            line1 = [[UIView alloc]initWithFrame:CGRectMake(0, 43.5, APP_W, 0.5f)];
+            line1.backgroundColor = RGBHex(qwColor10);
+            [headView addSubview:line1];
+        }
+        
+        rightImage.center = answer.center;
+        CGRect rect = rightImage.frame;
+        rect.origin.x = APP_W - image.size.width - 14;
+        rightImage.frame = rect;
+        [headView addSubview:rightImage];
+        
+        UIButton *btn = [[UIButton alloc]initWithFrame:CGRectMake(0, 0, APP_W, headView.frame.size.height)];
+        btn.tag = section;
+        [btn setBackgroundColor:[UIColor clearColor]];
+        [btn addTarget:self action:@selector(SectionClick:) forControlEvents:UIControlEventTouchUpInside];
+        [headView addSubview:btn];
+        return headView;
+    }
+    else if(pageNumber == Enum_Page_Third){
+        
+        UIView *headView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, APP_W, 44)];
+        UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(15, 11.5, 200, 21)];
+        NSString *typeStr = @"";
+        // 关键词搜索类型 0:商品, 1:疾病, 2:症状 3:药店
+        if([sectionClickType intValue] == 0){
+            typeStr = @"药品";
+        }
+        if([sectionClickType intValue] == 1){
+            typeStr = @"疾病";
+        }
+        if([sectionClickType intValue] == 2){
+            typeStr = @"症状";
+        }
+        if([sectionClickType intValue] == 3){
+            typeStr = @"药店";
+        }
+        
+        label.text = [NSString stringWithFormat:@"%@的相关%@",self.searchBarView.text,typeStr];
+        label.textColor = RGBHex(qwColor8);
+        label.font = fontSystem(13.0f);
+
+        UIView *line = [[UIView alloc]initWithFrame:CGRectMake(0, headView.frame.size.height, APP_W, 0.5)];
+        line.backgroundColor = RGBHex(qwColor10);
+        [headView addSubview:line];
+        
+        headView.backgroundColor = [UIColor whiteColor];
+        [headView addSubview:label];
+        
+        return headView;
+    }
+    
+    return nil;
+    
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section{
+    
+    if(pageNumber == Enum_Page_First){
+        if(historyArray.count > 0){
+            return 46.0f;
+        }else{
+            return APP_H - headerView.frame.size.height;
+        }
+    }else{
+        return 0.0f;
+    }
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section{
+    
+    if(historyArray.count > 0){
+        UIView *footView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, APP_W, 44)];
+        footView.backgroundColor = [UIColor whiteColor];
+        footView.clipsToBounds = YES;
+        
+        UIButton * clearBtn = [[UIButton alloc]initWithFrame:CGRectMake(APP_W*0.35, 15, 100, 15)];
+        clearBtn.center = footView.center;
+        clearBtn.titleLabel.font = fontSystem(kFontS4);
+        [clearBtn setTitle:@"清空搜索历史" forState:0];
+        [clearBtn setTitleColor:RGBHex(qwColor8) forState:0];
+        [clearBtn setBackgroundColor:[UIColor clearColor]];
+        [clearBtn addTarget:self action:@selector(onClearBtnTouched:) forControlEvents:UIControlEventTouchUpInside];
+        
+        UIImageView *image = [[UIImageView alloc]initWithImage:[UIImage imageNamed:@"清空搜索记录icon.png"]];
+        image.frame = CGRectMake(clearBtn.frame.origin.x - 20, 15, 15, 15);
+        
+    
+        [footView addSubview:image];
+        [footView addSubview:clearBtn];
+        
+        return footView;
+    }else{
+        UIView *footView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, APP_W, APP_H - headerView.frame.size.height)];
+        footView.backgroundColor = [UIColor whiteColor];
+        footView.clipsToBounds = YES;
+        UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(0, 0, 200, 21)];
+        label.textAlignment = NSTextAlignmentCenter;
+        label.font = fontSystem(15.0f);
+        label.text = @"暂无搜索历史";
+        label.textColor = RGBHex(qwColor6);
+        label.center = footView.center;
+        CGRect rect = label.frame;
+        rect.origin.y = 150;
+        label.frame = rect;
+        [footView addSubview:label];
+        
+        return footView;
+    }
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+
+    return 46.0f;
+
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    
+    if(pageNumber == Enum_Page_First)
+    {
+        return historyArray.count;
+    }
+    else if(pageNumber == Enum_Page_Second)
+    {
+        KeywordVO *ko = secondArray[section];
+        if(ko.keywords.count > 2)
+        {
+            return 2;
+        }
+        else
+        {
+            return ko.keywords.count;
+        }
+    }
+    else if(pageNumber == Enum_Page_Third)
+    {
+        return thirdArray.count;
+    }
+    return 0;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+
+    static NSString *ConsultPharmacyIdentifier = @"KeyWordSearchTableViewCell";
+    KeyWordSearchTableViewCell *cell = (KeyWordSearchTableViewCell *)[tableView dequeueReusableCellWithIdentifier:ConsultPharmacyIdentifier];
+    if(cell == nil){
+        UINib *nib = [UINib nibWithNibName:@"KeyWordSearchTableViewCell" bundle:nil];
+        [tableView registerNib:nib forCellReuseIdentifier:ConsultPharmacyIdentifier];
+        cell = (KeyWordSearchTableViewCell *)[tableView dequeueReusableCellWithIdentifier:ConsultPharmacyIdentifier];
+        //            [cell setHighlighted:YES animated:YES];
+        
+    }
+    UIView *seperator = [[UIView alloc]initWithFrame:CGRectMake(0, cell.frame.size.height - 0.5, APP_W, 0.5)];
+    seperator.backgroundColor = RGBHex(qwColor10);
+    [cell addSubview:seperator];
+
+
+    cell.mainLabel.font = fontSystem(kFontS1);
+    CGRect rect = cell.mainLabel.frame;
+    rect.origin.x = 15.0f;
+    cell.mainLabel.frame = rect;
+    cell.mainLabel.textColor = RGBHex(qwColor6);
+    
+    if(pageNumber == Enum_Page_First)
+    {
+        cell.VoucherImage.hidden = YES;
+        cell.mainLabel.textColor = RGBHex(qwColor6);
+        cell.mainLabel.text = historyArray[historyArray.count - 1 - indexPath.row];
+        
+    }
+    else if(pageNumber == Enum_Page_Second)
+    {
+        KeywordVO *ko = secondArray[indexPath.section];
+        Keyword *kw = ko.keywords[indexPath.row];
+        cell.mainLabel.text = kw.keyword;
+        //优惠药房图片
+        if([kw.promotion intValue] == 1){
+            cell.VoucherImage.hidden = NO;
+        }else{
+            cell.VoucherImage.hidden = YES;
+        }
+    }
+    else if(pageNumber == Enum_Page_Third)
+    {
+        if(thirdSectionNumber != 3)
+        {
+            GetSearchKeywordsclassModel *kw = thirdArray[indexPath.row];
+            cell.mainLabel.text = kw.gswCname;
+            cell.VoucherImage.hidden = YES;
+        }else{
+            SearchStorehModel *store = thirdArray[indexPath.row];
+            cell.mainLabel.text = store.name;
+            if([store.promotion intValue] == 1)
+            {
+                cell.VoucherImage.hidden = NO;
+           
+            }
+            else
+            {
+                cell.VoucherImage.hidden = YES;
+            }
+        }
+    }
+    
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    [self.searchBarView resignFirstResponder];
+    
+    if(QWGLOBALMANAGER.currentNetWork == kNotReachable){
+        [SVProgressHUD showErrorWithStatus:kWarning12];
+        return;
+    }
+    
+    
+    if(pageNumber == Enum_Page_First)
+    {
+        //一层点击
+        DDLogVerbose(@"历史记录被点击");
+        self.searchBarView.text = historyArray[historyArray.count - indexPath.row - 1];
+        [self loadDataWithKeyWord:self.searchBarView.text];
+        
+        return;
+    }
+    else if(pageNumber == Enum_Page_Second)
+    {
+        //二层点击
+        KeywordVO *ko = secondArray[indexPath.section];
+        Keyword *kw = ko.keywords[indexPath.row];
+        [self historyWordSave:kw.keyword];
+        if(ko.keywords.count == 0){
+            return;
+        }
+        if(indexPath.section == 0){
+            DDLogVerbose(@"搜索进入药品详情");
+            
+            [self pushToDrugDetail:kw.keywordId andKeyWord:kw.keyword];
+            
+        }
+        if(indexPath.section == 1){
+            DDLogVerbose(@"搜索进入疾病详情");
+            
+            [self pushToDiseaseDetail:kw.keywordId andKeyWord:kw.keyword];
+            
+        }
+        if(indexPath.section == 2){
+            DDLogVerbose(@"搜索进入症状详情");
+            
+            [self pushToSymbolDetail:kw.keywordId andKeyWord:kw.keyword];
+            
+        }
+        if(indexPath.section == 3){
+            DDLogVerbose(@"搜索进入药房详情");
+            
+            [self pushToConsultDetail:kw.keywordId];
+            
+        }
+        return;
+    }
+    else if(pageNumber == Enum_Page_Third)
+    {
+        if(thirdSectionNumber != 3){
+            GetSearchKeywordsclassModel *kw = thirdArray[indexPath.row];
+            [self historyWordSave:kw.gswCname];
+            if(thirdSectionNumber == 0){
+                [self pushToDrugDetail:kw.gswId andKeyWord:kw.gswCname];
+            }
+            if(thirdSectionNumber == 1){
+                [self pushToDiseaseDetail:kw.gswId andKeyWord:kw.gswCname];
+            }
+            if(thirdSectionNumber == 2){
+                [self pushToSymbolDetail:kw.gswId andKeyWord:kw.gswCname];
+            }
+           
+        }else{
+            SearchStorehModel *store = thirdArray[indexPath.row];
+            [self historyWordSave:store.name];
+            [self pushToConsultDetail:store.branchId];
+        }
+    }
+    
+}
+
+#pragma mark - 待处理
+- (void)backToFirst{
+    
+    //热门搜索关键词
+    [self removeInfoView];
+    [self setupHeaderView:QWGLOBALMANAGER.hotWord.searchWords];
+    self.pageNumber = Enum_Page_First;
+   
+    
+//    [UIView animateWithDuration:0.3 animations:^{
+//        CGRect rect = self.searchBarView.frame;
+//        rect.origin.x = 10;
+//        rect.size.width = APP_W - 60;
+//        self.searchBarView.frame = rect;
+//    }];
+    [self.mainTableView reloadData];
+    [self.searchBarView becomeFirstResponder];
+}
+
+- (void)GoToSecond{
+
+    pageNumber = Enum_Page_Second;
+    self.mainTableView.tableHeaderView = nil;
+    //搜索框左边的返回按钮 现在隐藏掉了不显示
+    //self.backImage.userInteractionEnabled = YES;
+    [self.mainTableView reloadData];
+    [self.mainTableView removeFooter];
+//    [UIView animateWithDuration:0.3 animations:^{
+//        CGRect rect = self.searchBarView.frame;
+//        rect.origin.x = 40;
+//        rect.size.width = APP_W - 90;
+//        self.searchBarView.frame = rect;
+//    }];
+}
+
+#pragma mark - 各种跳转
+//药品详情
+- (void)pushToDrugDetail:(NSString *)kwId andKeyWord:(NSString *)title{
+    
+    //跳转到药品详情
+    SearchMedicineListViewController * medicineList = [[SearchMedicineListViewController alloc] init];
+    medicineList.kwId = kwId;
+    medicineList.title = title;
+    [self.navigationController pushViewController:medicineList animated:YES];
+
+}
+
+//疾病详情
+- (void)pushToDiseaseDetail:(NSString *)diseaseId andKeyWord:(NSString *)title{
+    
+    SearchDisease_SymptomListViewController * searchDisease_Symptom = [[SearchDisease_SymptomListViewController alloc] init];
+    searchDisease_Symptom.requsetType = RequsetTypeDisease;
+    searchDisease_Symptom.kwId = diseaseId;
+    searchDisease_Symptom.title = title;
+    [self.navigationController pushViewController:searchDisease_Symptom animated:YES];
+    
+}
+//症状详情
+- (void)pushToSymbolDetail:(NSString *)symbolId andKeyWord:(NSString *)title{
+
+    SearchDisease_SymptomListViewController * searchDisease_Symptom = [[SearchDisease_SymptomListViewController alloc] init];
+    searchDisease_Symptom.requsetType = RequsetTypeSymptom;
+    searchDisease_Symptom.kwId = symbolId;
+    searchDisease_Symptom.title = title;
+    [self.navigationController pushViewController:searchDisease_Symptom animated:YES];
+}
+
+//药房详情
+- (void)pushToConsultDetail:(NSString *)branchId{
+    
+    PharmacyStoreDetailViewController *storeDetail = [[PharmacyStoreDetailViewController alloc] init];
+    storeDetail.storeId = branchId;
+    [self.navigationController pushViewController:storeDetail animated:YES];
+}
+
+#pragma mark - 存储历史搜索信息
+- (void)historyWordSave:(NSString *)keyWord{
+    
+    BOOL existInHistory = NO;
+    for(NSString *wo in historyArray){
+        if([keyWord isEqualToString:wo]){
+            existInHistory = YES;
+            break;
+        }
+    }
+    
+    if(existInHistory == NO){
+        [historyArray addObject:keyWord];
+        if(historyArray.count > 5){
+            [historyArray removeObjectAtIndex:0];
+        }
+        setHistoryConfig(@"SearchHistory", historyArray);
+    }
+}
+
+@end

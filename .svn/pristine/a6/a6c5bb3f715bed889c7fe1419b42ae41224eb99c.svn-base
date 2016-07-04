@@ -1,0 +1,49 @@
+//
+//  ComboxRightViewTableViewCell.m
+//  APP
+//
+//  Created by 李坚 on 15/8/17.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "ComboxRightViewTableViewCell.h"
+
+@implementation ComboxRightViewTableViewCell
+
+- (void)awakeFromNib {
+    // Initialization code
+    self.titleLabel.font = [UIFont systemFontOfSize:13.0f];
+    self.titleLabel.textColor = RGBHex(qwColor7);
+    self.switchButton.onTintColor = RGBHex(qwColor2);
+    
+    [self.switchButton addTarget:self action:@selector(switchAction:) forControlEvents:UIControlEventValueChanged];
+}
+
+- (void)switchAction:(UISwitch *)btn{
+    
+    if(btn.on){
+        self.titleLabel.textColor = RGBHex(qwColor2);
+    }else{
+        self.titleLabel.textColor = RGBHex(qwColor7);
+    }
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+- (void)setCellWithContent:(NSString *)content withSwitch:(BOOL)status
+{
+    if(status) {
+        self.titleLabel.textColor = RGBHex(qwColor2);
+        [self.switchButton setOn:YES];
+    }else{
+        self.titleLabel.textColor = RGBHex(qwColor7);
+        [self.switchButton setOn:NO];
+    }
+    self.titleLabel.text = content;
+}
+
+@end

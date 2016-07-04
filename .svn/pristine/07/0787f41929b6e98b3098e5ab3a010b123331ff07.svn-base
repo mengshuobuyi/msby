@@ -1,0 +1,25 @@
+//
+//  QWUnreadCountModel.h
+//  wenYao-store
+//
+//  Created by PerryChen on 6/11/15.
+//  Copyright (c) 2015 carret. All rights reserved.
+//
+
+#import "BasePrivateModel.h"
+
+@interface QWUnreadCountModel : BasePrivateModel
+@property (nonatomic, strong) NSString *passport;
+
+//@property (nonatomic, assign) BOOL bool_ConsultShouldShowRed;
+//@property (nonatomic, assign) BOOL bool_PTPShouldShowRed;
+//@property (nonatomic, assign) BOOL bool_NotiShouldShowRed;
+
+@property (nonatomic, strong) NSString *count_CounsultUnread;
+@property (nonatomic, strong) NSString *count_NotifyListUnread;     //消息盒子的通知列表未读数
+@property (nonatomic, strong) NSString *count_PTPUnread;            //点对点未读数
+@property (nonatomic, strong) NSString *count_OfficialUnread;       //消息盒子的全维药事未读数
+@property (nonatomic, strong) NSString *count_CouponUnread;         //消息盒子的优惠券未读数
+@property (nonatomic, strong) NSString *count_sysUnread;            //消息盒子的系统未读数
+@property (nonatomic, strong) NSString *count_orderUnread;          //消息盒子的订单通知未读数
+@end

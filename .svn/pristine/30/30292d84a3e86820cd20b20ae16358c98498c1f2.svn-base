@@ -1,0 +1,568 @@
+//
+//  HealthCircleViewController.m
+//  APP
+//  接口
+//  API_HealthCircle_Home           @"h5/team/userHomepage"                     // 用户端圈子-首页
+//  Created by Martin.Liu on 16/6/20.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "HealthCircleViewController.h"
+#import "cssex.h"
+#import "UITableView+FDTemplateLayoutCell.h"
+#import "HealthCircleCollectionCell.h"      // 圈子广场中的cell
+#import "StoreExpertTableCell.h"    // 入住商家cell
+#import "StoreNonExpertTableCell.h" // 入住商家为空的cell
+#import "AutoScrollView.h"          // 顶部通知
+#import "Forum.h"                   // 获取健康圈数据
+#import "ActivityModel.h"
+#import "CircleSquareViewController.h"  // 圈子广场
+#import "CircleDetailViewController.h"  // 圈子详情
+#import "SVProgressHUD.h"
+#import "WebDirectViewController.h"
+#import "PostDetailViewController.h"        // 帖子详情
+#import "ExpertPageViewController.h"        // 专家专栏
+
+NSString *const kStoreNonExpertTableCellIdentifier = @"StoreNonExpertTableCell";
+NSString *const kStoreExpertTableCellIdentifier = @"StoreExpertTableCell";
+NSString *const kHealthCircleCollectionCellIdentifier = @"HealthCircleCollectionCell";
+
+@interface HealthCircleViewController ()<UITableViewDelegate,UITableViewDataSource,UICollectionViewDelegate,UICollectionViewDataSource,UICollectionViewDelegateFlowLayout,AutoScrollViewDelegate>
+
+#pragma mark -  ------    顶部的通知视图   ------  start
+@property (strong, nonatomic) IBOutlet UIView             *topContainerView;// 顶部视图，存放公告
+@property (strong, nonatomic) IBOutlet AutoScrollView     *noticeScrollView;// 通知视图
+@property (strong, nonatomic) IBOutlet NSLayoutConstraint *constraint_topContainerViewHeight;// 通知视图的高度约束 default 31 ， 当为0的时候隐藏
+#pragma mark   ------    顶部的通知视图   ------  end
+
+#pragma mark -  ------    表格视图   ------
+@property (strong, nonatomic) IBOutlet UITableView        *tableView;
+
+#pragma mark -  ------    表格视图的header   ------  start
+@property (strong, nonatomic) IBOutlet UIView             *tableHeaderView;
+@property (strong, nonatomic) IBOutlet UIView             *tableHeaderContainerView;
+
+@property (strong, nonatomic) IBOutlet UIImageView        *storeImageView;          // 门店头像
+@property (strong, nonatomic) IBOutlet UILabel            *storeNameLabel;          // 门店名称标签
+@property (strong, nonatomic) IBOutlet UILabel            *storeCareCountLabel;     // 门店关注标签
+@property (strong, nonatomic) IBOutlet UIButton           *gotoCircleBtn;           // 进入圈子按钮
+
+@property (strong, nonatomic) IBOutlet UIImageView *cloundImageView;    //云彩
+@property (strong, nonatomic) IBOutlet UIImageView        *pointCircleImageView;    // 旋转的霓虹灯
+@property (strong, nonatomic) IBOutlet UIImageView *balloonImageView;
+
+@property (strong, nonatomic) IBOutlet NSLayoutConstraint *constraint_tableHeaderContainerViewWidth;
+@property (strong, nonatomic) IBOutlet NSLayoutConstraint *constraint_buildersImageViewHeight;// 图片的高度约束，用来调整图片大小，防止拉伸
+// 约束 用来控制云彩、气球以及霓虹灯位置
+@property (strong, nonatomic) IBOutlet NSLayoutConstraint *constraint_cloundLeading;
+@property (strong, nonatomic) IBOutlet NSLayoutConstraint *constraint_pointCircleTop;
+@property (strong, nonatomic) IBOutlet NSLayoutConstraint *constraint_pointCircleTrailing;
+@property (strong, nonatomic) IBOutlet NSLayoutConstraint *constraint_balloonTrailing;
+
+- (IBAction)gotoCircleBtnAction:(id)sender;
+#pragma mark   ------    表格视图的header   ------  end
+
+#pragma mark -  ------    表格视图的footer   ------  start
+@property (strong, nonatomic) IBOutlet UIView             *tableFooterView;
+@property (strong, nonatomic) IBOutlet UIView             *tableFooterContainerView;
+@property (strong, nonatomic) IBOutlet UILabel *circleSquareTipLeftLabel;
+@property (strong, nonatomic) IBOutlet UILabel *circleSquareTipRightLabel;
+@property (strong, nonatomic) IBOutlet UICollectionView   *circleCollectionView;
+@property (strong, nonatomic) IBOutlet NSLayoutConstraint *constraint_circleCollectionViewHeight;
+
+- (IBAction)moreCirclesAction:(id)sender;
+#pragma mark   ------    表格视图的footer   ------  end
+#pragma mark -
+
+@property (nonatomic, strong) QWHealthCircleInfoModel *healthCircleInfoModel;
+@property (nonatomic, strong) NSArray* noticePushArray;
+@property (nonatomic, strong) NSArray* expertArray;
+@property (nonatomic, strong) NSArray* circleArray;
+
+
+@property (nonatomic, strong) CABasicAnimation* rotationAnimation;
+@property (nonatomic, strong) CABasicAnimation* position1Animation;
+@property (nonatomic, strong) CABasicAnimation* position2Animation;
+@end
+
+@implementation HealthCircleViewController
+{
+    BOOL needLoadData;
+}
+- (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    if (self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil]) {
+        self.title = @"健康圈";
+    }
+    return self;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.storeImageView.image = ForumDefaultImage;
+    needLoadData = YES;
+    [self configViews];
+//    [QWGLOBALMANAGER getMapBranchId];
+//    [self loadData];
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    [self configAnimations];
+    if (needLoadData == YES) {
+        [self loadData];
+    }
+}
+
+- (void)UIGlobal
+{
+    // headerview的配置
+    UIImage* imgeBg = [UIImage imageNamed:@"bg_circle"];
+    if (imgeBg) {
+        self.constraint_tableHeaderContainerViewWidth.constant = APP_W;
+        self.constraint_buildersImageViewHeight.constant = (APP_W - 35 - 38) / imgeBg.size.width * imgeBg.size.height;
+        CGSize headerSize = [self.tableHeaderContainerView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
+        CGRect tableHeaderFrame = self.tableHeaderView.frame;
+        tableHeaderFrame.size = headerSize;
+        self.tableHeaderView.frame = tableHeaderFrame;
+        if (IS_IPHONE_6P) {
+            self.constraint_pointCircleTrailing.constant = 128;
+            self.constraint_pointCircleTop.constant = 22;
+        }
+        else if (IS_IPHONE_6)
+        {
+            self.constraint_pointCircleTop.constant = 20;
+            self.constraint_pointCircleTrailing.constant = 115;
+        }
+        else if (APP_W == 320)
+        {
+            self.constraint_pointCircleTop.constant = 16;
+            self.constraint_pointCircleTrailing.constant = 97;
+        }
+        
+    }
+    
+    self.tableView.tableHeaderView = self.tableHeaderView;
+    self.tableView.tableFooterView = self.tableFooterView;
+    
+    
+    self.topContainerView.backgroundColor = RGBHex(qwColor23);
+    self.noticeScrollView.backgroundColor = RGBHex(qwColor23);
+    self.noticeScrollView.ButtonColor = RGBHex(qwColor24);
+    self.noticeScrollView.ButtonFont = [UIFont systemFontOfSize:kFontS5];
+    self.noticeScrollView.delegate = self;
+    [self.noticeScrollView setupView];
+    
+    
+    self.tableView.backgroundColor = RGBHex(qwColor21);
+    // 门店头像圆弧
+    self.storeImageView.layer.masksToBounds = YES;
+    self.storeImageView.layer.cornerRadius = CGRectGetHeight(self.storeImageView.frame)/2;
+    // 进入圈子按钮
+    self.gotoCircleBtn.layer.masksToBounds = YES;
+    self.gotoCircleBtn.layer.cornerRadius = 2;
+    self.gotoCircleBtn.backgroundColor = RGBHex(qwColor1);
+    self.gotoCircleBtn.titleLabel.font = [UIFont systemFontOfSize:kFontS3];
+    [self.gotoCircleBtn setTitleColor:RGBHex(qwColor4) forState:UIControlStateNormal];
+    self.tableFooterContainerView.layer.masksToBounds = YES;
+    self.tableFooterContainerView.layer.cornerRadius = 4;
+
+    self.constraint_topContainerViewHeight.constant = 0;    // 隐藏顶部公告
+    
+}
+
+- (void)configViews
+{
+    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    self.tableView.delegate = self;
+    self.tableView.dataSource = self;
+    self.circleCollectionView.delegate = self;
+    self.circleCollectionView.dataSource = self;
+    
+    [self.tableView registerNib:[UINib nibWithNibName:@"StoreExpertTableCell" bundle:nil] forCellReuseIdentifier:kStoreExpertTableCellIdentifier];
+    [self.tableView registerNib:[UINib nibWithNibName:@"StoreNonExpertTableCell" bundle:nil] forCellReuseIdentifier:kStoreNonExpertTableCellIdentifier];
+    
+    [self.circleCollectionView registerNib:[UINib nibWithNibName:@"HealthCircleCollectionCell" bundle:nil] forCellWithReuseIdentifier:kHealthCircleCollectionCellIdentifier];
+    
+    __weak __typeof(self) weakSelf = self;
+    [self enableSimpleRefresh:self.tableView block:^(SRRefreshView *sender) {
+        [weakSelf loadData];
+    }];
+    
+}
+
+- (void)configAnimations
+{
+    [self.pointCircleImageView.layer addAnimation:self.rotationAnimation forKey:@"rotationAnimation"];
+    [self.cloundImageView.layer addAnimation:self.position1Animation forKey:@"position1Animation"];
+    [self.balloonImageView.layer addAnimation:self.position2Animation forKey:@"position2Animation"];
+}
+
+- (CABasicAnimation *)rotationAnimation
+{
+    if (!_rotationAnimation) {
+        _rotationAnimation = [CABasicAnimation animationWithKeyPath:@"transform"];
+        _rotationAnimation.toValue = [NSValue valueWithCATransform3D:CATransform3DMakeRotation(M_PI,0, 0,M_PI)];
+        //执行时间
+        _rotationAnimation.duration =2;
+        _rotationAnimation.cumulative =YES;//累积的
+        //执行次数
+        _rotationAnimation.repeatCount = INT_MAX;
+    }
+    return _rotationAnimation;
+}
+
+- (CABasicAnimation *)position1Animation
+{
+    if (!_position1Animation) {
+        _position1Animation = [CABasicAnimation animationWithKeyPath:@"position.x"];
+        _position1Animation.toValue = @(80);
+        _position1Animation.duration = 3;
+        _position1Animation.repeatCount = INT_MAX;
+        _position1Animation.autoreverses = YES;
+    }
+    return _position1Animation;
+}
+
+- (CABasicAnimation *)position2Animation
+{
+    if (!_position2Animation) {
+        _position2Animation = [CABasicAnimation animationWithKeyPath:@"position.y"];
+        _position2Animation.fromValue = @(20);
+        _position2Animation.toValue = @(50);
+        _position2Animation.duration = 5;
+        _position2Animation.repeatCount = INT_MAX;
+        _position2Animation.autoreverses = YES;
+    }
+    return _position2Animation;
+
+}
+
+- (void)loadData
+{
+    MapInfoModel *mapInfo = [QWUserDefault getModelBy:APP_MAPINFOMODEL];
+    if (mapInfo == nil || StrIsEmpty(mapInfo.groupId)) {
+        return;
+    }
+    GetHealthCircleInfoR* getHealthCircleInfoR = [GetHealthCircleInfoR new];
+    getHealthCircleInfoR.token = QWGLOBALMANAGER.configure.userToken;
+    getHealthCircleInfoR.groupId = mapInfo.groupId;
+    __weak __typeof(self) weakSelf = self;
+    [Forum getHealthCircleInfo:getHealthCircleInfoR success:^(QWHealthCircleInfoModel *healthCircleInfoModel) {
+        [weakSelf removeInfoView];
+        [weakSelf endHeaderRefresh];
+        if ([healthCircleInfoModel.apiStatus integerValue] == 0) {
+            __strong __typeof(weakSelf) strongSelf = weakSelf;
+            if (strongSelf) {
+                strongSelf->needLoadData = NO;
+                strongSelf.healthCircleInfoModel = healthCircleInfoModel;
+            }
+        }
+        else
+        {
+            [SVProgressHUD showErrorWithStatus:healthCircleInfoModel.apiMessage duration:DURATION_LONG];
+        }
+    } failure:^(HttpException *e) {
+        [weakSelf endHeaderRefresh];
+        if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+            [weakSelf showInfoView:kWarning12 image:@"网络信号icon"];
+        }else
+        {
+            if(e.errorCode!=-999){
+                if(e.errorCode == -1001){
+                    [weakSelf showInfoView:kWarning215N26 image:@"ic_img_fail"];
+                }else{
+                    [weakSelf showInfoView:kWarning39 image:@"ic_img_fail"];
+                }
+            }
+        }
+    }];
+}
+
+- (void)setHealthCircleInfoModel:(QWHealthCircleInfoModel *)healthCircleInfoModel
+{
+    _healthCircleInfoModel = healthCircleInfoModel;
+    
+    [self.storeImageView setImageWithURL:[NSURL URLWithString:healthCircleInfoModel.teamLogo] placeholderImage:ForumDefaultImage];
+    self.storeNameLabel.text = healthCircleInfoModel.teamName;
+    if (!StrIsEmpty(healthCircleInfoModel.teamId) || !StrIsEmpty(healthCircleInfoModel.groupId)) {
+        self.storeCareCountLabel.text = [NSString stringWithFormat:@"附近%ld关注",(long)healthCircleInfoModel.attnCount];
+    }
+    else
+    {
+        self.storeCareCountLabel.text = nil;
+    }
+    
+    self.noticePushArray = healthCircleInfoModel.noticePushList;
+    self.expertArray = healthCircleInfoModel.expertList;
+    if (healthCircleInfoModel.attnTeamList.count > 0) {
+        self.circleArray = healthCircleInfoModel.attnTeamList;
+        self.circleSquareTipLeftLabel.text = @"我关注的圈子";
+        self.circleSquareTipRightLabel.text = @"圈子广场";
+    }
+    else
+    {
+        self.circleSquareTipLeftLabel.text = @"圈子广场";
+        self.circleSquareTipRightLabel.text = @"更多圈子";
+        self.circleArray = healthCircleInfoModel.teamList;
+    }
+}
+
+- (void)setNoticePushArray:(NSArray *)noticePushArray
+{
+    _noticePushArray = noticePushArray;
+    NSMutableArray* titleArray = [NSMutableArray array];
+    for (QWNoticePushModel* noticePushModel in _noticePushArray) {
+        BranchActivityVo* notice = [[BranchActivityVo alloc] init];
+        notice.title = noticePushModel.noticeTitle;
+        [titleArray addObject:notice];
+    }
+    self.noticeScrollView.dataArray = titleArray;
+    [self.noticeScrollView setupView];
+    self.constraint_topContainerViewHeight.constant = titleArray.count == 0 ? 0 : 31;
+}
+
+- (void)setExpertArray:(NSArray *)expertArray
+{
+    _expertArray = expertArray;
+    [self.tableView reloadData];
+}
+
+- (void)setCircleArray:(NSArray *)circleArray
+{
+    _circleArray = circleArray;
+    [self.circleCollectionView reloadData];
+    [self performSelector:@selector(layoutCollectionHeight) withObject:nil afterDelay:0.01];
+}
+
+- (void)viewInfoClickAction:(id)sender
+{
+    [self loadData];
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return MAX(1, MIN(3, self.expertArray.count));
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    UITableViewCell* cell;
+    if (self.expertArray.count > 0) {
+        cell = [tableView dequeueReusableCellWithIdentifier:kStoreExpertTableCellIdentifier forIndexPath:indexPath];
+    }
+    else
+        cell = [tableView dequeueReusableCellWithIdentifier:kStoreNonExpertTableCellIdentifier];
+    [self configCell:cell indexPath:indexPath];
+    return cell;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    NSString* identifier = self.expertArray.count == 0 ? kStoreNonExpertTableCellIdentifier: kStoreExpertTableCellIdentifier;
+    return [tableView fd_heightForCellWithIdentifier:identifier cacheByIndexPath:indexPath configuration:NULL];
+}
+
+- (void)configCell:(id)cell indexPath:(NSIndexPath*)indexPath
+{
+    if ([cell isKindOfClass:[StoreNonExpertTableCell class]]) {
+        __weak __typeof(self) weakSelf = self;
+        StoreNonExpertTableCell* emptyCell = cell;
+        emptyCell.gotoOtherCircleBtn.touchUpInsideBlock = ^{
+            [weakSelf gotoOtherCircleAction];
+        };
+    }
+    if ([cell isKindOfClass:[StoreExpertTableCell class]]) {
+        StoreExpertTableCell* expertCell = cell;
+        NSInteger rows = [self tableView:self.tableView numberOfRowsInSection:0];
+        MARCellLocation locations = MARCellLocationNone;
+        if (rows == 1) {
+            locations = MARCellLocationTop | MARCellLocationBottom;
+        }
+        else if (indexPath.row == 0)
+        {
+            locations = MARCellLocationTop;
+        }
+        else if (indexPath.row == rows - 1)
+        {
+            locations = MARCellLocationBottom;
+        }
+        if (self.expertArray.count > indexPath.row) {
+            [expertCell setCell:self.expertArray[indexPath.row] location:locations];
+        }
+    }
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (self.expertArray.count > indexPath.row) {
+        [QWGLOBALMANAGER statisticsEventId:@"健康圈_专家列表" withLable:@"健康圈_专家列表" withParams:nil];
+        QWMbrInfoModel* expert = self.expertArray[indexPath.row];
+        ExpertPageViewController *vc = [[UIStoryboard storyboardWithName:@"ExpertPage" bundle:nil] instantiateViewControllerWithIdentifier:@"ExpertPageViewController"];
+        vc.hidesBottomBarWhenPushed = YES;
+        vc.posterId = expert.id;
+        vc.expertType = (int)expert.userType;
+        vc.preVCNameStr = @"健康圈";
+        vc.nickName = expert.nickName;
+        [self.navigationController pushViewController:vc animated:YES];
+
+    }
+}
+
+#pragma mark - 去其他圈子逛逛 到圈子广场
+- (void)gotoOtherCircleAction
+{
+    [QWGLOBALMANAGER statisticsEventId:@"健康圈_去其他圈子逛逛按键" withLable:@"健康圈_去其他圈子逛逛按键" withParams:nil];
+    CircleSquareViewController* circleSquareVC = [[CircleSquareViewController alloc] init];
+    circleSquareVC.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:circleSquareVC animated:YES];
+}
+
+#pragma mark - UICollection Delegate
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
+{
+    return MIN(4, self.circleArray.count);
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    HealthCircleCollectionCell* cell = [collectionView dequeueReusableCellWithReuseIdentifier:kHealthCircleCollectionCellIdentifier forIndexPath:indexPath];
+    if (self.circleArray.count > indexPath.row) {
+        QWCircleModel* circle = self.circleArray[indexPath.row];
+        [cell setCell:circle];
+        CGRect frame = cell.frame;
+        
+        frame.size = [self collectionView:collectionView layout:[collectionView valueForKey:@"_layout"] sizeForItemAtIndexPath:indexPath];
+        cell.frame = frame;
+    }
+    return cell;
+}
+
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    return CGSizeMake((APP_W - 8 * 2 - 10 * 2 - 20 ) / 2, 55);
+}
+
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    if ([self.circleSquareTipRightLabel.text isEqualToString:@"更多圈子"]) {
+        [QWGLOBALMANAGER statisticsEventId:@"健康圈_圈子广场_圈子列表" withLable:@"健康圈_圈子广场_圈子列表" withParams:nil];
+    }
+    else
+    {
+        [QWGLOBALMANAGER statisticsEventId:@"健康圈_我关注的圈子_圈子列表" withLable:@"健康圈_我关注的圈子_圈子列表" withParams:nil];
+    }
+    if (self.circleArray.count > indexPath.row) {
+        QWCircleModel* circle = self.circleArray[indexPath.row];
+        CircleDetailViewController *vc = [[UIStoryboard storyboardWithName:@"Circle" bundle:nil] instantiateViewControllerWithIdentifier:@"CircleDetailViewController"];
+        vc.hidesBottomBarWhenPushed = YES;
+        vc.teamId = circle.teamId;
+        vc.title = [NSString stringWithFormat:@"%@圈",circle.teamName];
+        [self.navigationController pushViewController:vc animated:YES];
+
+    }
+}
+
+#pragma mark - AutoScrollViewDelegate
+- (void)didSelectedButtonAtIndex:(NSInteger)index
+{
+    [QWGLOBALMANAGER statisticsEventId:@"健康圈_公告" withLable:@"健康圈_公告" withParams:nil];
+    if (index < self.noticePushArray.count) {
+        QWNoticePushModel* noticePushModel = self.noticePushArray[index];
+        switch (noticePushModel.columnType) {
+            case 1: // 外链
+            {
+                WebDirectViewController *vcWebDirect = [[UIStoryboard storyboardWithName:@"WebDirect" bundle:nil] instantiateViewControllerWithIdentifier:@"WebDirectViewController"];
+                WebDirectLocalModel *modelLocal = [[WebDirectLocalModel alloc] init];
+                modelLocal.url = noticePushModel.noticeContent;
+                modelLocal.typeLocalWeb = WebLocalTypeOuterLink;
+                modelLocal.title = noticePushModel.noticeTitle;
+                vcWebDirect.isOtherLinks = YES;
+                [vcWebDirect setWVWithLocalModel:modelLocal];
+                //                vcWebDirect.hidesBottomBarWhenPushed = YES;
+                [self.navigationController pushViewController:vcWebDirect animated:YES];
+            }
+                break;
+            case 10:  // 帖子详情
+            {
+                PostDetailViewController* postDetailVC = (PostDetailViewController*)[[UIStoryboard storyboardWithName:@"Forum" bundle:nil] instantiateViewControllerWithIdentifier:@"PostDetailViewController"];
+                postDetailVC.hidesBottomBarWhenPushed = YES;
+                postDetailVC.postId = noticePushModel.noticeContent;
+                postDetailVC.preVCNameStr = @"热议";
+                [self.navigationController pushViewController:postDetailVC animated:YES];
+            }
+            default:
+                break;
+        }
+    }
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+- (void)layoutCollectionHeight
+{
+    self.constraint_circleCollectionViewHeight.constant = self.circleCollectionView.contentSize.height;
+    CGRect tableFooterFrame = self.tableFooterView.frame;
+    tableFooterFrame.size.height = [self.tableFooterContainerView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize].height + 10;
+    self.tableFooterView.frame = tableFooterFrame;
+//    [self.tableView beginUpdates];
+    self.tableView.tableFooterView = self.tableFooterView;
+//    [self.tableView endUpdates];
+}
+
+#pragma mark - 点击更多圈子按钮 进入 圈子广场
+- (IBAction)moreCirclesAction:(id)sender {
+    if ([self.circleSquareTipRightLabel.text isEqualToString:@"更多圈子"]) {
+        [QWGLOBALMANAGER statisticsEventId:@"健康圈_更多圈子按键" withLable:@"健康圈_更多圈子按键" withParams:nil];
+    }
+    else
+    {
+        [QWGLOBALMANAGER statisticsEventId:@"健康圈_圈子广场按键" withLable:@"健康圈_圈子广场按键" withParams:nil];
+    }
+    
+    CircleSquareViewController* circleSquareVC = [[CircleSquareViewController alloc] init];
+    circleSquareVC.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:circleSquareVC animated:YES];
+}
+
+#pragma mark - 点击进入圈子按钮
+- (IBAction)gotoCircleBtnAction:(id)sender {
+    [QWGLOBALMANAGER statisticsEventId:@"健康圈_进入圈子按键" withLable:@"健康圈_进入圈子按键" withParams:nil];
+    if (!StrIsEmpty(self.healthCircleInfoModel.teamId)) {
+        CircleDetailViewController *vc = [[UIStoryboard storyboardWithName:@"Circle" bundle:nil] instantiateViewControllerWithIdentifier:@"CircleDetailViewController"];
+        vc.hidesBottomBarWhenPushed = YES;
+        vc.teamId = self.healthCircleInfoModel.teamId;
+        vc.title = [NSString stringWithFormat:@"%@圈",self.healthCircleInfoModel.teamName];
+        [self.navigationController pushViewController:vc animated:YES];
+    }
+    
+}
+
+#pragma mark - 通知
+- (void)getNotifType:(Enum_Notification_Type)type data:(id)data target:(id)obj
+{
+    // 登录，登出，抢登都需要重新获取数据
+    if (type == NotifLoginSuccess || type == NotifQuitOut || type == NotiPostCommentSuccess) {
+        [self loadData];
+    }
+    if (type == NotifHomepagePharmacyStoreChanged) {
+        needLoadData = YES;
+    }
+}
+
+@end

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9529"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="44" id="KGk-i7-Jjw" customClass="ReportConsultTableViewCell">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="43"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Uk0-u2-tIx">
+                        <rect key="frame" x="15" y="14" width="255" height="17"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                        <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Vv6-kY-D1a">
+                        <rect key="frame" x="285" y="12" width="20" height="20"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="20" id="5jm-Pm-RjC"/>
+                            <constraint firstAttribute="height" constant="20" id="gzj-DK-EP1"/>
+                        </constraints>
+                    </imageView>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="Vv6-kY-D1a" firstAttribute="leading" secondItem="Uk0-u2-tIx" secondAttribute="trailing" constant="15" id="KkC-NN-XTm"/>
+                    <constraint firstItem="Vv6-kY-D1a" firstAttribute="centerY" secondItem="H2p-sc-9uM" secondAttribute="centerY" id="bkH-78-ZMA"/>
+                    <constraint firstAttribute="trailing" secondItem="Vv6-kY-D1a" secondAttribute="trailing" constant="15" id="nCr-G6-khE"/>
+                    <constraint firstItem="Uk0-u2-tIx" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="15" id="tS2-hg-WNG"/>
+                </constraints>
+            </tableViewCellContentView>
+            <constraints>
+                <constraint firstItem="Uk0-u2-tIx" firstAttribute="centerY" secondItem="KGk-i7-Jjw" secondAttribute="centerY" id="6Hw-H1-eyp"/>
+            </constraints>
+            <connections>
+                <outlet property="reasonLabel" destination="Uk0-u2-tIx" id="FzR-p4-Ley"/>
+                <outlet property="selectImage" destination="Vv6-kY-D1a" id="hgL-uN-1TD"/>
+            </connections>
+        </tableViewCell>
+    </objects>
+</document>

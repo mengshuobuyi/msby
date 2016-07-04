@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="HealthToolViewController">
+            <connections>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <button opaque="NO" tag="1" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="VLJ-jx-kNt">
+                    <rect key="frame" x="30" y="30" width="40" height="40"/>
+                    <state key="normal" image="btn_img_one"/>
+                    <connections>
+                        <action selector="healthToolClick:" destination="-1" eventType="touchUpInside" id="eQv-c0-3wk"/>
+                    </connections>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="用药提醒" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="6rQ-WM-3wH">
+                    <rect key="frame" x="26" y="83" width="48" height="15"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                    <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <button opaque="NO" tag="3" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="d7D-Pc-de3">
+                    <rect key="frame" x="203" y="25" width="50" height="50"/>
+                    <state key="normal" image="found_btn_three"/>
+                    <connections>
+                        <action selector="healthToolClick:" destination="-1" eventType="touchUpInside" id="AMH-dB-PZw"/>
+                    </connections>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="健康评测" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="t4C-gn-NcZ">
+                    <rect key="frame" x="204" y="83" width="48" height="15"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                    <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <button opaque="NO" tag="2" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cYP-7f-MDe">
+                    <rect key="frame" x="112" y="25" width="50" height="50"/>
+                    <state key="normal" image="found_btn_two"/>
+                    <connections>
+                        <action selector="healthToolClick:" destination="-1" eventType="touchUpInside" id="gGS-6e-rjY"/>
+                    </connections>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="家庭药箱" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ymh-Ml-Lvm">
+                    <rect key="frame" x="113" y="83" width="48" height="15"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                    <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <button opaque="NO" tag="4" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="QU6-8R-C76">
+                    <rect key="frame" x="295" y="25" width="50" height="50"/>
+                    <state key="normal" image="found_btn_four"/>
+                    <connections>
+                        <action selector="healthToolClick:" destination="-1" eventType="touchUpInside" id="Kiu-RT-lwR"/>
+                    </connections>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="健康指标" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="U9V-eY-otQ">
+                    <rect key="frame" x="296" y="83" width="48" height="15"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                    <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Aao-tX-3fH">
+                    <rect key="frame" x="70" y="35" width="42" height="30"/>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="30" id="yWI-rR-CZN"/>
+                    </constraints>
+                </view>
+                <view contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="xHu-Ib-tFF">
+                    <rect key="frame" x="162" y="35" width="41" height="30"/>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                </view>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="uEf-mV-AEu">
+                    <rect key="frame" x="253" y="35" width="42" height="30"/>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                </view>
+                <button opaque="NO" tag="5" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="vIc-u9-FPz">
+                    <rect key="frame" x="25" y="126" width="50" height="50"/>
+                    <state key="normal" image="found_btn_five"/>
+                    <connections>
+                        <action selector="healthToolClick:" destination="-1" eventType="touchUpInside" id="ATh-pD-Wtz"/>
+                    </connections>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="药品" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="jQe-ZW-O3K">
+                    <rect key="frame" x="38" y="184" width="24" height="15"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                    <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <button opaque="NO" tag="7" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="i2h-ng-sDF">
+                    <rect key="frame" x="203" y="126" width="50" height="50"/>
+                    <state key="normal" image="found_btn_seven"/>
+                    <connections>
+                        <action selector="healthToolClick:" destination="-1" eventType="touchUpInside" id="nbN-9r-Nud"/>
+                    </connections>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="症状" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="d1G-mx-w8R">
+                    <rect key="frame" x="216" y="184" width="24" height="15"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                    <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <button opaque="NO" tag="6" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="poB-TQ-FJL">
+                    <rect key="frame" x="112" y="126" width="50" height="50"/>
+                    <state key="normal" image="found_btn_six"/>
+                    <connections>
+                        <action selector="healthToolClick:" destination="-1" eventType="touchUpInside" id="DMc-an-Qn7"/>
+                    </connections>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="疾病" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mxM-pN-lIo">
+                    <rect key="frame" x="125" y="184" width="24" height="15"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                    <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <button opaque="NO" tag="8" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="fKL-On-NaQ">
+                    <rect key="frame" x="295" y="126" width="50" height="50"/>
+                    <state key="normal" image="found_btn_eight"/>
+                    <connections>
+                        <action selector="healthToolClick:" destination="-1" eventType="touchUpInside" id="1B3-Fi-DVb"/>
+                    </connections>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="健康方案" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xzH-mW-pkA">
+                    <rect key="frame" x="296" y="184" width="48" height="15"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                    <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <button opaque="NO" tag="9" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="iyE-sy-yXM">
+                    <rect key="frame" x="25" y="237" width="50" height="50"/>
+                    <state key="normal" image="found_btn_nine"/>
+                    <connections>
+                        <action selector="healthToolClick:" destination="-1" eventType="touchUpInside" id="6ie-VQ-i6O"/>
+                    </connections>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="品牌" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="jxr-c9-bSL">
+                    <rect key="frame" x="38" y="295" width="24" height="15"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                    <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="cYP-7f-MDe" firstAttribute="leading" secondItem="Aao-tX-3fH" secondAttribute="trailing" id="18D-Vu-sg5"/>
+                <constraint firstItem="d7D-Pc-de3" firstAttribute="leading" secondItem="xHu-Ib-tFF" secondAttribute="trailing" id="2Nk-Ha-1yu"/>
+                <constraint firstItem="t4C-gn-NcZ" firstAttribute="centerX" secondItem="d7D-Pc-de3" secondAttribute="centerX" id="3cd-aM-aLW"/>
+                <constraint firstItem="QU6-8R-C76" firstAttribute="centerY" secondItem="d7D-Pc-de3" secondAttribute="centerY" id="7oR-QB-lYG"/>
+                <constraint firstItem="d1G-mx-w8R" firstAttribute="top" secondItem="i2h-ng-sDF" secondAttribute="bottom" constant="8" id="7zf-be-JO4"/>
+                <constraint firstItem="xHu-Ib-tFF" firstAttribute="width" secondItem="Aao-tX-3fH" secondAttribute="width" id="8SA-Q6-ZvT"/>
+                <constraint firstItem="Aao-tX-3fH" firstAttribute="centerY" secondItem="VLJ-jx-kNt" secondAttribute="centerY" id="8k6-GD-aYp"/>
+                <constraint firstItem="cYP-7f-MDe" firstAttribute="centerY" secondItem="VLJ-jx-kNt" secondAttribute="centerY" id="9Nh-1S-duZ"/>
+                <constraint firstItem="6rQ-WM-3wH" firstAttribute="centerX" secondItem="VLJ-jx-kNt" secondAttribute="centerX" id="9c0-pr-rPR"/>
+                <constraint firstItem="Aao-tX-3fH" firstAttribute="leading" secondItem="VLJ-jx-kNt" secondAttribute="trailing" id="AJ0-bd-BjE"/>
+                <constraint firstItem="jQe-ZW-O3K" firstAttribute="top" secondItem="vIc-u9-FPz" secondAttribute="bottom" constant="8" id="BhW-jl-EC2"/>
+                <constraint firstItem="xHu-Ib-tFF" firstAttribute="centerY" secondItem="Aao-tX-3fH" secondAttribute="centerY" id="DFE-60-eym"/>
+                <constraint firstItem="VLJ-jx-kNt" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" constant="30" id="En1-gN-6VW"/>
+                <constraint firstItem="mxM-pN-lIo" firstAttribute="top" secondItem="poB-TQ-FJL" secondAttribute="bottom" constant="8" id="FrG-Z1-sll"/>
+                <constraint firstItem="mxM-pN-lIo" firstAttribute="centerX" secondItem="poB-TQ-FJL" secondAttribute="centerX" id="GsJ-fe-w7h"/>
+                <constraint firstItem="xHu-Ib-tFF" firstAttribute="height" secondItem="Aao-tX-3fH" secondAttribute="height" id="ITm-V9-ex7"/>
+                <constraint firstItem="iyE-sy-yXM" firstAttribute="centerX" secondItem="vIc-u9-FPz" secondAttribute="centerX" id="Imy-Fp-eMO"/>
+                <constraint firstItem="xHu-Ib-tFF" firstAttribute="leading" secondItem="cYP-7f-MDe" secondAttribute="trailing" id="Jfh-Ig-1GA"/>
+                <constraint firstItem="poB-TQ-FJL" firstAttribute="centerX" secondItem="cYP-7f-MDe" secondAttribute="centerX" id="K09-Wi-LlN"/>
+                <constraint firstItem="U9V-eY-otQ" firstAttribute="centerX" secondItem="QU6-8R-C76" secondAttribute="centerX" id="LZb-Lf-XTw"/>
+                <constraint firstItem="xzH-mW-pkA" firstAttribute="top" secondItem="fKL-On-NaQ" secondAttribute="bottom" constant="8" id="McN-o7-fIO"/>
+                <constraint firstItem="d1G-mx-w8R" firstAttribute="centerX" secondItem="i2h-ng-sDF" secondAttribute="centerX" id="Pau-xT-Iwd"/>
+                <constraint firstItem="QU6-8R-C76" firstAttribute="leading" secondItem="uEf-mV-AEu" secondAttribute="trailing" id="SgC-Eh-RTc"/>
+                <constraint firstItem="fKL-On-NaQ" firstAttribute="centerX" secondItem="QU6-8R-C76" secondAttribute="centerX" id="TTP-Ik-E6d"/>
+                <constraint firstItem="ymh-Ml-Lvm" firstAttribute="top" secondItem="cYP-7f-MDe" secondAttribute="bottom" constant="8" id="ZRa-hr-b5V"/>
+                <constraint firstItem="jQe-ZW-O3K" firstAttribute="centerX" secondItem="vIc-u9-FPz" secondAttribute="centerX" id="Zex-kY-CbQ"/>
+                <constraint firstAttribute="trailing" secondItem="QU6-8R-C76" secondAttribute="trailing" constant="30" id="Zpl-NM-Lws"/>
+                <constraint firstItem="xzH-mW-pkA" firstAttribute="centerX" secondItem="fKL-On-NaQ" secondAttribute="centerX" id="b9D-2d-kFd"/>
+                <constraint firstItem="6rQ-WM-3wH" firstAttribute="top" secondItem="VLJ-jx-kNt" secondAttribute="bottom" constant="13" id="cnB-Ht-ZC9"/>
+                <constraint firstItem="VLJ-jx-kNt" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" constant="30" id="e0h-yW-SQW"/>
+                <constraint firstItem="jxr-c9-bSL" firstAttribute="centerX" secondItem="iyE-sy-yXM" secondAttribute="centerX" id="ekz-PN-LVV"/>
+                <constraint firstItem="t4C-gn-NcZ" firstAttribute="top" secondItem="d7D-Pc-de3" secondAttribute="bottom" constant="8" id="fer-It-lcA"/>
+                <constraint firstItem="vIc-u9-FPz" firstAttribute="top" secondItem="6rQ-WM-3wH" secondAttribute="bottom" constant="28" id="fgB-LK-zI7"/>
+                <constraint firstItem="vIc-u9-FPz" firstAttribute="centerX" secondItem="VLJ-jx-kNt" secondAttribute="centerX" id="iJJ-Lj-H7J"/>
+                <constraint firstItem="i2h-ng-sDF" firstAttribute="centerY" secondItem="poB-TQ-FJL" secondAttribute="centerY" id="jU0-ex-RF6"/>
+                <constraint firstItem="i2h-ng-sDF" firstAttribute="centerX" secondItem="d7D-Pc-de3" secondAttribute="centerX" id="jaZ-Cd-fkq"/>
+                <constraint firstItem="fKL-On-NaQ" firstAttribute="centerY" secondItem="i2h-ng-sDF" secondAttribute="centerY" id="mHe-2O-i46"/>
+                <constraint firstItem="iyE-sy-yXM" firstAttribute="top" secondItem="jQe-ZW-O3K" secondAttribute="bottom" constant="38" id="mPw-PQ-A0V"/>
+                <constraint firstItem="jxr-c9-bSL" firstAttribute="top" secondItem="iyE-sy-yXM" secondAttribute="bottom" constant="8" id="nRG-o0-EhM"/>
+                <constraint firstItem="uEf-mV-AEu" firstAttribute="leading" secondItem="d7D-Pc-de3" secondAttribute="trailing" id="o3i-i9-iNZ"/>
+                <constraint firstItem="ymh-Ml-Lvm" firstAttribute="centerX" secondItem="cYP-7f-MDe" secondAttribute="centerX" id="oOU-Fh-pvX"/>
+                <constraint firstItem="uEf-mV-AEu" firstAttribute="centerY" secondItem="Aao-tX-3fH" secondAttribute="centerY" id="ohf-46-8wX"/>
+                <constraint firstItem="uEf-mV-AEu" firstAttribute="width" secondItem="Aao-tX-3fH" secondAttribute="width" id="pBz-CF-8PB"/>
+                <constraint firstItem="d7D-Pc-de3" firstAttribute="centerY" secondItem="cYP-7f-MDe" secondAttribute="centerY" id="sey-Ok-qWZ"/>
+                <constraint firstItem="poB-TQ-FJL" firstAttribute="centerY" secondItem="vIc-u9-FPz" secondAttribute="centerY" id="tkf-6p-aI3"/>
+                <constraint firstItem="U9V-eY-otQ" firstAttribute="top" secondItem="QU6-8R-C76" secondAttribute="bottom" constant="8" id="yBy-ua-dt8"/>
+                <constraint firstItem="uEf-mV-AEu" firstAttribute="height" secondItem="Aao-tX-3fH" secondAttribute="height" id="zYR-5Y-2J4"/>
+            </constraints>
+            <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina47"/>
+            <point key="canvasLocation" x="444.5" y="405.5"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="btn_img_one" width="40" height="40"/>
+        <image name="found_btn_eight" width="50" height="50"/>
+        <image name="found_btn_five" width="50" height="50"/>
+        <image name="found_btn_four" width="50" height="50"/>
+        <image name="found_btn_nine" width="50" height="50"/>
+        <image name="found_btn_seven" width="50" height="50"/>
+        <image name="found_btn_six" width="50" height="50"/>
+        <image name="found_btn_three" width="50" height="50"/>
+        <image name="found_btn_two" width="50" height="50"/>
+    </resources>
+</document>

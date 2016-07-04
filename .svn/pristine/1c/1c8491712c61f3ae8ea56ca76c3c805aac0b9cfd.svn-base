@@ -1,0 +1,377 @@
+//
+//  QuickSearchViewController.m
+//  wenyao
+//
+//  Created by Meng on 14-9-17.
+//  Copyright (c) 2014年 xiezhenghong. All rights reserved.
+//
+
+#import "QuickSearchViewController.h"
+#import "SearchViewController.h"
+#import "SymptomMainViewController.h"
+#import "QuickMedicineViewController.h"
+#import "HealthIndicatorViewController.h"
+#import "FactoryListViewController.h"
+#import "DiseaseViewController.h"
+#import "ScanReaderViewController.h"
+#import "HealthyScenarioViewController.h"
+#import "QYPhotoAlbum.h"
+#import "LoginViewController.h"
+#import "MessageBoxListViewController.h"
+#import "QuickSearchTableViewCell.h"
+#import "WebDirectModel.h"
+#import "WebDirectViewController.h"
+
+#define BUTTON_Y  60
+#define BUTTON_H  90
+
+#define imageView_X  20
+#define imageView_Y  10
+#define imageView_W  42
+#define imageView_H  42
+
+static NSString * const QuickSearchIdentifier = @"QuickSearchIdentifier";
+
+
+
+
+
+@interface QuickSearchViewController ()<UISearchBarDelegate,UITextFieldDelegate,UITableViewDataSource,UITableViewDelegate>
+
+@property (nonatomic ,strong) UISearchBar * searchBar;
+@property (nonatomic ,strong) UITextField * textField;
+@property (nonatomic, strong) UITableView *tableView;
+@property (nonatomic, strong) NSMutableArray    *dataSource;
+@end
+
+@implementation QuickSearchViewController
+
+- (id)init{
+    if (self = [super init]) {
+        self.view.backgroundColor = RGBHex(qwColor11);
+    }
+    return self;
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    
+    if(self.badgeView.value > 0) {
+        self.badgeView.hidden = NO;
+    }else{
+        self.badgeView.hidden = YES;
+    }
+}
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    self.badgeView.hidden = YES;
+}
+
+- (void)fillUpDataSource
+{
+    NSArray * titleArr = @[@"药品",@"疾病",@"症状",@"健康评测",@"健康指标",@"健康方案",@"品牌展示"];
+    NSArray * subTitleArr = @[@"种类齐全的药品库",@"权威疾病知识介绍",@"帮您判断身体的不适",@"测试评估健康状况",@"查对身体各项指标",@"家中常备用药",@"知名药业品牌展示"];
+    NSArray * imageArr = @[@"icon_drug",@"icon_disease",@"icon_symptoms",@"icon_review",@"icon_indicators",@"icon_plan",@"icon_brand"];
+    self.dataSource = [NSMutableArray arrayWithCapacity:7];
+    for(NSInteger index = 0; index < titleArr.count; ++index)
+    {
+        QuickSearchModel *searchModel = [QuickSearchModel new];
+        searchModel.imageName = imageArr[index];
+        searchModel.qucikTitle = titleArr[index];
+        searchModel.qucikSubTitle = subTitleArr[index];
+        searchModel.searchType = (QuickSearchType)index;
+        [self.dataSource addObject:searchModel];
+    }
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    self.title = @"自查";
+    if (iOSv7 && self.view.frame.origin.y==0) {
+        self.edgesForExtendedLayout = UIRectEdgeNone;
+        self.extendedLayoutIncludesOpaqueBars = NO;
+        self.modalPresentationCapturesStatusBarAppearance = NO;
+    }
+//    [self setUpTextfield];
+    [self fillUpDataSource];
+    [self setupTableView];
+    [self setupSearchBar];
+    _badgeView = [[MKNumberBadgeView alloc] initWithFrame:CGRectMake(5, -6, 35, 35)];
+    _badgeView.shadow = NO;
+    _badgeView.userInteractionEnabled = NO;
+    _badgeView.hideWhenZero = NO;
+    _badgeView.tag = 888;
+    _badgeView.hidden = NO;
+    _badgeView.textColor=RGBHex(qwColor4);
+    
+    //小信封
+    UIButton *rightButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    rightButton.frame = CGRectMake(20, 0, 25, 44);
+    [rightButton addSubview:_badgeView];
+    [rightButton setImage:[UIImage imageNamed:@"ic_btn_newsbox"] forState:UIControlStateNormal];
+    [rightButton addTarget:self action:@selector(pushIntoMessageBox:) forControlEvents:UIControlEventTouchDown];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:rightButton];
+    
+}
+
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+    //立刻刷新小红点
+    [QWGLOBALMANAGER updateRedPoint];
+}
+#pragma mark -----
+#pragma mark ----- 设置Action
+
+- (void)pushIntoMessageBox:(id)sender
+{
+    if(!QWGLOBALMANAGER.loginStatus) {
+        LoginViewController *loginViewController = [[LoginViewController alloc] initWithNibName:@"LoginViewController" bundle:nil];
+        UINavigationController *navgationController = [[QWBaseNavigationController alloc] initWithRootViewController:loginViewController];
+        loginViewController.isPresentType = YES;
+        [self presentViewController:navgationController animated:YES completion:NULL];
+        return;
+    }
+    
+    MessageBoxListViewController *vcMsgBoxList = [[UIStoryboard storyboardWithName:@"MessageBoxListViewController" bundle:[NSBundle mainBundle]] instantiateViewControllerWithIdentifier:@"MessageBoxListViewController"];
+    
+    
+    vcMsgBoxList.hidesBottomBarWhenPushed = YES;
+    if(sender) {
+        [self.navigationController pushViewController:vcMsgBoxList animated:YES];
+    }else{
+        [self.navigationController pushViewController:vcMsgBoxList animated:YES];
+    }
+    
+}
+
+
+- (void)buttonViewWithFrame:(CGRect)frame withTitle:(NSString *)title withTag:(NSInteger)tag imageName:(NSString *)imagename{
+    
+    CGFloat Btn_width = (SCREEN_W-11-11-1-1)/3;
+    
+    UIView * view = [[UIView alloc] initWithFrame:frame];
+    view.backgroundColor = [UIColor whiteColor];
+    UIImage * image = [UIImage imageNamed:imagename];
+    UIImageView * imageView = [[UIImageView alloc] initWithFrame:CGRectMake((Btn_width - image.size.width)/2, (Btn_width - imageView_H -15)/2, imageView_W, imageView_H)];
+    imageView.image = image;
+    [view addSubview:imageView];
+    
+    UILabel * label = [[UILabel alloc] initWithFrame:CGRectMake(0, (Btn_width - imageView_H -15)/2 + imageView_H + 10, Btn_width, 15)];
+    label.text = title;
+    label.font = fontSystem(kFontS4);
+    label.textAlignment = NSTextAlignmentCenter;
+    [view addSubview:label];
+
+    [self.view addSubview:view];
+}
+
+- (void)setupTableView
+{
+    CGRect rect = self.view.frame;
+    rect.size.height -= 64 + 44;
+    self.tableView = [[UITableView alloc] initWithFrame:rect];
+    [self.tableView registerNib:[UINib nibWithNibName:@"QuickSearchTableViewCell" bundle:nil] forCellReuseIdentifier:QuickSearchIdentifier];
+    self.tableView.delegate = self;
+    self.tableView.dataSource = self;
+    self.tableView.separatorStyle=UITableViewCellSeparatorStyleNone;
+    [self.tableView addStaticImageHeader];
+    [self.view addSubview:self.tableView];
+}
+
+
+#pragma mark -
+#pragma mark UITableViewDelegate
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 71.0;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section;
+{
+    return self.dataSource.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    QuickSearchTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:QuickSearchIdentifier];
+    QuickSearchModel *model = self.dataSource[indexPath.row];
+    [cell setCell:model];
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    QuickSearchModel *model = self.dataSource[indexPath.row];
+    switch (model.searchType) {
+        case QuickSearchMedicine:
+        {
+            QuickMedicineViewController * medicineViewController = [[QuickMedicineViewController alloc] init];
+            medicineViewController.hidesBottomBarWhenPushed = YES;
+            [self.navigationController pushViewController:medicineViewController animated:YES];
+            break;
+        }
+        case QuickSearchDisease:
+        {
+            DiseaseViewController * diseaseViewController = [[DiseaseViewController alloc] init];
+            diseaseViewController.hidesBottomBarWhenPushed = YES;
+            [self.navigationController pushViewController:diseaseViewController animated:YES];
+            break;
+        }
+        case QuickSearchSymptom:
+        {
+            SymptomMainViewController * symptomMainViewController = [[SymptomMainViewController alloc] init];
+            symptomMainViewController.hidesBottomBarWhenPushed = YES;
+            [self.navigationController pushViewController:symptomMainViewController animated:YES];
+
+            break;
+        }
+        case QuickSearchHealthAssessment:
+        {
+            WebDirectViewController *vcWebMedicine = [[UIStoryboard storyboardWithName:@"WebDirect" bundle:nil] instantiateViewControllerWithIdentifier:@"WebDirectViewController"];
+            WebDirectLocalModel *modelLocal = [WebDirectLocalModel new];
+            modelLocal.typeLocalWeb = WebPageToWebTypeHealthCheckBegin;
+            modelLocal.title = @"健康评测";
+            [vcWebMedicine setWVWithLocalModel:modelLocal];
+            [self.navigationController pushViewController:vcWebMedicine animated:YES];
+            [QWUserDefault setBool:YES key:@"HealthCheck"];
+            [tableView reloadData];
+            break;
+        }
+        case QuickSearchHealthIndicators:
+        {
+            HealthIndicatorViewController * healthIndicator = [[HealthIndicatorViewController alloc] init];
+            healthIndicator.hidesBottomBarWhenPushed = YES;
+            [self.navigationController pushViewController:healthIndicator animated:YES];
+            break;
+        }
+        case QuickSearchHealthPlan:
+        {
+            HealthyScenarioViewController * healthyScenario = [[HealthyScenarioViewController alloc] init];
+            healthyScenario.hidesBottomBarWhenPushed = YES;
+            [self.navigationController pushViewController:healthyScenario animated:YES];
+            break;
+        }
+        case QuickSearchFactory:
+        {
+            FactoryListViewController *vc = [[FactoryListViewController alloc] init];
+            vc.hidesBottomBarWhenPushed = YES;
+            [self.navigationController pushViewController:vc animated:YES];
+            break;
+        }
+        default:
+            break;
+    }
+    
+}
+
+- (void)setUpRightBarButton{
+    UIBarButtonItem * rightBarButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"扫码.png"] style:UIBarButtonItemStyleBordered target:self action:@selector(rightBarButtonClick)];
+    self.navigationItem.rightBarButtonItem = rightBarButton;
+}
+
+- (void)rightBarButtonClick{
+    if (![QYPhotoAlbum checkCameraAuthorizationStatus]) {
+        [self showError:kWarning42];
+        return;
+    }
+    ScanReaderViewController *scanReaderViewController = [[ScanReaderViewController alloc] initWithNibName:@"ScanReaderViewController" bundle:nil];
+    scanReaderViewController.delegatePopVC = self;
+    scanReaderViewController.useType = 1;
+    scanReaderViewController.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:scanReaderViewController animated:YES];
+}
+
+- (void)setupSearchBar{
+    UIImageView *headerImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, APP_W, 62)];
+    [headerImageView setBackgroundColor:RGB(236, 241, 240)];
+    headerImageView.userInteractionEnabled = YES;
+    UIImageView *searchBackGroundImage = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0,APP_W / 320.0 * 290, 37)];
+    searchBackGroundImage.userInteractionEnabled = YES;
+    UIImage *resizeImage = [[UIImage imageNamed:@"bg_img_search_new"] resizableImageWithCapInsets:UIEdgeInsetsMake(0, 60, 0, 40) resizingMode:UIImageResizingModeStretch];
+    searchBackGroundImage.image = resizeImage;
+    [headerImageView addSubview:searchBackGroundImage];
+    searchBackGroundImage.center = headerImageView.center;
+    UITextField *searchText = [[UITextField alloc] initWithFrame:CGRectMake(0, 0,APP_W / 320.0 * 290, 37)];
+    searchText.font = [UIFont systemFontOfSize:14.0];
+    searchText.textColor = RGBHex(qwColor9);
+    searchText.text = @"        搜索药/病/症";
+    searchText.delegate = self;
+    searchText.userInteractionEnabled = YES;
+    [searchBackGroundImage addSubview:searchText];
+    
+    self.tableView.tableHeaderView = headerImageView;
+}
+
+- (void)setUpTextfield{
+    UIImageView * bgImageView = [[UIImageView alloc] initWithFrame:CGRectMake(10, 10, APP_W-20, 40)];
+    bgImageView.userInteractionEnabled = YES;
+    bgImageView.image = [UIImage imageNamed:@"重置密码_输入验证码_输入框.png"];
+    [self.view addSubview:bgImageView];
+    UIImage * image = [UIImage imageNamed:@"快速自查_搜索icon.png"];
+    
+    
+    self.textField = [[UITextField alloc] initWithFrame:CGRectMake(10, 10, APP_W-60, 20)];
+    [bgImageView addSubview:self.textField];
+    self.textField.borderStyle = UITextBorderStyleNone;
+    self.textField.placeholder = @" 搜索药品/疾病/症状";
+    self.textField.font = [UIFont systemFontOfSize:15];
+    self.textField.delegate = self;
+    
+    UIImageView * rightView = [[UIImageView alloc]initWithFrame:CGRectMake(self.textField.frame.origin.x + self.textField.frame.size.width , 10, image.size.width, image.size.height)];
+    rightView.image = image;
+    [bgImageView addSubview:rightView];
+    [self.view addSubview:bgImageView];
+}
+
+- (BOOL)textFieldShouldBeginEditing:(UITextField *)textField{
+    //自查模块点击搜索
+    SearchViewController *searchView = [[SearchViewController alloc]initWithNibName:@"SearchViewController" bundle:nil];
+    searchView.isHideBranchList = YES;
+    searchView.hidesBottomBarWhenPushed = YES;
+     searchView.tjType=@"1";
+    [self.navigationController pushViewController:searchView animated:YES];
+    return NO;
+}
+
+- (BOOL)searchBarShouldBeginEditing:(UISearchBar *)searchBar{
+    SearchViewController *searchView = [[SearchViewController alloc]initWithNibName:@"SearchViewController" bundle:nil];
+    searchView.isHideBranchList = YES;
+    searchView.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:searchView animated:YES];
+    return NO;
+}
+
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    [self.searchBar resignFirstResponder];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+}
+
+#pragma mark -
+#pragma mark 处理本视图收到的通知
+
+- (void)getNotifType:(Enum_Notification_Type)type data:(id)data target:(id)obj
+{
+    if(NotiMessageBadgeNum == type)
+    {
+        [self.badgeView setValueOnly:[data integerValue]];
+    }
+}
+
+
+@end
+
+@implementation QuickSearchModel
+
+@end
+

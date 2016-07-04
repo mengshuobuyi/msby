@@ -1,0 +1,66 @@
+//
+//  VFourCouponQuanTableViewCell.h
+//  APP
+//
+//  Created by 李坚 on 15/12/2.
+//  Copyright © 2015年 carret. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "QWBaseCell.h"
+#import "CouponModel.h"
+#import "MallCartModel.h"
+
+
+//优惠券状态图片:
+//已领取
+#define Picked          [UIImage imageNamed:@"img_bg_receive_224"]
+//快过期
+#define FastExpired     [UIImage imageNamed:@"img_bg_fastexpired_224"]
+//未评价
+#define DisEvaluated    [UIImage imageNamed:@"img_bg_waitevaluate_224"]
+//已评价
+#define Evaluated       [UIImage imageNamed:@"img_bg_rated_224"]
+//已过期
+#define Expired         [UIImage imageNamed:@"img_bg_expired_224"]
+//已领完
+//#define PickOver        [UIImage imageNamed:@"img_bg_receiveover_224"]
+//已抢光
+#define PickOver        [UIImage imageNamed:@"img_bg_yiqiangguang"]
+
+@interface VFourCouponQuanTableViewCell : QWBaseCell
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *leftTagConstant;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *midTagConstant;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *leftButtomCon;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *leftTopCon;
+
+
+@property (weak, nonatomic) IBOutlet UILabel *couponValue;
+@property (weak, nonatomic) IBOutlet UILabel *couponTag;
+@property (weak, nonatomic) IBOutlet UILabel *couponPrice;
+@property (weak, nonatomic) IBOutlet UILabel *couponBranch;
+@property (weak, nonatomic) IBOutlet UILabel *couponType;
+@property (weak, nonatomic) IBOutlet UIImageView *giftImage;
+@property (weak, nonatomic) IBOutlet UILabel *dateLabel;
+@property (weak, nonatomic) IBOutlet UIImageView *statusImage;
+@property (weak, nonatomic) IBOutlet UIImageView *TicketLeftImage;
+@property (weak, nonatomic) IBOutlet UIImageView *TicketRightImage;
+
+
+@property (weak, nonatomic) IBOutlet UIView *coverView;
+@property (strong, nonatomic) NSMutableArray *array;
+@property (weak, nonatomic) IBOutlet UIView *leftView;
+@property (weak, nonatomic) IBOutlet UIView *rightView;
+@property (weak, nonatomic) IBOutlet UIView *middleView;
+
+//确认订单,优惠券选择列表
+- (void)setCouponChooseQuan:(CartOnlineCouponVoModel *)model suppertOnline:(BOOL)suppertOnline;
+//我的优惠券模块CellForRow调用
+- (void)setMyCouponQuan:(MyCouponVoModel *)model;
+//领券中心优惠券模块CellForRow调用
+- (void)setCouponCenterQuan:(OnlineCouponVoModel *)model;
+//领券中心优惠券详情调用
+- (void)setTicketCouponQuan:(OnlineCouponDetailVo *)model;
+//我的优惠券详情调用
+- (void)setMyCouponDetailQuan:(MyCouponDetailVo *)model;
+@end

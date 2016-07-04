@@ -1,0 +1,202 @@
+//
+//  SearchAndChooseAddressViewController.m
+//  APP
+//
+//  Created by qw_imac on 16/1/5.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "SearchAndChooseAddressViewController.h"
+#import <AMapSearchKit/AMapSearchAPI.h>
+#import "LocationInfoTableViewCell.h"
+#import "AddOrChangeAddressInfoViewController.h"
+#import "MedicineSearchResultViewController.h"
+#import "HomePageViewController.h"
+
+@interface SearchAndChooseAddressViewController ()<UITableViewDataSource,UITableViewDelegate,AMapSearchDelegate>
+@property (nonatomic,strong) AMapSearchAPI              *search;
+@property (nonatomic,strong) AMapPlaceSearchResponse    *response;
+@end
+
+@implementation SearchAndChooseAddressViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+//    if ([APPDelegate isMainTab]) {
+//        self.searchBarView.backgroundColor = RGBHex(qwColor3);
+//    }else {
+//        self.searchBarView.backgroundColor = RGBHex(qwColor1);
+//    }
+    self.searchBarView.placeholder = @"请输入地址";
+    self.tableMain =[[UITableView alloc] initWithFrame:CGRectMake(0, 0, APP_W, [[UIScreen mainScreen] bounds].size.height - 64) style:UITableViewStylePlain];
+    self.tableMain.separatorStyle = UITableViewCellSeparatorStyleNone;
+    self.tableMain.delegate = self;
+    self.tableMain.dataSource = self;
+    self.tableMain.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:self.tableMain];
+    [self showInfoView:nil image:nil];
+    
+    //搜索输入框置为焦点
+    [self.searchBarView becomeFirstResponder];
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+- (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText {
+    if (StrIsEmpty(searchText)) {
+        [self showInfoView:nil image:nil];
+    }else {
+        [self searchPoiWith:searchText];
+    }
+}
+
+-(void)searchPoiWith:(NSString *)keyword{
+    if (!self.search) {
+        self.search = [[AMapSearchAPI alloc]initWithSearchKey:AMAP_KEY Delegate:self];
+    }
+    
+    AMapPlaceSearchRequest *request = [[AMapPlaceSearchRequest alloc]init];
+    MapInfoModel *model = [QWGLOBALMANAGER QWGetLocation];
+    request.location = [AMapGeoPoint locationWithLatitude:model.location.coordinate.latitude longitude:model.location.coordinate.longitude];
+    request.keywords = keyword;
+    if (model.city) {
+        request.city = @[model.city];
+    }else {
+        request.city = @[@"苏州"];
+    }
+    request.sortrule = 1;
+    request.requireExtension = YES;
+    
+    [self.search AMapPlaceSearch:request];
+}
+
+
+#pragma mark - amap回调
+-(void)onPlaceSearchDone:(AMapPlaceSearchRequest *)request response:(AMapPlaceSearchResponse *)response {
+    [self removeInfoView];
+    self.response = response;
+    [self.tableMain reloadData];
+    if (response.pois.count == 0) {
+        [self showInfoView:@"在您所在的城市没有搜索到结果" image:@"ic_img_fail"];
+    }
+}
+
+- (void)searchRequest:(id)request didFailWithError:(NSError *)error{
+    
+}
+
+#pragma mark - tableview
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return self.response.pois.count;
+}
+
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    LocationInfoTableViewCell *cell = (LocationInfoTableViewCell *)[tableView dequeueReusableCellWithIdentifier:@"LocationInfoTableViewCell"];
+    if (!cell) {
+        cell =[[NSBundle mainBundle] loadNibNamed:@"LocationInfoTableViewCell" owner:self options:nil][0];
+    }
+    AMapPOI *poi = self.response.pois[indexPath.row];
+    cell.name.text = poi.name;
+    cell.addressDetail.text = poi.address;
+    
+    return cell;
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    AMapPOI *poi = self.response.pois[indexPath.row];
+    if (![poi.city isEqualToString:[QWGLOBALMANAGER QWGetLocation].city] ) {
+        UIAlertView *alert = [[UIAlertView alloc]initWithTitle:nil message:@"只可选择当前城市下的地址" delegate:self cancelButtonTitle:@"确定" otherButtonTitles: nil];
+        [alert show];
+        return;
+    }
+  
+    NSMutableDictionary *params = [NSMutableDictionary dictionary];
+    params[@"district"] = poi.district;
+    params[@"village" ] = poi.name;
+    params[@"longitude"] = [NSString stringWithFormat:@"%f",poi.location.longitude ];
+    params[@"latitude"] = [NSString stringWithFormat:@"%f",poi.location.latitude ];
+    params[@"city"] = poi.city;
+    if (!_isEdit) {
+        switch (self.pageType) {
+            case PageComeFromStoreList:
+            {
+                [self popVCAction:nil];
+                break;
+            }
+            case PageComeFromHomePage:
+            {
+                HomePageViewController *vc = nil;
+                for (QWBaseVC *viewController in self.navigationController.viewControllers) {
+                    if ([viewController isKindOfClass:[HomePageViewController class]]) {
+                        vc = (HomePageViewController *)viewController;
+                        break;
+                    }
+                }
+                if (vc) {
+                    [self.navigationController popToViewController:vc animated:YES];
+                }else {
+                    [self popVCAction:nil];
+                }
+                break;
+            }
+            case PageComeFromSearch:
+            {
+                MedicineSearchResultViewController *vc = nil;
+                for (QWBaseVC *viewController in self.navigationController.viewControllers) {
+                    if ([viewController isKindOfClass:[MedicineSearchResultViewController class]]) {
+                        vc = (MedicineSearchResultViewController *)viewController;
+                        break;
+                    }
+                }
+                if (vc) {
+                    [self.navigationController popToViewController:vc animated:YES];
+                }else {
+                    [self popVCAction:nil];
+                }
+                break;
+            }
+            default:
+            {
+                AddOrChangeAddressInfoViewController *vc = nil;
+                for (QWBaseVC *viewController in self.navigationController.viewControllers) {
+                    if ([viewController isKindOfClass:[AddOrChangeAddressInfoViewController class]]) {
+                        vc = (AddOrChangeAddressInfoViewController *)viewController;
+                        break;
+                    }
+                }
+                if (vc) {
+                    [self.navigationController popToViewController:vc animated:YES];
+                }else {
+                    [self popVCAction:nil];
+                }
+                break;
+            }
+        }
+    }else {
+        [QWGLOBALMANAGER postNotif:NotifAddressRefreshOne data:params object:nil];
+        AddOrChangeAddressInfoViewController *vc = nil;
+        for (QWBaseVC *viewController in self.navigationController.viewControllers) {
+            if ([viewController isKindOfClass:[AddOrChangeAddressInfoViewController class]]) {
+                vc = (AddOrChangeAddressInfoViewController *)viewController;
+                break;
+            }
+        }
+        if (vc) {
+            [self.navigationController popToViewController:vc animated:YES];
+        }else {
+            [self popVCAction:nil];
+        }
+    }
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return 56;
+}
+
+-(void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
+    [self.searchBarView resignFirstResponder];
+}
+@end

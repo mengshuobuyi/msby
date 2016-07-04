@@ -1,0 +1,512 @@
+//
+//  QWGlobalManager.h
+//  APP
+//
+//  Created by qw on 15/2/27.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import "Constant.h"
+#import "userDefault.h"
+#import "ReachabilityMonitor.h"
+#import "GlobalManager.h"
+#import "UserInfoModel.h"
+#import "MbrModel.h"
+#import <MAMapKit/MAMapKit.h>
+#import "Warning.h"
+//社会分享
+#import "UMSocial.h"
+//#import "UMSocialSinaHandler.h"
+#import "UMSocialSinaSSOHandler.h"
+#import "UMSocialQQHandler.h"
+#import "UMSocialWechatHandler.h"
+#import "MapInfoModel.h"
+#import "customAlertView.h"
+
+#import "QWTabBar.h"
+#import "QWMessage.h"
+#import "ConsultModelR.h"
+#import "Consult.h"
+#import "ConsultPTPModel.h"
+#import "Notification.h"
+#import "QWUnreadCountModel.h"
+#import "AppFadeCover.h"
+//事件和页面跟踪记录
+#import "QWClickEvent.h"
+
+#import "CouponNotiListModelR.h"
+#import "CouponNotiBaseModel.h"
+#import "CouponNotiListRequest.h"
+#import "CocoaLumberjack.h"
+#import "SysNotiBaseModel.h"
+#import "SysNotiListModelR.h"
+#import "SysNotiListRequest.h"
+#import "ConfigInfo.h"
+#import "InfoMsg.h"
+#import "Circle.h"
+#import "CircleMsgSyncModel.h"
+#import "MallCartModel.h"
+//评论
+//#import "APPCmtModel.h"
+#import "APPCommentAlert.h"
+//#import "WebDirectViewController.h"
+
+#import "Search.h"//热门搜索
+#import "WebDirectModel.h"
+
+//全局管理对象
+#define  QWGLOBALMANAGER [QWGlobalManager sharedInstance]
+
+extern NSString *const APPLOGINTYPE_NORMAL;
+extern NSString *const APPLOGINTYPE_VALIDCODE;
+extern NSString *const APPLOGINTYPE_QQ;
+extern NSString *const APPLOGINTYPE_WEIXIN;
+
+typedef void (^ReadLocationBlock)(MapInfoModel *mapInfoModel);
+typedef void (^AddressBlcok)(NSString *province,NSString *city,NSString *formattedAddress);
+typedef void (^LocationBlock)(CLLocation *location);
+@interface QWGlobalManager : GlobalManager<ReachabilityDelegate,UIActionSheetDelegate,MAMapViewDelegate,WXApiDelegate>
+{
+    // 版本更新
+    customAlertView *myAlertView;
+    
+    NSTimeInterval lastTimeStamp;
+    NSString * installUrl;
+    
+    NSTimer *brightTime;
+    NSTimer *darkTime;
+    CGFloat screenBright;
+    CGFloat originalBrightNess;
+}
+@property (strong, nonatomic) UIImageView *expertMineRedPoint;  // 内容平小红点
+@property (strong, nonatomic) UIImageView *sellerMineRedPoint;  // 营销平小红点
+@property (nonatomic, assign) BOOL boolLoadFromFirstIn;
+@property (nonatomic, assign) BOOL isForceUpdating;
+@property (nonatomic, assign) BOOL                      loginStatus;            //登陆状态
+@property (nonatomic,assign)  BOOL                      isKickOff;              //抢登状态
+@property (nonatomic, strong) UserInfoModel *           configure;              //全局配置
+@property (nonatomic, strong) UserInfoModelPrivate  *   configureTest;
+@property (nonatomic, assign) NetworkStatus             currentNetWork;         //当前的网络状态
+@property (nonatomic ,strong) NSString *                deviceToken;            //令牌
+@property (nonatomic,strong)  AppFadeCover              *fadeCover;
+@property (nonatomic, assign) BOOL                      needShowBadge;          //
+@property (strong, nonatomic) QWTabBar *                tabBar;                 //底部tab标签
+@property (nonatomic, strong) ReachabilityMonitor       *reachabilityMonitor;   //网络监控
+@property (nonatomic, strong) MAMapView                 *mapView;               //全局高德地图
+@property (nonatomic, strong) MapInfoModel              *mapModel;              //定位解析后信息
+@property (nonatomic, strong) UIImageView               *myCenterBudge;         //我的显示小红点
+@property (nonatomic, strong) UIImage                   *saveImage;
+@property (nonatomic, assign) NSInteger                 unReadCount;
+@property (nonatomic, copy)   dispatch_source_t          pullCircleMessageTimer;
+@property (nonatomic, copy)   dispatch_source_t         pullMessageTimer;       //拉取官方消息定时器
+@property (nonatomic, copy)   dispatch_source_t         pullMessageBoxTimer;    //拉取官方消息盒子定时器
+@property (nonatomic, copy)   dispatch_source_t         heartBeatTimer;
+@property (nonatomic, assign) BOOL                      weChatBusiness;                 //首页是否开通微商
+@property (nonatomic ,strong) NSString *                lastTimestampfortimer;         //定时轮训加时间戳
+@property (nonatomic, strong) NSString *                lastTimestampForptpMsg;         // 轮询拉取点对点聊天列表
+
+@property (nonatomic, strong) NSString *                branchName;                 // 切换药房时,记录branchName
+@property (nonatomic, strong) NSString *                lastTimestampOutOfDate;         // 拉取过期问题列表的时间戳
+@property (nonatomic, assign) BOOL                      DebugLogEnable;
+@property (nonatomic, assign) NSInteger                 pullCount;              // 定时轮询的次数，2次为全部拉取到了
+@property (nonatomic, assign) NSInteger                 intSelectVCIndex;       // 上次选择的消息盒子的tab索引
+@property (nonatomic, strong) DDFileLogger              *fileLogger;
+@property (nonatomic, strong) NSTimer                   *getVerifyTimer;                //定时器注册验证码
+@property (nonatomic, strong) NSTimer                   *getChangePhoneTimer;           //定时器修改手机号
+@property (nonatomic, strong) MicroMallCartCompleteVoModel *completeVoModel;
+@property (nonatomic, strong) NSTimer                   *getForgetPasswordTimer;        //定时器忘记密码
+@property (nonatomic, strong) NSTimer                   *getValidCodeLoginTimer;        //定时器验证码登陆
+@property (nonatomic, strong) NSTimer                   *getVoiceValidCodeLoginTimer;        //定时器验证码登陆
+@property (nonatomic, strong) NSString                  *payOrderId;            //支付订单号
+@property (nonatomic, strong) NSString *                strPTPSessionID;        // 进入点对点聊天的详情ID
+@property (nonatomic, strong) NSString *                strConsultID;           // 进入咨询详情的ID
+@property (nonatomic, strong) NSString *                strPrivateCircleMsgID;  // 进入私聊详情的ID
+
+@property (nonatomic, strong) NSString *                lastQWYSTime;         // 拉取全维要是时间
+@property (nonatomic, assign) BOOL                      clearShoppingCartStepOne;
+
+@property (nonatomic, strong) hotKeywordList            *hotWord;           //热门搜索关键词保存
+@property (nonatomic, strong) NSString *registerAccount;           //热门搜索关键词保存
+
+@property (nonatomic, assign) BOOL isShowAlert;
+
+@property (nonatomic, strong) NSString *selectedFamilyMemberID;          // 免费问药中选择为谁提问的成员ID
+
+
+@property (nonatomic, strong) NSMutableDictionary       *EventData;         //诸葛统计
++ (QWGlobalManager *)sharedInstance;
+- (void)initNavigationBarStyle:(UIColor *)color;
+- (void)renewTabbarStyle; // Tabbar主题切换
+- (void)resetTabbarStyle; // 重置
+- (void)startRgisterVerifyCode:(NSString *)phoneNum;
+- (void)startRgisterVerifyCode:(NSString *)phoneNum imageCode:(NSString*)imageCode;
+- (void)startChangePhoneVerifyCode:(NSString *)phoneNum;
+- (void)startForgetPasswordVerifyCode:(NSString *)phoneNum;
+- (void)startValidCodeLoginVerifyCode:(NSString *)phoneNum;
+- (void)startValidCodeLoginVerifyCode:(NSString *)phoneNum imageCode:(NSString*)imageCode;
+- (void)startVoiceValidCodeToLogin:(NSString*)phoneNum;
+- (NSInteger)getUnreadShoppingCart;
+- (void)createHeartBeatTimer;
+- (void)getForceSecuritySwitch;
+/**
+ *  @brief 读取地图信息  relocation表示如果没有读取到历史数据,是否需要重新定位,YES会重新定位,NO则不会,为NO时,会返回默认位置
+ *
+ *  @param relocation 如果没有读取到历史数据,是否需要重新定位,yes 则会重新定位, no 则不会
+ *  @param block      成功和失败回调
+ */
+- (void)readLocationWhetherReLocation:(BOOL)relocation block:(ReadLocationBlock)block;
+
+- (void)pushIntoDifferentBannerType:(BannerInfoModel *)banner navigation:(UINavigationController *)myNavgationController bannerLocation:(NSString *)bannerLocation selectedIndex:(NSInteger)index;
+- (void)statisticsEventId:(NSString *)eventId withLable:(NSString *)eventLable withParams:(NSMutableDictionary *)params;
+-(void)qwChannel:(ChannerTypeModel *)channerEventId;
+
+//检查当前登录状态,如未登录,则显示登录界面
+- (BOOL)checkLoginStatus:(UIViewController *)viewController;
+/**
+ *  @brief 读取首页定位所得省/市/格式化地址  province city formattedAddress
+ *
+ *  @param addressBlock 如果数据存在则返回,如果不存在返回nil
+ */
+
+- (void)upLoadLogFile;
+- (void)checkLogEnable;
+- (void)clearOldCache;
+- (void)readLastMapAddress:(AddressBlcok)addressBlock;
+//加载热词
+- (void)loadHotWord;
+- (MapInfoModel *)buildSuzhouLocatinMapInfo;
+/**
+ *  获取地址
+ */
+- (MapInfoModel *)QWGetLocation;
+/**
+ *  @brief 读取首页定位所得经纬度 返回格式:CLLocation *location
+ *
+ *  @param locationBlock 返回格式 CLLocation *location, 如果存在,则返回,不存在 返回nil
+ */
+- (void)readLastMapLocation:(LocationBlock)locationBlock;
+- (void)setMapBranchId:(NSString *)branchId branchName:(NSString *)branchName;
+- (NSString *)getMapBranchId;
+- (MapInfoModel *)getMapInfoModel;
+- (MapInfoModel *)buildSuzhouAuditLocatinMapInfo;
+//重新定位
+- (void)resetLocationInformation:(ReadLocationBlock)block;
+
+/**
+ *  @brief 逆地理解析
+ *
+ *  @param cllocation 经纬度
+ *  @param timeout    超时时间
+ *  @param block      回调
+ */
+- (void)mapReGeocodeSearchRequest:(CLLocation *)cllocation
+                            block:(ReadLocationBlock)block;
+
+- (void)updateMapInfoModel:(MicroMallBranchNewIndexVo *)model;
+- (void)updateMapInfoModelLocation:(MapInfoModel *)model;
+//保存上一次地理位置信息
+- (void)saveLastLocationInfo:(MapInfoModel *)mapinfo;
+
+//检查城市是否在开通城市列表,并且提供已开通的回调和未开通回调
+- (void)checkCityOpenInfo:(MapInfoModel *)mapinfo
+                openBlock:(void(^)(MapInfoModel *openMapInfo))openBlock
+               closeBlock:(void(^)(MapInfoModel *closeMapInfo))closeBlock
+             failureBlock:(void(^)(HttpException *e))failureBlock;
+
+//前后台切换,是否启用推送
+- (void)enablePushNotification:(BOOL)enable;
+//解压zip包
+- (BOOL)unZipFile:(NSString *)sourcePath toPath:(NSString *)destPath;
+//保存全局设置
+- (void)saveAppConfigure;
+- (void)clearLocationInformation;
+//获取私有数据库的名称 业务无需关心此处
+- (NSString*)getPrivateDBName;
+
+- (void)applicationDidEnterBackground;
+
+/**
+ *  发出全局通知
+ *
+ *  @param type 通知类型
+ *  @param data 数据
+ *  @param obj  通知来源对象，填self
+ */
+- (NSDictionary *)postNotif:(Enum_Notification_Type)type data:(id)data object:(id)obj;
+
+//初始化社会分享
+-(void)initsocailShare:(NSString *)urlString;
+
+/**
+ *  计算内容的显示宽高
+ *
+ *  @param text  需要计算的字符
+ *  @param font  显示的字符的字体
+ *  @param width 默认的宽度
+ *
+ *  @return 返回字符实际的宽高
+ */
+- (CGSize) getTextSizeWithContent:(NSString*)text WithUIFont:(UIFont*)font WithWidth:(CGFloat)width;
+
+/**
+ *  剔除掉特殊的字符
+ *
+ *  @return 返回剔除后的字符串
+ */
+
+- (NSString *)replaceSpecialStringWith:(NSString *)string;
+/**
+ *  符号字符的替换，用于关键词净化
+ *
+ *  @return 返回剔除后的字符串
+ */
+- (NSString *)replaceSymbolStringWith:(NSString *)string;
+/**
+ *  支付宝随机生成订单号
+ *
+ *  @return 生成的订单号
+ */
+- (NSString *)generateTradeNO;
+
+//有branchId且知道那种类型时候跳转药房详情
+- (void)pushBranchDetail:(NSString *)branchId withType:(NSString *)type navigation:(UINavigationController *)nav;
+//针对只有branchId跳转药房详情的情况
+- (void)pushNewBranchDetail:(NSString *)branchId navigation:(UINavigationController *)nav;
+
+
+//微信支付
+- (void)weChatPayOrder:(NSString *)orderString withObjId:(NSString*)objId;
+-(BOOL)getWxResult:(NSString *)objId index:(int)i;
+//阿里支付
+- (void)aliPayOrder:(NSString *)orderString withObjId:(NSString*)objId;
+-(BOOL)getAliResult:(NSString *)objId index:(int)i;
+//跳转至H5支付界面
+- (void)jumpH5PayOrderWithOrderId:(NSString *)orderId
+                       totalPrice:(NSString *)price
+                       isComeFrom:(NSString *)come
+                       orderModel:(WebOrderDetailModel *)model
+             navigationController:(UINavigationController *)navigationController;
+
+/**
+ *  @brief 比较两个NSDate大小 日期格式:yyyy-MM-dd HH:mm:ss
+ *
+ *  @param date01
+ *  @param date02
+ *
+ *  @return date02比date01大 返回1 ;date02比date01小 返回-1 ;date02=date01 返回0
+ */
+-(int)compareDate:(NSString*)date01 withDate:(NSString*)date02;
+
+- (void)loginSucessCallBack;
+
+- (NSString *)updateDisplayTime:(NSDate *)date;
+
+- (NSString *)updateFirstPageTimeDisplayer:(NSDate *)date;
+
+//- (void)updateUnreadCountBadge:(NSInteger)pullCount;
+
+// 咨询tab
+// 根据服务器返回的咨询Model创建一个新的消息model
+- (HistoryMessages *)createNewMessage:(ConsultCustomerModel *)modelCustomer;
+- (void)convertConsultModelToMessages:(ConsultCustomerModel *)modelCustomer withModelMessage:(HistoryMessages **)modelMessageOri;
+
+
+// 药店tab
+// 根据服务器返回的咨询Model创建一个新的消息model
+//- (PharMsgModel *)createNewMsg:(CustomerSessionVo *)modelSession;
+//- (void)convertSessionModelToMsg:(CustomerSessionVo *)modelSession withModelMsg:(PharMsgModel **)modelMsgPhar;
+// 更新消息盒子数据
+- (void)sycMsgBoxListData:(MessageList *)listModel;
+// 新的消息盒子的逻辑流程
+- (PharMsgModel *)createNewMsg:(MessageItemVo *)modelSession;
+- (void)convertSessionModelToMsg:(MessageItemVo *)modelSession withModelMsg:(PharMsgModel **)modelMsgPhar;
+
+// 消息盒子的通知列表
+- (MsgNotifyListModel *)createNewMsgNotifyList:(CustomerConsultVoModel *)modelCustomer;
+
+- (void)convertConsultModelToNotifyList:(CustomerConsultVoModel *)modelCustomer withModelMessage:(MsgNotifyListModel **)modelMessageOri;
+
+- (void)convertSystemNotiModel:(SystemMessageVo *)modelSys withModelLocal:(SysNotiModel **)modelLocal;
+- (CouponNotiModel *)createCouponNotiModel:(CouponMessageVo *)modelLoad;
+- (SysNotiModel *)createSystemNotiModel:(SystemMessageVo *)modelLoad;
+
+- (void)convertCouponModel:(CouponMessageVo *)modelCoupon withModelCouponLocal:(CouponNotiModel **)modelLocal;
+
+- (OrderNotiModel *)createOrderNotiModel:(OrderMessageVo *)modelLoad;
+- (void)convertOrderModel:(OrderMessageVo *)modelOrder withModelOrderLocal:(OrderNotiModel **)modelLocal;
+- (void)showSplash;
+- (void)showOPSplash;
+
+// 暂停注册的计时器
+- (void)stopCountDownRegisterTimer:(NSTimer *)timer;
+- (NSUInteger)valueExists:(NSString *)key withValue:(NSString *)value withArr:(NSMutableArray *)arrOri;
+
+//检查版本更新
+- (void)checkVersion;
+- (void)applicationDidBecomeActive;
+
+// 是否显示慢病订阅小红点
+- (void)setBadgeNumStatus:(BOOL)isShow;
+
+/**
+ *  查询圈子消息小红点
+ */
+- (BOOL)queryCircleMsgRedPoint;
+
+/**
+ *  更新圈子消息小红点
+ */
+- (void)updateCircleMsgRedPoint;
+
+// 资讯频道操作
+- (void)syncInfoChannelList:(BOOL)needUpdateList;
+- (void)updateInfoChannelList:(NSMutableArray *)arrAdd;
+- (void)saveInfoChannelList:(MsgChannelListVO *)model needUpdateList:(BOOL)needUpdate;
+
+- (NSString *)checkStr:(id)obj;
+
+- (NSInteger)updateRedPoint;
+- (NSInteger)getAllUnreadCount;
+//清除账户信息 退出登录
+- (void)clearAccountInformation;
+
+//向服务器回执未读数
+- (void)updateUnreadCount:(NSString *)strUnread;
+
+- (QWUnreadFlagModel *)getUnreadModel;
+
+- (void)saveOperateLog:(NSString *)type;
+
+/**
+ *  友盟，app使用状态收集
+ */
+- (void)umengInit;
+
+//关闭打开推送和轮询
+- (void)closePushPull;
+- (void)openPushPull;
+/**
+ *  @brief 去掉字符串中得空格
+ *
+ *  @param string 原字符串
+ 
+ *
+ *  @return 去掉空格之后的新字符串
+ */
+- (NSString *)removeSpace:(NSString *)string;
+//- (void)checkAllNewDisease;
+
+#pragma mark - 评论
+- (void)checkAppComment;
+- (void)appCommentClick;
+- (APPCmtModel*)getCommentModel;
+//发免费咨询
+- (void)appHadConsult;
+//使用优惠商品
+- (void)appUseGoods;
+//使用优惠券
+- (void)appUseCoupon;
+- (void)pullCircleMessage;
+
+
+/**
+ *  根据控制返回对应药品显示用途(适应症、保健功能等)
+ *
+ *  @param Signcode 药品控制码
+ *
+ *  @return String类型
+ */
+- (NSString *)UseOfDrugByCode:(NSString *)signcode;
+/**
+ *  根据控制返回对应药品属性
+ *
+ *  @param signcode 药品控制码
+ *
+ *  @return String类型
+ */
+- (NSString *)TypeOfDrugByCode:(NSString *)signcode;
+
+//运营点调用点
+//1）App进程杀掉后，重新启动，调用运营点接口
+//2）首页下拉刷新，调用运营点接口
+//3）1小时定位 功能 完成后，调用运营点接口
+- (void)applicationActionOP;
+
+//屏幕亮度变换(当前亮度~80%)
+- (void)brightScreenWithAnimated:(BOOL)animated;
+- (void)darkScreenwithAnimated:(BOOL)animated;
+
+// 密码登录、验证码登录、第三方登录、注册登录成功统一的操作
+- (void)loginSuccessWithUserInfo:(mbrUser*)user;
+
+// 验证手机号是否已经在该客户端已经登录，如果没有则返回NO，并且保存缓存
+- (BOOL) verifyMobileHasLogin:(NSString*)mobile;
+
+// 获取用户基础信息
+- (void)getUserBaseInfo;
+
+// 获取保存积分规则
+- (void)queryAndSaveCreditRules;
+
+// 根据任务key返回奖励积分，如果任务key不存在返回0
+/*
+    BIND    绑定
+    LOGIN   登录
+    TRADE   购物
+    SIGN    签到
+    SHARE   分享
+    FULL    完善资料
+    INVITE  邀请好友
+    VIP1    等级一级
+    VIP2
+    VIP3
+    VIP4
+    VIP5
+    VIP6
+ */
+/**
+ @param taskKey  see CreditModel.h
+ @see CreditModel
+ */
+- (NSInteger)rewardScoreWithTaskKey:(NSString*)taskKey;
+
+// 解除第三方授权  qq: UMShareToQQ  weixin: UMShareToWechatSession
+//- (void)unOauthWithType:(NSString *)platformType;
+// 如果是qq登陆或者微信登陆则解除授权
+- (void) unOauth;
+// 获取一个随机的32位UUID
+- (NSString*)randomUUID;
+// 获取现在的时间字符串
+- (NSString*)timeStrNow;
+/** 需要优化
+ 1.	当天：
+ 1)	1分钟内，显示刚刚
+ 2)	1小时内，显示X分钟前，格式为“15分钟前”
+ 3)	5小时内，显示X小时前，格式为“3小时前”
+ 4)	5小时外，显示时分，格式为“08:30”
+ 2.	昨天：显示昨日+时分，格式为“昨日 10:19”
+ 3.	本年：显示月日+时分，格式为“12.19 10:19”
+ 4.	非本年：显示年月日+时分，格式为“2014.12.19 10:19”
+ */
+- (NSString*)timeStrSinceNowWithPastDateStr:(NSString*)pastDateStr withFormatter:(NSString*)formatterStr;
+- (NSString*)timeStrSinceNowWithPastDate:(NSDate*)pastDate;
+//四舍五入
+-(NSString *)notRounding:(float)price afterPoint:(int)position;
+
+/**
+ *  3.1.0 新增新人专享礼包提示需求 by martin
+ */
+- (void)alertNewerGiftBag NS_UNAVAILABLE; // 4.0.0 unavailabel
+
+/**
+ *  4.0.0 赠送新人大礼包
+ */
+- (void)checkAndAlertNewerGiftBag_4_0;
+//#pragma mark - TalkingDataAppCpa
+//- (void)TalkingDataAppCpaKey:(NSString*)key;
+@end
+void setHistoryConfig(NSString * key , id value);
+id getHistoryConfig(NSString *key);
+
+

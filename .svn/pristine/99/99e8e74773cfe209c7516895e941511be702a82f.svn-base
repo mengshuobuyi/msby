@@ -1,0 +1,287 @@
+//
+//  CircleMsgSyncModel.m
+//  APP
+//
+//  Created by PerryChen on 3/25/16.
+//  Copyright © 2016 carret. All rights reserved.
+//
+
+#import "CircleMsgSyncModel.h"
+#import "QWGlobalManager.h"
+#import "Circle.h"
+
+@implementation CircleMsgSyncModel
+
++ (CircleMsgSyncModel *)sharedInstance
+{
+    static CircleMsgSyncModel *sharedPhotoManager = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sharedPhotoManager = [[CircleMsgSyncModel alloc] init];
+    });
+    return sharedPhotoManager;
+}
+
+- (id)init
+{
+    self = [super init];
+    if (self) {
+    }
+    return self;
+}
+
+/**
+ *  转换缓存model与服务器上Model
+ *
+ *  @param modelLocal 本地缓存中的Model
+ *  @param modelLoad  服务器上的model
+ */
+- (void)convertLocalModel:(CircleChatPointModel **)modelLocal withRemoteModel:(CircleChatPointModel *)modelLoad
+{
+    (*modelLocal).sessionId = modelLoad.sessionId;
+    (*modelLocal).recipientId = modelLoad.recipientId;
+    (*modelLocal).nickName = modelLoad.nickName;
+    (*modelLocal).headImg = modelLoad.headImg;
+    (*modelLocal).mobile = modelLoad.mobile;
+    (*modelLocal).userType = modelLoad.userType;
+    (*modelLocal).respond = modelLoad.respond;
+    (*modelLocal).respondDate = modelLoad.respondDate;
+    (*modelLocal).displayDate = modelLoad.displayDate;
+    (*modelLocal).readFlag = modelLoad.readFlag;
+}
+
+/**
+ *  同步全量的圈子消息
+ *
+ *  @param arrList
+ */
+- (void)syncCircleMsgList:(NSArray *)arrList
+{
+    if (self.arrCircleMsg == nil) {
+        [self getAllCircleMsgList];
+    }
+    __weak CircleMsgSyncModel *weakSelf = self;
+    NSMutableArray *arrCached = [NSMutableArray arrayWithArray:self.arrCircleMsg];
+    NSMutableArray *arrLoaded = [NSMutableArray arrayWithArray:arrList];
+    NSMutableArray *arrNeedAdded = [@[] mutableCopy];
+    NSMutableArray *arrNeedDeleted = [@[] mutableCopy];
+    // 从缓存中找出服务器上不存在的项，并删除
+    [arrCached enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        CircleChatPointModel *modelCache = (CircleChatPointModel *)obj;
+        __block BOOL isExist = NO;
+        [arrLoaded enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+            CircleChatPointModel *modelLoad = (CircleChatPointModel *)obj;
+            if ([modelLoad.sessionId intValue] == [modelCache.sessionId intValue]) {
+                isExist = YES;
+                *stop = YES;
+            }
+        }];
+        if (!isExist) {
+            [arrNeedDeleted addObject:modelCache];
+        }
+    }];
+    // 删除数据
+    for (CircleChatPointModel *modelHis in arrNeedDeleted) {
+        [CircleChatPointModel deleteObjFromDBWithKey:[NSString stringWithFormat:@"%@",modelHis.sessionId]];
+    }
+    arrCached = [NSMutableArray arrayWithArray:[CircleChatPointModel getArrayFromDBWithWhere:nil WithorderBy:@"respondDate desc"]];
+    for (CircleChatPointModel *modelLoad in arrLoaded) {
+        NSUInteger indexFound = [weakSelf valueExists:@"sessionId" withValue:[NSString stringWithFormat:@"%@",modelLoad.sessionId] withArr:arrCached];
+        // 更新数据
+        if (indexFound != NSNotFound) {
+            // 更新Model
+            CircleChatPointModel *modelCache = [arrCached objectAtIndex:indexFound];
+            [self convertLocalModel:&modelCache withRemoteModel:modelLoad];
+        } else {
+            [arrNeedAdded addObject:modelLoad];
+        }
+    }
+    [arrCached addObjectsFromArray:arrNeedAdded];
+    BOOL needShowRedPoint = NO;
+    for (int i = 0; i < arrCached.count; i++) {
+        CircleChatPointModel *model = (CircleChatPointModel *)arrCached[i];
+        if (model.readFlag == NO) {
+            needShowRedPoint = YES;
+        }
+        [CircleChatPointModel updateObjToDB:model WithKey:[NSString stringWithFormat:@"%@",model.sessionId]];
+    }
+    if (needShowRedPoint == YES) {
+        QWGLOBALMANAGER.configure.expertPrivateMsgRed = YES;
+    } else {
+        QWGLOBALMANAGER.configure.expertPrivateMsgRed = NO;
+    }
+    [QWGLOBALMANAGER saveAppConfigure];
+    [QWGLOBALMANAGER postNotif:NotifCircleMsgRedPoint data:nil object:nil];
+    self.arrCircleMsg = arrCached;
+}
+
+/**
+ *  同步轮询的圈子消息
+ *
+ *  @param arrList
+ */
+- (void)syncNewCircleMsgList:(NSArray *)arrList
+{
+    if (self.arrCircleMsg == nil) {
+        [self getAllCircleMsgList];
+    }
+    NSMutableArray *arrCached;
+    arrCached = [NSMutableArray arrayWithArray:[CircleChatPointModel getArrayFromDBWithWhere:nil WithorderBy:@"respondDate desc"]];
+    for (CircleChatPointModel *model in arrList) {
+        // 是否在本地数据库中找到相同的Model
+        NSUInteger indexFound = [self valueExists:@"sessionId" withValue:[NSString stringWithFormat:@"%@",model.sessionId] withArr:arrCached];
+        if (indexFound != NSNotFound) {
+            // 更新本地数据库
+            CircleChatPointModel *modelMessage = [arrCached objectAtIndex:indexFound];
+            [self convertLocalModel:&modelMessage withRemoteModel:model];
+            // 判断是否轮询在聊天页面中，在当前页面不处理未读数
+            if ([[NSString stringWithFormat:@"%@",modelMessage.sessionId] isEqualToString:[NSString stringWithFormat:@"%@",QWGLOBALMANAGER.strPrivateCircleMsgID]]) {
+                modelMessage.readFlag = @"0";
+            } else {
+            }
+            [CircleChatPointModel updateObjToDB:modelMessage WithKey:[NSString stringWithFormat:@"%@",modelMessage.sessionId]];
+            QWGLOBALMANAGER.configure.expertPrivateMsgRed = YES;
+            [QWGLOBALMANAGER saveAppConfigure];
+            [QWGLOBALMANAGER postNotif:NotifCircleMsgRedPoint data:nil object:nil];
+        } else {
+            DDLogVerbose(@"the model is %@",model);
+            [CircleChatPointModel updateObjToDB:model WithKey:[NSString stringWithFormat:@"%@",model.sessionId]];
+        }
+    }
+    [QWGLOBALMANAGER postNotif:NotifNewCircleMsg data:nil object:nil];
+}
+
+/**
+ *  获取全部的圈子消息缓存
+ *
+ *  @return
+ */
+- (NSArray *)getAllCircleMsgList
+{
+    NSArray *arrCache = @[];
+    arrCache = [CircleChatPointModel getArrayFromDBWithWhere:nil WithorderBy:@"respondDate desc"];
+    self.arrCircleMsg = [NSArray arrayWithArray:arrCache];
+    return arrCache;
+}
+
+/**
+ *  轮询拉取圈子消息
+ */
+- (void)pullNewCircleMsgListWithParams:(InfoCircleNewMsgListModelR *)param
+                               Success:(void(^)(CircleMsgListModel *model))success
+                               failure:(void(^)(HttpException * e))failure
+{
+    [Circle queryNewCircleMsgListWithParams:param success:^(CircleMsgListModel *model) {
+        if (model.sessionMsglist.count > 0) {
+            [self syncNewCircleMsgList:model.sessionMsglist];
+            if (success) {
+                success(model);
+            }
+        }
+
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+/**
+ *  全量拉取圈子消息
+ */
+- (void)pullAllCicleMsgListWithParams:(InfoCircleMsgListModelR *)param
+                              Success:(void(^)(CircleMsgListModel *model))success
+                              failure:(void(^)(HttpException * e))failure
+{
+    [Circle queryAllCircleMsgListWithParams:param success:^(CircleMsgListModel *model) {
+        if (model.sessionMsglist.count > 0) {
+            [self syncCircleMsgList:model.sessionMsglist];
+        }
+        model.sessionMsglist = self.arrCircleMsg;
+        if (success) {
+            success(model);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+/**
+ *  缓存最新的圈子消息
+ *
+ *  @param arrTeam
+ */
+- (void)saveCircleTeamMsg:(NSArray *)arrTeam
+{
+    if (arrTeam.count > 0) {
+        CircleTeamMsgVoModel *model = arrTeam[0];
+        [CircleTeamMsgVoModel deleteAllObjFromDB];
+        [CircleTeamMsgVoModel saveObjToDB:model];
+    }
+}
+
+/**
+ *  获取最新的圈子消息
+ *
+ *  @return
+ */
+- (NSArray *)getNewestTeamMsg
+{
+    NSArray *arr = [CircleTeamMsgVoModel getArrayFromDBWithWhere:nil];
+    return arr;
+}
+
+/**
+ *  设置所有圈子消息已读
+ */
+- (void)updateAllMsgReadWithSuccess:(void(^)(BaseModel *model))success
+                        failure:(void(^)(HttpException * e))failure
+{
+    InfoCircleAllReadModelR *modelR = [InfoCircleAllReadModelR new];
+    modelR.token = QWGLOBALMANAGER.configure.userToken;
+    [Circle setAllCircleMsgListReadWithParams:modelR success:^(BaseModel *model) {
+        if (success) {
+            NSArray *arrTeam = [CircleTeamMsgVoModel getArrayFromDBWithWhere:nil];
+            for (CircleTeamMsgVoModel *model in arrTeam) {
+                model.flagRead = YES;
+                [CircleTeamMsgVoModel updateObjToDB:model WithKey:model.id];
+            }
+            NSArray *arrMsgList = [CircleChatPointModel getArrayFromDBWithWhere:nil];
+            for (CircleChatPointModel *model in arrMsgList) {
+                model.readFlag = YES;
+                [CircleChatPointModel updateObjToDB:model WithKey:model.sessionId];
+            }
+            QWGLOBALMANAGER.configure.expertPrivateMsgRed = NO;
+            QWGLOBALMANAGER.configure.expertFlowerRed = NO;
+            QWGLOBALMANAGER.configure.expertCommentRed = NO;
+            QWGLOBALMANAGER.configure.expertSystemInfoRed = NO;
+            [QWGLOBALMANAGER saveAppConfigure];
+            [QWGLOBALMANAGER postNotif:NotifCircleMessage data:nil object:nil];
+            [QWGLOBALMANAGER postNotif:NotifCircleMsgRedPoint data:nil object:nil];
+            
+            [QWGLOBALMANAGER noticeUnreadByMsgBoxTypes:@[@(MsgBoxListMsgTypeExpertPTP),@(MsgBoxListMsgTypeCircle)] readFlag:YES];
+            
+            success(model);
+        }
+    } failure:^(HttpException *e) {
+        if (failure) {
+            failure(e);
+        }
+    }];
+}
+
+- (NSUInteger)valueExists:(NSString *)key withValue:(NSString *)value withArr:(NSMutableArray *)arrOri
+{
+    NSInteger intReturn = NSNotFound;
+    for (int i = 0; i < arrOri.count ; i++) {
+        CircleChatPointModel *model = arrOri[i];
+        if ([[NSString stringWithFormat:@"%@",model.sessionId] isEqualToString:value]) {
+            intReturn = i;
+            break;
+        }
+    }
+    return intReturn;
+}
+@end

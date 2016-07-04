@@ -1,0 +1,30 @@
+//
+//  AddressCell.m
+//  APP
+//
+//  Created by Meng on 15/6/5.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "AddressCell.h"
+
+@interface AddressCell()
+@property (weak, nonatomic) IBOutlet UIView *lineView;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *lineConstraint;
+
+@end
+
+@implementation AddressCell
+
+- (void)awakeFromNib {
+    
+    self.lineConstraint.constant = 0.5;
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+@end

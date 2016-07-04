@@ -1,0 +1,61 @@
+/*!
+ @header UserDefault.h
+ @abstract 记录所有userdefault相关的常量名
+ @author .
+ @version 1.00 2015/03/06  (1.00)
+ */
+
+#ifndef USER_DEFAULT_H
+#define USER_DEFAULT_H
+
+#define USER_PERSON_INFO                    @"user_person_info"   //存储用户信息
+#define BRANCH_INFO                         @"branch_info"   //存储商户信息
+//#define MSG_INFO            @"MSG_INFO"
+#define APP_USERNAME_KEY            @"appusernamekey"//app用户名
+#define APP_PASSWORD_KEY            @"apppasswordkey"
+#define CREDIT_RULES                @"credit_rules_info" // 存储积分规则信息
+
+
+#define APP_LOGIN_STATUS                    @"APP_LOGIN_STATUS"
+#define APP_LOGIN_TYPE                      @"APP_LOGIN_TYPE"  // 登录方式 普通登录、杨峥吗登陆、qq登录、微信登录
+
+#define kUserDefaultsCookie                 @"kUserDefaultsCookie"
+#define kUserDefaultsIdLogin                @"kUserDefaultsIdLogin"
+
+//XMPP消息提醒开关
+#define APP_VIBRATION_ENABLE                @"APP_VIBRATION_ENABLE"
+#define APP_SOUND_ENABLE                    @"APP_SOUND_ENABLE"
+#define APP_QUESTIONPUSH                    @"APP_QUESTIONPUSH"
+
+//用药闹钟提醒开关
+#define APP_Alarm_VIBRATION_ENABLE          @"APP_Alarm_VIBRATION_ENABLE"
+#define APP_Alarm_SOUND_ENABLE              @"APP_Alarm_SOUND_ENABLE"
+
+#define ONCE_LOADING                        @"once_loading"   //仅加载一次
+#define ONCE_COVER_LOADING                  @"ONCE_COVER_LOADING"
+
+//定位地理位置信息
+#define APP_FIRSTLOCATION_NOTIFICATION      @"APP_FIRSTLOCATION_NOTIFICATION"//首次定位
+#define APP_PROVIENCE_NOTIFICATION          @"APP_PROVIENCE_NOTIFICATION"//省份
+#define APP_CITY_NOTIFICATION               @"APP_CITY_NOTIFICATION"    //城市
+#define APP_MAPINFOMODEL                    @"MAP_INFO_MODEL"           //mapInfoModel
+#define LAST_SPECIAL_CITY                   @"LAST_SPECIAL_CITY" //特殊的定位城市  add by meng
+
+#define kApplicationLastAliveDate           @"kApplicationLastAliveDate"//程序进入后台那一刻的时间 add by meng
+
+#define kReportNotOpenKey                   @"kReportNotOpenKey"
+#define kCanConsultPharmacists              @"kCanConsultPharmacists"
+
+
+#define APP_PROVIENCE_INDEX                 @"APP_PROVIENCE_INDEX"//省份
+#define APP_CITY_INDEX                      @"APP_CITY_INDEX"//城市
+
+#define kModifiedCityModel                  @"kModifiedCityModel"               //可修改的地址
+#define kLastLocationSuccessAddressModel    @"kLastLocationSuccessAddressModel" //最近一次定位成功的地址
+#define kLocationSuccess                    @"kLocationSuccess"
+#define kLocationAudition                   @"kLocationAudition"
+
+#define kHadOpenSendPostVC                      @"kHadOpenSendPostVC_For_4"             //4.0.0如果第一次发帖则显示蒙版提示匿名发帖
+#endif
+
+

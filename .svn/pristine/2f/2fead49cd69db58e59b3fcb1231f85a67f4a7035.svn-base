@@ -1,0 +1,19 @@
+//
+//  CityListViewController.h
+//  wenyao
+//
+//  Created by xiezhenghong on 14-10-7.
+//  Copyright (c) 2014年 xiezhenghong. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "QWBaseVC.h"
+#import "Search.h"
+
+
+@interface CityListViewController : QWBaseVC
+
+@property (nonatomic, copy) void(^selectBlock)(OpenCityModel *cityModel);
+@property (nonatomic, strong) NSString                  *currentCity;
+
+@end

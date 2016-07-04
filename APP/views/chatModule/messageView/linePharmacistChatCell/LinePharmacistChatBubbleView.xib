@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="7531" systemVersion="14A389" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7520"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="LinePharmacistChatBubbleView">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="30"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" placeholderIntrinsicWidth="110" placeholderIntrinsicHeight="14" text="" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="PjF-bw-mla">
+                    <rect key="frame" x="12" y="8" width="110" height="14"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="14" id="Qdu-NK-pIX"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                    <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalCompressionResistancePriority="749" text="" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qoj-bK-lPM">
+                    <rect key="frame" x="132" y="14" width="188" height="1"/>
+                    <color key="backgroundColor" red="0.85882352941176465" green="0.85882352941176465" blue="0.85882352941176465" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="1" id="G4U-YF-c6l"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                    <nil key="highlightedColor"/>
+                </label>
+            </subviews>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="qoj-bK-lPM" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="14" id="9PT-sI-K4O"/>
+                <constraint firstItem="qoj-bK-lPM" firstAttribute="leading" secondItem="PjF-bw-mla" secondAttribute="trailing" constant="10" id="CDo-Xu-XmR"/>
+                <constraint firstAttribute="trailing" secondItem="qoj-bK-lPM" secondAttribute="trailing" id="n0y-1r-jrj"/>
+                <constraint firstItem="qoj-bK-lPM" firstAttribute="leading" secondItem="PjF-bw-mla" secondAttribute="trailing" constant="10" id="sbo-RM-EnJ"/>
+                <constraint firstItem="PjF-bw-mla" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="8" id="x7I-Lw-orP"/>
+                <constraint firstItem="PjF-bw-mla" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="12" id="y2g-YI-9dC"/>
+            </constraints>
+            <nil key="simulatedStatusBarMetrics"/>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="linePharmacistText" destination="PjF-bw-mla" id="Aka-AJ-NyA"/>
+            </connections>
+            <point key="canvasLocation" x="-125" y="154"/>
+        </view>
+    </objects>
+</document>

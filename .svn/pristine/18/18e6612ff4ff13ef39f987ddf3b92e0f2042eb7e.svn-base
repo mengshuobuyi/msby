@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15C50" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="MyCouponDetailViewController">
+            <connections>
+                <outlet property="bottomHeight" destination="oCl-w7-dmP" id="hTV-WD-FMc"/>
+                <outlet property="btnPharmcy" destination="fzN-oj-OZJ" id="rhG-qa-BSk"/>
+                <outlet property="btnUse" destination="6cb-EE-WF3" id="15L-q4-SLW"/>
+                <outlet property="footerView" destination="DYB-Z9-MaQ" id="whN-RL-1LF"/>
+                <outlet property="lblNoPharmcy" destination="9AC-IK-Bec" id="zrV-ic-ta0"/>
+                <outlet property="mainTableView" destination="ouW-UR-pKM" id="rss-JW-yJF"/>
+                <outlet property="view" destination="iN0-l3-epB" id="wfv-NM-xBf"/>
+                <outlet property="viewFooter" destination="DYB-Z9-MaQ" id="j9h-eo-ohc"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB">
+            <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="ouW-UR-pKM">
+                    <rect key="frame" x="0.0" y="0.0" width="375" height="617"/>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <connections>
+                        <outlet property="dataSource" destination="-1" id="Qe1-KA-7WH"/>
+                        <outlet property="delegate" destination="-1" id="GRd-AC-3j4"/>
+                    </connections>
+                </tableView>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="DYB-Z9-MaQ">
+                    <rect key="frame" x="0.0" y="617" width="375" height="50"/>
+                    <subviews>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6cb-EE-WF3">
+                            <rect key="frame" x="91" y="5" width="193" height="40"/>
+                            <color key="backgroundColor" red="1" green="0.58039215686274503" blue="0.0078431372549019607" alpha="1" colorSpace="calibratedRGB"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="40" id="5T1-kW-7gM"/>
+                                <constraint firstAttribute="width" constant="193" id="7qI-sZ-J1a"/>
+                            </constraints>
+                            <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                            <state key="normal" title="立即使用"/>
+                            <connections>
+                                <action selector="useCoupon:" destination="-1" eventType="touchUpInside" id="Dzt-A5-vFH"/>
+                            </connections>
+                        </button>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="fzN-oj-OZJ">
+                            <rect key="frame" x="167" y="5" width="193" height="40"/>
+                            <color key="backgroundColor" red="1" green="0.58039215686274503" blue="0.0078431372549019607" alpha="1" colorSpace="calibratedRGB"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="193" id="7ai-c2-BFs"/>
+                                <constraint firstAttribute="height" constant="40" id="cqN-c9-uyg"/>
+                            </constraints>
+                            <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                            <state key="normal" title="其他适用药房"/>
+                            <connections>
+                                <action selector="otherPharmcy:" destination="-1" eventType="touchUpInside" id="hT7-NM-nDN"/>
+                            </connections>
+                        </button>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="本药房不适用此券" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="9AC-IK-Bec">
+                            <rect key="frame" x="15" y="14" width="100" height="22"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="100" id="W2c-kn-v1C"/>
+                                <constraint firstAttribute="height" constant="22" id="jXc-8X-T1e"/>
+                            </constraints>
+                            <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                            <color key="textColor" red="0.40000000000000002" green="0.40000000000000002" blue="0.40000000000000002" alpha="1" colorSpace="calibratedRGB"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                    </subviews>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstItem="fzN-oj-OZJ" firstAttribute="top" secondItem="DYB-Z9-MaQ" secondAttribute="top" constant="5" id="4vl-Cc-koV"/>
+                        <constraint firstItem="9AC-IK-Bec" firstAttribute="centerY" secondItem="DYB-Z9-MaQ" secondAttribute="centerY" id="BZE-P5-wuc"/>
+                        <constraint firstAttribute="height" constant="50" id="Sgr-0r-shd"/>
+                        <constraint firstItem="6cb-EE-WF3" firstAttribute="centerY" secondItem="DYB-Z9-MaQ" secondAttribute="centerY" id="kJa-xp-XYN"/>
+                        <constraint firstItem="6cb-EE-WF3" firstAttribute="centerX" secondItem="DYB-Z9-MaQ" secondAttribute="centerX" id="rVw-tG-QUF"/>
+                        <constraint firstItem="9AC-IK-Bec" firstAttribute="leading" secondItem="DYB-Z9-MaQ" secondAttribute="leading" constant="15" id="t65-EU-TLl"/>
+                        <constraint firstAttribute="trailing" secondItem="fzN-oj-OZJ" secondAttribute="trailing" constant="15" id="y9K-ju-bLJ"/>
+                    </constraints>
+                </view>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstAttribute="trailing" secondItem="ouW-UR-pKM" secondAttribute="trailing" id="69g-cs-ezk"/>
+                <constraint firstItem="ouW-UR-pKM" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="SpG-pA-P4O"/>
+                <constraint firstAttribute="bottom" secondItem="DYB-Z9-MaQ" secondAttribute="bottom" id="Swj-3E-LIZ"/>
+                <constraint firstItem="DYB-Z9-MaQ" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="dk5-Zn-BAu"/>
+                <constraint firstAttribute="bottom" secondItem="ouW-UR-pKM" secondAttribute="bottom" constant="50" id="oCl-w7-dmP"/>
+                <constraint firstItem="ouW-UR-pKM" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="rvj-4K-bhn"/>
+                <constraint firstAttribute="trailing" secondItem="DYB-Z9-MaQ" secondAttribute="trailing" id="zcY-rr-0cS"/>
+            </constraints>
+            <nil key="simulatedStatusBarMetrics"/>
+            <nil key="simulatedTopBarMetrics"/>
+            <nil key="simulatedBottomBarMetrics"/>
+            <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina47"/>
+        </view>
+    </objects>
+</document>

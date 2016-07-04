@@ -1,0 +1,553 @@
+//
+//  IndentDetailViewController.m
+//  APP
+//  订单列表
+//  订单列表数据接口：QueryOrdersList
+//  操作订单接口：OperateOrders
+//  订单取消理由接口：QueryUserCancelReasonInfo
+//  Created by qw_imac on 15/12/29.
+//  Copyright © 2015年 carret. All rights reserved.
+//
+
+#import "IndentDetailViewController.h"
+#import "IndentCell.h"
+#import "CancelAlertView.h"
+#import "IndentDetailListViewController.h"
+#import "CheckPostViewController.h"
+#import "Orders.h"
+#import "EvaluateProductViewController.h"
+#import "SVProgressHUD.h"
+@interface IndentDetailViewController ()<UITableViewDataSource,UITableViewDelegate,UIPickerViewDelegate,UIPickerViewDataSource,UIActionSheetDelegate,UIAlertViewDelegate>
+{
+    NSMutableArray      *array;
+    NSMutableArray      *dataResource;
+    NSInteger           curpage;
+    NSMutableArray      *telePhoneArray;
+    NSInteger           reasonIndex;
+    NSInteger           opreationIndex;
+    NSString            *phoneNumber;//客服电话
+}
+@property (nonatomic,strong)UITableView     *tableView;
+@property (nonatomic,strong)CancelAlertView *cancelView;
+@end
+
+@implementation IndentDetailViewController
+static NSString *identifier = @"IndentCell";
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    dataResource = [NSMutableArray array];
+    array = [NSMutableArray array];
+    opreationIndex = 0;
+    reasonIndex = 0;
+    phoneNumber = [[NSString alloc]init];
+    [self setupUI];
+//    [self queryData];
+    [self queryCancelReason];
+}
+
+-(void)setupUI {
+    self.tableView =[[UITableView alloc] initWithFrame:CGRectMake(0, 0 , APP_W, [[UIScreen mainScreen] bounds].size.height - 64 - 36) style:UITableViewStylePlain];
+    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    self.tableView.delegate = self;
+    self.tableView.dataSource = self;
+    self.tableView.backgroundColor = [UIColor clearColor];
+    [self.tableView addFooterWithTarget:self action:@selector(actionLoadMore)];
+    [self enableSimpleRefresh:self.tableView block:^(SRRefreshView *sender) {
+        [self refresh];
+    }];
+    [self.view addSubview:self.tableView];
+}
+
+-(void)refresh {
+    curpage = 1;
+    self.tableView.footer.canLoadMore = YES;
+    [self queryData];
+}
+
+- (void)actionLoadMore {
+    HttpClientMgr.progressEnabled = NO;
+    curpage++;
+    [self queryData];
+}
+
+-(void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    curpage = 1;
+    [self queryData];
+//    [self queryCancelReason];
+}
+
+//取消订单
+-(void)cancelOrder:(UIButton *)sender {
+    [QWGLOBALMANAGER statisticsEventId:@"我的_未完成_取消订单" withLable:nil withParams:nil];
+
+    _cancelView = [CancelAlertView cancelAlertView];
+    _cancelView.picker.dataSource = self;
+    _cancelView.picker.delegate = self;
+    _cancelView.bkView.alpha = 0.0;
+    
+    NSInteger i = (sender.tag - 1)/100;
+    _cancelView.ensureBtn.tag = i + 1000;
+    [_cancelView.ensureBtn addTarget:self action:@selector(cancelOperate:) forControlEvents:UIControlEventTouchUpInside];
+    
+    UIWindow *win = [[UIApplication sharedApplication] keyWindow];
+    [win addSubview:_cancelView];
+    [UIView animateWithDuration:0.25 animations:^{
+        _cancelView.bkView.alpha =0.4;
+        _cancelView.picker.hidden = NO;
+        _cancelView.reasonView.hidden = NO;
+    }];
+}
+
+-(void)cancelOperate:(UIButton *)sender {
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+        [SVProgressHUD showErrorWithStatus:kWarning12 duration:0.8];
+        return;
+    }
+    NSInteger i = sender.tag - 1000;
+    [_cancelView removeSelf];
+    MicroMallOrderVO *vo = dataResource[i];
+    
+    NSMutableDictionary *tdParams = [NSMutableDictionary dictionary];
+    tdParams[@"药房名"] = vo.branchName;
+    tdParams[@"药品数"] = [NSString stringWithFormat:@"%d",vo.microMallOrderDetailVOs.count];
+    tdParams[@"价格"] = [NSString stringWithFormat:@"%@",vo.finalAmount];
+    [QWGLOBALMANAGER statisticsEventId:@"x_wddd_qx" withLable:@"我的订单" withParams:tdParams];
+    
+    NSMutableDictionary *tedParams = [NSMutableDictionary dictionary];
+    tedParams[@"取消理由"] = array[reasonIndex];
+    [QWGLOBALMANAGER statisticsEventId:@"x_wddd_qxqd" withLable:@"我的订单" withParams:tedParams];
+    
+    OperateUseOrderR *modelR = [OperateUseOrderR new];
+    if (QWGLOBALMANAGER.configure.userToken) {
+        modelR.token = QWGLOBALMANAGER.configure.userToken;
+    }
+    modelR.orderId = vo.orderId;
+    modelR.operate = 2;
+    modelR.cancelReason = array[reasonIndex];
+    [Orders operateUserOrder:modelR success:^(OperateUseOrderModel *model) {
+        if ([model.apiStatus integerValue] == 0) {
+            [self queryData];
+        }else {
+            //[SVProgressHUD showErrorWithStatus:model.apiMessage duration:.5];
+        }
+    } failure:^(HttpException *e) {
+        
+    }];
+    
+}
+//删除订单
+-(void)deleteOrder:(NSInteger)index {
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+        [SVProgressHUD showErrorWithStatus:kWarning12 duration:0.8];
+        return;
+    }
+    MicroMallOrderVO *vo = dataResource[index];
+    OperateUseOrderR *modelR = [OperateUseOrderR new];
+    if (QWGLOBALMANAGER.configure.userToken) {
+        modelR.token = QWGLOBALMANAGER.configure.userToken;
+    }
+    modelR.orderId = vo.orderId;
+    modelR.operate = 3;
+    [Orders operateUserOrder:modelR success:^(OperateUseOrderModel *model) {
+        if ([model.apiStatus integerValue] == 0) {
+            [self queryData];
+        }else {
+            //[SVProgressHUD showErrorWithStatus:model.apiMessage duration:.5];
+        }
+    } failure:^(HttpException *e) {
+        
+    }];
+}
+//查看物流
+-(void)checkPost:(UIButton *)sender {
+    CheckPostViewController *vc = [CheckPostViewController new];
+    NSInteger i = (sender.tag -1)/100;
+    MicroMallOrderVO *vo = dataResource[i];
+    vc.postName = vo.expressCompany;
+    vc.postNumber = vo.waybillNo;
+    [self.navi pushViewController:vc animated:YES];
+}
+//确认收货
+-(void)ensureOrder:(NSInteger)index {
+    [QWGLOBALMANAGER statisticsEventId:@"我的_未完成_确认订单" withLable:nil withParams:nil];
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+        [SVProgressHUD showErrorWithStatus:kWarning12 duration:0.8];
+        return;
+    }
+    MicroMallOrderVO *vo = dataResource[index];
+    
+    NSMutableDictionary *tdParams = [NSMutableDictionary dictionary];
+    tdParams[@"药房名"] = vo.branchName;
+    tdParams[@"药品数"] = [NSString stringWithFormat:@"%d",vo.microMallOrderDetailVOs.count];
+    tdParams[@"价格"] = [NSString stringWithFormat:@"%@",vo.finalAmount];
+    [QWGLOBALMANAGER statisticsEventId:@"x_wddd_qr" withLable:@"我的订单" withParams:tdParams];
+    
+    OperateUseOrderR *modelR = [OperateUseOrderR new];
+    if (QWGLOBALMANAGER.configure.userToken) {
+        modelR.token = QWGLOBALMANAGER.configure.userToken;
+    }
+    modelR.orderId = vo.orderId;
+    modelR.operate = 1;
+    [Orders operateUserOrder:modelR success:^(OperateUseOrderModel *model) {
+        if ([model.apiStatus integerValue] == 0) {
+            UIAlertView *alertView = [[UIAlertView alloc]initWithTitle:nil message:@"订单已经确认收货成功\n是否立即评价？" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
+            alertView.tag = 103;
+            [alertView show];
+        }else {
+            //[SVProgressHUD showErrorWithStatus:model.apiMessage duration:.5];
+        }
+    } failure:^(HttpException *e) {
+        
+    }];
+    
+}
+//我要评价
+-(void)gotoComment:(NSInteger)index {
+    EvaluateProductViewController *vcEva = (EvaluateProductViewController *)[[UIStoryboard storyboardWithName:@"EvaluateProduct" bundle:[NSBundle mainBundle]] instantiateViewControllerWithIdentifier:@"EvaluateProductViewController"];
+    MicroMallOrderVO *vo = dataResource[index];
+    vcEva.orderId = vo.orderId;
+    if ([vo.deliver intValue] == 2) {
+        vcEva.hasPostSpeed = YES;
+    }else {
+        vcEva.hasPostSpeed = NO;
+    }
+    __weak typeof(self) weakSelf = self;
+    vcEva.refreshDetail = ^{
+        curpage = 1;
+        [weakSelf queryData];
+    };
+    [self.navi pushViewController:vcEva animated:YES];
+}
+
+-(void)gotoPay:(UIButton *)sender {
+    NSInteger index = (sender.tag - 2)/100;
+    MicroMallOrderVO *vo = dataResource[index];
+    NSString *orderId = vo.orderId;
+    WebOrderDetailModel *model=[WebOrderDetailModel new];
+    model.orderCode=vo.orderCode;
+    model.orderId=vo.orderId;
+    model.orderIdName=vo.branchName;
+    [QWGLOBALMANAGER jumpH5PayOrderWithOrderId:orderId totalPrice:vo.finalAmount  isComeFrom:@"2" orderModel:model  navigationController:self.navi];
+}
+
+-(void)applyForrefund:(UIButton *)sender {
+    NSInteger index = (sender.tag -1)/100;
+    opreationIndex = index;
+    MicroMallOrderVO *vo = dataResource[index];
+    phoneNumber = vo.serviceTel;
+    UIAlertView *alertView = [[UIAlertView alloc]initWithTitle:nil message:[NSString stringWithFormat:@"申请取消订单需联系客服热线\n%@",phoneNumber] delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
+    alertView.tag = 104;
+    [alertView show];
+}
+
+#pragma mark - tableviewDelegate
+-(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    return dataResource.count;
+}
+
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return 1;
+}
+
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    IndentCell *cell = (IndentCell *)[self.tableView dequeueReusableCellWithIdentifier:identifier];
+    if (!cell) {
+        cell =[[NSBundle mainBundle] loadNibNamed:@"IndentCell" owner:self options:nil][0];
+    }
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    MicroMallOrderVO *vo = dataResource[indexPath.section];
+    [cell cellSetWith:vo];
+    //根据状态给cell上的btn添加事件
+    cell.checkPostBtn.tag = indexPath.section *100 +1;
+    cell.consigneeBtn.tag = indexPath.section *100 +2;
+//    cell.telBtn.tag = indexPath.section *100 +3;
+//    [cell.telBtn addTarget:self action:@selector(phoneCallWithNumber:) forControlEvents:UIControlEventTouchUpInside];
+    if ([vo.orderStatus intValue] == 1 && [vo.payType integerValue] == 2){  //已付款成功，申请退款(在线支付)
+        [cell.checkPostBtn addTarget:self action:@selector(applyForrefund:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    if ([vo.orderStatus intValue] == 1 && [vo.payType integerValue] == 1){  //当面支付，取消订单
+        [cell.checkPostBtn addTarget:self action:@selector(cancelOrder:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    if([vo.orderStatus intValue] == 2 && [vo.payType integerValue] == 1){
+        [cell.checkPostBtn addTarget:self action:@selector(cancelOrder:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    if ([vo.orderStatus intValue] == 2 && [vo.payType integerValue] == 2) {//待配送在线支付情况下是申请取消
+        [cell.checkPostBtn addTarget:self action:@selector(applyForrefund:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    
+    if([vo.orderStatus intValue] == 6 && [vo.payType integerValue] == 1){//待取货也要区分付款方式
+        [cell.checkPostBtn addTarget:self action:@selector(cancelOrder:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    if ([vo.orderStatus intValue] == 6 && [vo.payType integerValue] == 2) {
+        [cell.checkPostBtn addTarget:self action:@selector(applyForrefund:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    if ([vo.orderStatus intValue] == 10) {
+        [cell.checkPostBtn addTarget:self action:@selector(cancelOrder:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    if ([vo.orderStatus intValue] == 8) {
+        [cell.checkPostBtn addTarget:self action:@selector(deleteAction:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    if ([vo.orderStatus intValue] == 3||[vo.orderStatus intValue] == 9) {
+        [cell.checkPostBtn addTarget:self action:@selector(checkPost:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    //右边按钮
+    if ([vo.orderStatus intValue] == 3||[vo.orderStatus intValue] == 6) {
+        [cell.consigneeBtn addTarget:self action:@selector(ensureAction:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    if ([vo.orderStatus intValue] == 9) {
+        [cell.consigneeBtn addTarget:self action:@selector(commentAction:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    if ([vo.orderStatus intValue] == 10) {
+        [cell.consigneeBtn addTarget:self action:@selector(gotoPay:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return cell;
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    MicroMallOrderVO *vo = dataResource[indexPath.section];
+    if ([vo.orderStatus intValue] == 9 && [vo.deliver integerValue] != 3 && [vo.appraiseStatus intValue] == 2) {
+        //已完成的非同城快递的已评价的情况
+        return 175.0;
+    }else {
+        return [IndentCell setHeight];
+    }
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
+    return 7.0;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section {
+    return 0.1;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
+    UIView *bgView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, APP_W, 7.0)];
+    bgView.backgroundColor = [UIColor clearColor];
+    return bgView;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section {
+    UIView *bgView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, APP_W, 0.1)];
+    bgView.backgroundColor = RGBHex(qwColor11);
+    return bgView;
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    MicroMallOrderVO *vo = dataResource[indexPath.section];
+    
+    NSMutableDictionary *tdParams = [NSMutableDictionary dictionary];
+    tdParams[@"药房名"] = vo.branchName;
+    tdParams[@"药品数"] = [NSString stringWithFormat:@"%d",vo.microMallOrderDetailVOs.count];
+    tdParams[@"价格"] = [NSString stringWithFormat:@"%@",vo.finalAmount];
+    [QWGLOBALMANAGER statisticsEventId:@"x_wddd_dd" withLable:@"我的订单" withParams:tdParams];
+    
+    IndentDetailListViewController *vc = [IndentDetailListViewController new];
+    vc.status = vo.appraiseStatus;
+    __weak typeof(self) weakSelf = self;
+    vc.refreshBlock = ^{
+        curpage = 1;
+        [weakSelf queryData];
+    };
+    vc.orderId = vo.orderId;
+    [self.navi pushViewController:vc animated:YES];
+}
+
+-(void)ensureAction:(UIButton *)sender {
+    UIAlertView *alertView = [[UIAlertView alloc]initWithTitle:nil message:@"您是否确认已收货？" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
+    opreationIndex = (sender.tag - 2)/100;
+    alertView.tag = 100;
+    [alertView show];
+}
+
+-(void)deleteAction:(UIButton *)sender {
+    UIAlertView *alertView = [[UIAlertView alloc]initWithTitle:nil message:@"确定删除订单？" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"删除", nil];
+    alertView.tag = 101;
+    opreationIndex = (sender.tag - 1)/100;
+    [alertView show];
+}
+
+-(void)commentAction:(UIButton *)sender {
+    [QWGLOBALMANAGER statisticsEventId:@"我的_待评价_我要评价" withLable:nil withParams:nil];
+
+    UIAlertView *alertView = [[UIAlertView alloc]initWithTitle:nil message:@"订单已经确认收货成功\n是否立即评价？" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
+    alertView.tag = 102;
+    opreationIndex = (sender.tag - 2)/100;
+    [alertView show];
+}
+
+-(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+    if (alertView.tag == 100) {
+        if (buttonIndex == 1) {
+            [self ensureOrder:opreationIndex];
+        }
+    }else if (alertView.tag == 101){
+        if (buttonIndex == 1) {
+            [self deleteOrder:opreationIndex];
+        }
+    }else if (alertView.tag == 102){
+        if (buttonIndex == 1) {
+            [self gotoComment:opreationIndex];
+        }
+    }else if(alertView.tag == 103) {
+        if (buttonIndex == 0) {
+            [self queryData];
+        }else {
+            [self gotoComment:opreationIndex];
+        }
+    }else if(alertView.tag == 104) {
+        if (buttonIndex == 1) {
+            NSString *number = [NSString stringWithFormat:@"tel://%@",phoneNumber];
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:number]];
+            [self createRefundOrder:opreationIndex];
+        }
+    }
+}
+
+//申请取消电话拨打时要生成工单
+-(void)createRefundOrder:(NSInteger)index {
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+        [SVProgressHUD showErrorWithStatus:kWarning12 duration:0.8];
+        return;
+    }
+    MicroMallOrderVO *vo = dataResource[index];
+    OperateUseOrderR *modelR = [OperateUseOrderR new];
+    if (QWGLOBALMANAGER.configure.userToken) {
+        modelR.token = QWGLOBALMANAGER.configure.userToken;
+    }
+    modelR.orderId = vo.orderId;
+    modelR.operate = 6;
+    [Orders operateUserOrder:modelR success:^(OperateUseOrderModel *model) {
+        if ([model.apiStatus integerValue] == 0) {
+           
+        }else {
+            //[SVProgressHUD showErrorWithStatus:model.apiMessage duration:.5];
+        }
+    } failure:^(HttpException *e) {
+        
+    }];
+}
+
+//调用电话
+//-(void)phoneCallWithNumber:(UIButton *)sender {
+//    NSInteger i = (sender.tag -3)/100;
+//    MicroMallOrderVO *vo = dataResource[i];
+//    
+//    NSMutableDictionary *tdParams = [NSMutableDictionary dictionary];
+//    tdParams[@"药房名"] = vo.branchName;
+//    tdParams[@"药品数"] = [NSString stringWithFormat:@"%d",vo.microMallOrderDetailVOs.count];
+//    tdParams[@"价格"] = [NSString stringWithFormat:@"%@",vo.finalAmount];
+//    [QWGLOBALMANAGER statisticsEventId:@"x_wddd_dh" withLable:@"我的订单" withParams:tdParams];
+//    
+//    NSArray *tels = [vo.branchMobile componentsSeparatedByString:@","];
+//    telePhoneArray = [NSMutableArray arrayWithArray:tels];
+//    [self chooseTelWithTels:tels];
+//  }
+
+//-(void)chooseTelWithTels:(NSArray *)tels {
+//    UIActionSheet *telphone = [[UIActionSheet alloc]initWithTitle:nil delegate:self cancelButtonTitle:@"取消" destructiveButtonTitle:nil otherButtonTitles: nil];
+//    for (int i = 0; i < tels.count ; i ++) {
+//        [telphone addButtonWithTitle:tels[i]];
+//    }
+//    [telphone showInView:self.view];
+//}
+//
+//#pragma mark - UIActionSheet
+//- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
+//    if (buttonIndex != 0) {
+//        NSString *phoneNumber = telePhoneArray[buttonIndex - 1];
+//        NSString *number = [NSString stringWithFormat:@"tel://%@",phoneNumber];
+//        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:number]];
+//    }
+//}
+#pragma mark - pickerView
+- (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView {
+    return 1;
+}
+
+- (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component {
+    return array.count;
+}
+
+- (NSString *)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component {
+    return array[row];
+}
+
+- (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
+    reasonIndex = row;
+    NSMutableDictionary *tdParams = [NSMutableDictionary dictionary];
+    tdParams[@"取消理由"] = array[row];
+    [QWGLOBALMANAGER statisticsEventId:@"x_wddd_qxly" withLable:@"我的订单" withParams:tdParams];
+}
+
+#pragma mark - networking
+-(void)queryData {
+    if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+        [SVProgressHUD showErrorWithStatus:kWarning12 duration:0.8];
+        return;
+    }
+    [self removeInfoView];
+    QueryOrdersR *modelR = [QueryOrdersR new];
+    if (QWGLOBALMANAGER.configure.userToken) {
+        modelR.token = QWGLOBALMANAGER.configure.userToken;
+    }
+    modelR.status = self.status;
+    modelR.page = curpage;
+    modelR.pageSize = 10;
+    [Orders queryOrders:modelR success:^(OrderList *responseModel) {
+        [self.tableView footerEndRefreshing];
+        if (responseModel.list.count > 0) {
+            if (curpage == 1) {
+                [dataResource removeAllObjects];
+                [dataResource addObjectsFromArray:responseModel.list];
+            } else {
+                [dataResource addObjectsFromArray:responseModel.list];
+            }
+        }else {//请求数据列表为空的时候
+            if (curpage == 1) {
+                [dataResource removeAllObjects];
+            }else {
+                self.tableView.footer.canLoadMore = NO;
+                curpage --;
+            }
+        }
+        [self.tableView reloadData];
+        if (dataResource.count == 0) {
+            NSString *message;
+            if (_status == 0) {
+                message = @"您还没有订单哦~";
+            }else if (_status == 1) {
+                message = @"您还没有未完成的订单";
+            }else {
+                message = @"您还没有待评价的订单";
+            }
+            [self showInfoView:message image:@"icon_order_default"];
+        }
+        NSString *hasContent;
+        if (dataResource.count>0) {
+            hasContent = @"有内容";
+        }else {
+            hasContent = @"无内容";
+        }
+        NSMutableDictionary *tdParams = [NSMutableDictionary dictionary];
+        tdParams[@"有无内容"]=hasContent;
+        [QWGLOBALMANAGER statisticsEventId:@"x_wd_wddd" withLable:@"我的订单" withParams:tdParams];
+    } failure:^(HttpException *e) {
+        [self.tableView footerEndRefreshing];
+    }];
+}
+//取消订单理由
+-(void)queryCancelReason {
+    QueryCancelReasonR *modelR = [QueryCancelReasonR new];
+    modelR.type = 1;
+    [Orders queryCancelReason:modelR success:^(CancelReasonModel *model) {
+        if (model.list > 0) {
+            array = [NSMutableArray arrayWithArray:model.list];
+        }
+    } failure:^(HttpException *e) {
+        
+    }];
+}
+@end

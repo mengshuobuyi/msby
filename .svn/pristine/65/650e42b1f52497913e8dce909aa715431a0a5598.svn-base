@@ -1,0 +1,477 @@
+//
+//  MallStoreMainViewController.m
+//  APP
+//  V3.2 微商城市新微商药房页面QCSlideView最外层界面
+
+//  使用接口如下：
+//  h5/mmall/queryNotice 药房店内公告
+//  api/favorite/collect 添加、取消收藏以及check该药房是否已被当前登录账号收藏
+//  Created by 李坚 on 16/5/4.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "MallStoreMainViewController.h"
+#import "MallBranchHeaderView.h"
+#import "QCSlideSwitchView.h"
+#import "StorePharmacyDetailViewController.h"
+#import "PharmacyGoodsListViewController.h"
+#import "PharmacyMainViewController.h"
+#import "ConsultStoreModel.h"
+#import "LoginViewController.h"
+#import "Favorite.h"
+#import "SVProgressHUD.h"
+#import "NoticeCustomView.h"
+#import "AppDelegate.h"
+#import "ConsultStore.h"
+#import "StoreSearchMedicineViewController.h"
+#import "ScanReaderViewController.h"
+
+#define NoNoticeHeaderViewHeight    84.0f
+#define NoticeHeaderViewHeight      115.0f
+
+@interface MallStoreMainViewController ()<QCSlideSwitchViewDelegate>{
+    NSInteger selectedIndex;
+    BranchNoticeVO *noticeModel;
+    
+    PharmacyMainViewController *mainView;
+    PharmacyGoodsListViewController *storeGood;
+    StorePharmacyDetailViewController *sotreDetail;
+    
+    BranchDetailVO *branchDetail;
+}
+
+@property (nonatomic ,strong) NSMutableArray * viewControllerArray;
+@property (nonatomic ,strong) QCSlideSwitchView * slideSwitchView;
+@property (nonatomic, strong) MallBranchHeaderView *headView;
+@property (nonatomic, strong) UIView *searchView;
+
+@end
+
+@implementation MallStoreMainViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    selectedIndex = 0;
+    
+    [self naviRightBottonImage:@"icon_share" action:@selector(shareAction:)];
+    [self setupHeaderView];
+    [self setupSearchViewAndRightItem];
+    
+    [self checkCollect];
+    [self setupStoreViewControllers];
+    [self setupSliderView];
+
+    [self loadNotice];
+
+}
+
+- (void)setupHeaderView{
+    
+    NSArray* nibView =  [[NSBundle mainBundle] loadNibNamed:@"MallBranchHeaderView" owner:self options:nil];
+    _headView = [nibView objectAtIndex:0];
+    _headView.frame = CGRectMake(0, 0, APP_W, NoNoticeHeaderViewHeight);
+    _headView.noticeView.hidden = YES;
+    [_headView.noticeBtn addTarget:self action:@selector(noticeAction) forControlEvents:UIControlEventTouchUpInside];
+    
+    UIView *myHead = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, NoticeHeaderViewHeight)];
+    [self.view addSubview:myHead];
+    [myHead addSubview:_headView];
+}
+
+- (void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    
+    [self.navigationController.navigationBar addSubview:self.searchView];
+    
+    if(mainView && mainView.bannerArray.count > 0 && mainView.cycleScrollView){
+        [mainView.cycleScrollView startAutoScroll:5.0f];
+    }
+}
+
+- (void)viewDidAppear:(BOOL)animated{
+    [super viewDidAppear:animated];
+    
+    
+}
+
+- (void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    
+    [self.searchView removeFromSuperview];
+    
+    if(mainView.cycleScrollView){
+        [mainView.cycleScrollView stopAutoScroll];
+    }
+}
+
+- (void)setupSearchViewAndRightItem{
+    
+    //searchView初始化
+    self.searchView = [[UIView alloc]initWithFrame:CGRectMake(45, 7.0f, APP_W - 95, 29)];
+    self.searchView.backgroundColor = RGBHex(qwColor4);
+    self.searchView.layer.masksToBounds = YES;
+    self.searchView.layer.cornerRadius = 2.5f;
+    
+    UIImageView *searchImage = [[UIImageView alloc]initWithFrame:CGRectMake(8, 7.5, 15, 15)];
+    searchImage.image = [UIImage imageNamed:@"icon_home_search_grey"];
+    [_searchView addSubview:searchImage];
+    
+    UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(31, 0, 120, 30)];
+    label.font = fontSystem(kFontS4);
+    label.textColor = RGBHex(qwColor9);
+    label.text = @"搜索商品";
+    [_searchView addSubview:label];
+    
+    UIButton *searchBtn = [[UIButton alloc]initWithFrame:self.searchView.frame];
+    searchBtn.backgroundColor = [UIColor clearColor];
+    [searchBtn addTarget:self action:@selector(pushGoodSearchView) forControlEvents:UIControlEventTouchUpInside];
+    [_searchView addSubview:searchBtn];
+    
+    UIButton *scanBtn = [[UIButton alloc]initWithFrame:CGRectMake(searchBtn.frame.size.width - 40, 0.0f, 29, 29)];
+    [scanBtn setImage:[UIImage imageNamed:@"ic_btn_scancode"] forState:UIControlStateNormal];
+    [scanBtn addTarget:self action:@selector(pushScanSearchView) forControlEvents:UIControlEventTouchUpInside];
+    [_searchView addSubview:scanBtn];
+}
+
+#pragma mark - 右侧文字按钮
+- (void)naviRightBottonImage:(NSString *)imageStr action:(SEL)action
+{
+    CGRect frm = CGRectMake(0,0,44.0f,44.0f);
+    UIButton* btn= [[UIButton alloc] initWithFrame:frm];
+    
+    [btn setImage:[UIImage imageNamed:imageStr] forState:UIControlStateNormal];
+    [btn addTarget:self action:action forControlEvents:UIControlEventTouchUpInside];
+    
+    btn.contentHorizontalAlignment = UIControlContentHorizontalAlignmentLeft;
+    btn.backgroundColor=[UIColor clearColor];
+    
+    
+    UIBarButtonItem *fixed = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
+    fixed.width = -28.0f;
+    
+    UIBarButtonItem* btnItem = [[UIBarButtonItem alloc] initWithCustomView:btn];
+    self.navigationItem.rightBarButtonItems = @[fixed,btnItem];
+}
+
+
+#pragma mark - 分享按钮Action
+- (void)shareAction:(id)sender{
+    
+    if(branchDetail == nil || StrIsEmpty(branchDetail.id)){
+        return;
+    }
+    
+    [QWGLOBALMANAGER statisticsEventId:@"x_yfsy_fx" withLable:@"药房首页-分享" withParams:nil];
+    
+    ShareContentModel *modelShare = [[ShareContentModel alloc] init];
+    modelShare.typeShare = ShareTypePharmacy;
+    modelShare.title = branchDetail.name;
+    modelShare.shareID = branchDetail.id;
+    modelShare.content = @"送药上门，您的专属药房就在你身边";
+    if (branchDetail.logo.length > 0) {
+        modelShare.imgURL = branchDetail.logo;
+    }
+    //QWWAP/pharmacy/html/store.html?id= 5月19日H5给
+    //QWWAP/pharmacy/html/home_page.html?id= 5月23日H5给
+    modelShare.shareLink = [NSString stringWithFormat:@"%@QWWAP/pharmacy/html/home_page.html?id=%@",H5_NEW_SHARE_URL,branchDetail.id];
+    [self popUpShareView:modelShare];
+}
+
+#pragma mark - 搜索按钮Action
+- (void)pushGoodSearchView{
+    
+    [QWGLOBALMANAGER statisticsEventId:@"x_dnyp_ss" withLable:nil withParams:nil];
+    StoreSearchMedicineViewController *VC = [[StoreSearchMedicineViewController alloc]initWithNibName:@"StoreSearchMedicineViewController" bundle:nil];
+    VC.storeId = self.storeId;
+    [self.navigationController pushViewController:VC animated:YES];
+}
+
+#pragma mark - 扫码按钮Action
+- (void)pushScanSearchView{
+    
+    [QWGLOBALMANAGER statisticsEventId:@"x_dnyp_ss" withLable:nil withParams:nil];
+    
+    ScanReaderViewController *VC = [[ScanReaderViewController alloc]initWithNibName:@"ScanReaderViewController" bundle:nil];
+    VC.useType = Enum_Scan_Items_OnlyCode;
+//    VC.NeedPopBack = YES;
+    __weak typeof (self) weakSelf = self;
+    VC.scanBlock = ^(NSString *scanCode){
+        
+        StoreSearchMedicineViewController *SearchVC = [[StoreSearchMedicineViewController alloc]initWithNibName:@"StoreSearchMedicineViewController" bundle:nil];
+        SearchVC.storeId = self.storeId;
+        SearchVC.scanCode = scanCode;
+        [weakSelf.navigationController pushViewController:SearchVC animated:NO];
+    };
+    [self.navigationController pushViewController:VC animated:YES];
+}
+
+- (void)setupSliderView{
+    
+    self.slideSwitchView = [[QCSlideSwitchView alloc]initWithFrame:CGRectMake(0, NoNoticeHeaderViewHeight, APP_W, APP_H-NAV_H-NoNoticeHeaderViewHeight)];
+    
+    [self.slideSwitchView.topScrollView setBackgroundColor:RGBHex(qwColor4)];
+    
+    self.slideSwitchView.tabItemSelectedColor = RGBHex(qwColor1);
+    self.slideSwitchView.tabItemNormalColor = RGBHex(qwColor6);
+    
+    [self.slideSwitchView.rigthSideButton.titleLabel setFont:fontSystem(kFontS4)];
+    self.slideSwitchView.slideSwitchViewDelegate = self;
+    self.slideSwitchView.rootScrollView.scrollEnabled = YES;
+    self.slideSwitchView.shadowImage = [[UIImage imageNamed:@"blue_line_and_shadow"]
+                                        stretchableImageWithLeftCapWidth:84.0f topCapHeight:0.0f];
+    
+    [self.slideSwitchView buildUI];
+    
+    [self.view addSubview:self.slideSwitchView];
+}
+
+#pragma mark - 开通微商药房详情
+- (void)setupStoreViewControllers{
+    
+    self.viewControllerArray = [NSMutableArray new];
+    
+    mainView = [[PharmacyMainViewController alloc]initWithNibName:@"PharmacyMainViewController" bundle:nil];
+    mainView.title = @"首页";
+    __weak typeof (self) weakSelf = self;
+    mainView.selectedBlock = ^(NSString *branchId){
+        [weakSelf.slideSwitchView jumpToTabAtIndex:1];
+    };
+    mainView.branchId = self.storeId;
+    mainView.navigation = self.navigationController;
+    [self.viewControllerArray addObject:mainView];
+    
+    
+    storeGood = [[PharmacyGoodsListViewController alloc]initWithNibName:@"PharmacyGoodsListViewController" bundle:nil];
+    storeGood.branchTitle = self.title;
+    storeGood.branchId = self.storeId;
+    storeGood.title = @"商品";
+
+    storeGood.navigation = self.navigationController;
+    [self.viewControllerArray addObject:storeGood];
+    
+    sotreDetail = [[StorePharmacyDetailViewController alloc]initWithNibName:@"StorePharmacyDetailViewController" bundle:nil];
+    sotreDetail.branchId = self.storeId;
+    sotreDetail.navigation = self.navigationController;
+    [self.viewControllerArray addObject:sotreDetail];
+    
+    self.slideSwitchView.viewArray = self.viewControllerArray;
+    
+    NSString *cityEnable = @"开通";
+    if(StrIsEmpty(self.lastPageName)){
+        self.lastPageName = @"未知";
+    }
+    [QWGLOBALMANAGER statisticsEventId:@"x_yfxq_xq" withLable:@"药房详情" withParams:[NSMutableDictionary dictionaryWithDictionary:@{@"药房名":self.title,@"是否开通微商":cityEnable,@"上级页面":self.lastPageName}]];
+    sotreDetail.title = @"药房";
+}
+
+#pragma mark - QCSlideSwitchViewDelegate
+- (NSUInteger)numberOfTab:(QCSlideSwitchView *)view{
+    return self.viewControllerArray.count;
+}
+
+- (UIViewController *)slideSwitchView:(QCSlideSwitchView *)view viewOfTab:(NSUInteger)number{
+    
+    
+    return self.viewControllerArray[number];
+}
+
+- (void)slideSwitchView:(QCSlideSwitchView *)view didselectTab:(NSUInteger)number{
+    selectedIndex = number;
+
+    if(number == 0){
+        [QWGLOBALMANAGER statisticsEventId:@"x_yfsy_sy" withLable:@"药房首页-首页" withParams:nil];
+    }
+    if(number == 1){
+        [QWGLOBALMANAGER statisticsEventId:@"x_yfsy_sp" withLable:@"药房首页-商品" withParams:nil];
+    }
+    if(number == 2){
+        [QWGLOBALMANAGER statisticsEventId:@"x_yfsy_yf" withLable:@"药房首页-药房" withParams:nil];
+    }
+}
+
+- (void)slideSwitchView:(QCSlideSwitchView *)view panLeftEdge:(UIPanGestureRecognizer*) panParam{
+    
+//    QWBaseNavigationController *nav = (QWBaseNavigationController *)self.navigationController;
+//    if([nav.popRecognizer.delegate respondsToSelector:@selector(gestureRecognizerShouldBegin:)]){
+//        [nav.popRecognizer.delegate gestureRecognizerShouldBegin:nav.popRecognizer];
+//    }
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+- (void)getNotifType:(Enum_Notification_Type)type data:(id)data target:(id)obj{
+    
+    if(type == NotifBranchDetailRequestSuccess){
+        
+        branchDetail = (BranchDetailVO *)data;
+        
+        if(branchDetail.postTips > 0){
+            NSString *serviceStr = @"";
+            for(PostTipVo *vo in branchDetail.postTips){
+                if(serviceStr.length == 0){
+                    serviceStr = vo.title;
+                }else{
+                    serviceStr = [NSString stringWithFormat:@"%@|%@",serviceStr,vo.title];
+                }
+            }
+        }else{
+        }
+        
+        if(StrIsEmpty(branchDetail.shortName)){
+            _headView.branchName.text = branchDetail.name;
+        }else{
+            _headView.branchName.text = branchDetail.shortName;
+        }
+        [_headView.ratView setImagesDeselected:@"star_none" partlySelected:@"star_half" fullSelected:@"star_full" andDelegate:nil];
+        [_headView.branchImageView setImageWithURL:[NSURL URLWithString:branchDetail.logo] placeholderImage:[UIImage imageNamed:@"img_bg_pharmacy"]];
+        if(branchDetail.stars){
+            [_headView.ratView displayRating:[branchDetail.stars floatValue]/2.0f];
+        }else{
+            [_headView.ratView displayRating:5.0f];
+        }
+    }
+    if(type == NotifBranchDetailRequestFail){
+        [self showInfoView:kWarning39 image:@"ic_img_fail"];
+    }
+}
+
+#pragma mark - 药房公告请求
+- (void)loadNotice{
+    
+    CategoryModelR *modelR = [CategoryModelR new];
+    modelR.branchId = self.storeId;
+    
+    [ConsultStore branchContent:modelR success:^(BranchNoticeVO *model) {
+        if([model.apiStatus integerValue] == 0 && model.content.length > 0){
+            noticeModel = model;
+            _headView.noticeView.hidden = NO;
+            _headView.noticeLabel.text = model.content;
+                self.slideSwitchView.frame = CGRectMake(0, NoticeHeaderViewHeight, APP_W, APP_H-NAV_H-NoticeHeaderViewHeight);
+            _headView.frame = CGRectMake(0, 0, APP_W, NoticeHeaderViewHeight);
+        }else{
+            _headView.noticeView.hidden = YES;
+            self.slideSwitchView.frame = CGRectMake(0, NoNoticeHeaderViewHeight, APP_W, APP_H-NAV_H-NoNoticeHeaderViewHeight);
+        }
+    } failure:^(HttpException *e) {
+        
+    }];
+}
+
+#pragma mark - 点击药房公告Action
+- (void)noticeAction{
+    
+//    现在服务器返回title字段，由于V3.1.1公告标题是写死的，所以按照测试要求V3.2.0版本依然写死处理
+//    NSString *noticeTitle = noticeModel.title.length > 0?noticeModel.title:@"公告";
+    
+    NSString *noticeTitle = @"公告";
+    
+    [NoticeCustomView showNoticeViewInView:APPDelegate.window WithTitle:noticeTitle content:_headView.noticeLabel.text];
+}
+
+#pragma mark - 点击收藏按钮触发函数
+- (void)collectAction{
+    
+    [QWGLOBALMANAGER statisticsEventId:@"x_yfsy_gz" withLable:@"药房首页-关注" withParams:nil];
+    
+    if (!QWGLOBALMANAGER.loginStatus) {
+        
+        LoginViewController *loginViewController = [[LoginViewController alloc] initWithNibName:@"LoginViewController" bundle:nil];
+        loginViewController.hidesBottomBarWhenPushed = YES;
+        __weak typeof (self) weakSelf = self;
+        loginViewController.loginSuccessBlock = ^(void){
+            [weakSelf collectAction];
+        };
+        [self.navigationController pushViewController:loginViewController animated:YES];
+        return;
+    }
+    
+    
+    FavoriteCollectR *collectR=[FavoriteCollectR new];
+    collectR.token=QWGLOBALMANAGER.configure.userToken;
+    collectR.objId=self.storeId;
+    collectR.objType=@"7";
+    collectR.method=@"1";
+    
+    [Favorite collectWithParam:collectR success:^(id DFUserModel) {
+        
+        CancleResult *model=(CancleResult *)DFUserModel;
+        
+        NSString *collectType;
+        if([model.result isEqualToString:@"1"]){//已经收藏
+            collectType = @"取消关注";
+        }
+        if([model.result isEqualToString:@"0"]){//未收藏
+            collectType = @"关注";
+        }
+        
+        if([model.result isEqualToString:@"1"]){//已经收藏
+            
+            collectR.method = @"3";//取消收藏
+            [Favorite collectWithParam:collectR success:^(id DFUserModel) {
+                CancleResult *subModel=(CancleResult *)DFUserModel;
+                if ([subModel.result isEqualToString:@"4"]) {//取消收藏成功
+                    [SVProgressHUD showSuccessWithStatus:@"已取消关注" duration:DURATION_SHORT];
+                    
+                    
+                }else if ([subModel.result isEqualToString:@"5"]){//取消收藏失败
+                    [SVProgressHUD showErrorWithStatus:subModel.apiMessage duration:DURATION_SHORT];
+                }
+                
+            } failure:^(HttpException *e) {
+                DebugLog(@"%@",e);
+            }];
+            
+        }else if([model.result isEqualToString:@"0"]){//未收藏
+            collectR.method = @"2";//收藏当前对象
+            [Favorite collectWithParam:collectR success:^(id DFUserModel) {
+                CancleResult *subModel=(CancleResult *)DFUserModel;
+                if ([subModel.result isEqualToString:@"2"]) {//收藏当前对象成功
+                    [SVProgressHUD showSuccessWithStatus:@"关注成功" duration:DURATION_SHORT];
+                    
+                }else if ([subModel.result isEqualToString:@"3"]){//收藏当前对象失败
+                    [SVProgressHUD showErrorWithStatus:subModel.apiMessage duration:DURATION_SHORT];
+                }
+                
+            } failure:^(HttpException *e) {
+                DebugLog(@"%@",e);
+            }];
+            
+        }
+        
+        
+    } failure:^(HttpException *e) {
+        DebugLog(@"%@",e);
+    }];
+}
+
+#pragma mark - 检查是否已经收藏用于展示UI
+- (void)checkCollect{
+    if(QWGLOBALMANAGER.loginStatus) {
+        FavoriteCollectR *collectR=[FavoriteCollectR new];
+        collectR.token=QWGLOBALMANAGER.configure.userToken;
+        collectR.objId=self.storeId;
+        collectR.objType=@"7";
+        collectR.method=@"1";
+        
+        [Favorite collectWithParam:collectR success:^(id DFUserModel) {
+            
+            CancleResult *model=(CancleResult *)DFUserModel;
+            
+            if([model.result isEqualToString:@"1"]){//已经收藏
+                
+                
+            }else if([model.result isEqualToString:@"0"]){//未收藏
+
+            }
+        } failure:^(HttpException *e) {
+            DebugLog(@"%@",e);
+        }];
+    }
+}
+
+
+@end

@@ -1,0 +1,510 @@
+//
+//  MsgBoxHealthCell.m
+//  APP
+//
+//  Created by  ChenTaiyu on 16/6/23.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "MsgBoxHealthCell.h"
+#import "QWMessage.h"
+
+
+@interface MsgBoxHealthDietTipsCell ()
+@end
+
+@implementation MsgBoxHealthDietTipsCell
+
+const CGFloat kMsgBoxHealthCellIndentX = 12.0;
+
++ (instancetype)cellWithModel:(MsgBoxHealthItemModel *)model
+{
+    MsgBoxHealthDietTipsCell *cell = [[MsgBoxHealthDietTipsCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"MsgBoxHealthDietTipsCell"];
+    cell.backgroundColor = [UIColor clearColor];
+    cell.contentView.backgroundColor = [UIColor clearColor];
+    cell.backgroundView = nil;
+    cell.selectedBackgroundView = nil;
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    cell.bounds = CGRectMake(0, 0, SCREEN_W, CGRectGetHeight(cell.bounds));
+    
+    CGFloat offsetByTime = 0;
+    if (model.formatShowTime.length) {
+        UILabel *time = [UILabel new];
+        time.textColor = RGBHex(qwColor8);
+        time.font = fontSystem(kFontS5);
+        time.frame = CGRectMake(0, 15.0, SCREEN_W, 15);
+        time.text = model.formatShowTime;
+        time.textAlignment = NSTextAlignmentCenter;
+        time.numberOfLines = 1;
+        [cell.contentView addSubview:time];
+        offsetByTime = 40.0;
+    } else {
+        offsetByTime = 15.0;
+    }
+
+    UIView *wrapper = [UIView new];
+    wrapper.frame = CGRectMake(kMsgBoxHealthCellIndentX, offsetByTime, SCREEN_W - 2*kMsgBoxHealthCellIndentX, [self getCellHeightWithModel:model] - 40.0);
+    [cell.contentView addSubview:wrapper];
+    wrapper.layer.borderColor = RGBHex(0xc8c7cc).CGColor;
+    wrapper.layer.borderWidth = 0.5;
+    wrapper.layer.cornerRadius = 3.0f;
+    wrapper.clipsToBounds = YES;
+    
+    MsgBoxHealthCell *headCell = [MsgBoxHealthCell cell];
+    headCell.titleLabel.text = model.title;
+    headCell.subTitleLabel.text = model.content;
+    [cell reLayoutCell:headCell];
+    CGSize size = [headCell.contentView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
+    headCell.frame = CGRectMake(0, 0, SCREEN_W - 2*kMsgBoxHealthCellIndentX, size.height);
+    [wrapper addSubview:headCell];
+    wrapper.backgroundColor = [UIColor redColor];
+    CGFloat offsetY = size.height;
+    for (NSDictionary *taboo in model.tags) {
+        MsgBoxHealthCell2 *itemCell = [MsgBoxHealthCell2 cell];
+        itemCell.contentTitleLabel.text = taboo[@"proName"];
+        itemCell.contentLabel.text = taboo[@"taboo"];
+        [cell reLayoutCell:itemCell];
+        itemCell.contentLabel.preferredMaxLayoutWidth = CGRectGetWidth(itemCell.contentLabel.bounds);
+        CGSize itemSize = [itemCell.contentView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize];
+        itemCell.frame = CGRectMake(0, offsetY, SCREEN_W - 2*kMsgBoxHealthCellIndentX, itemSize.height);
+        [wrapper addSubview:itemCell];
+        offsetY += itemSize.height;
+    }
+    // set cell frame
+    return cell;
+}
+
+- (void)reLayoutCell:(UITableViewCell *)cell
+{
+    [cell setNeedsUpdateConstraints];
+    [cell updateConstraintsIfNeeded];
+    cell.bounds = CGRectMake(0.0f, 0.0f, SCREEN_W - 2 * kMsgBoxHealthCellIndentX, CGRectGetHeight(cell.bounds));
+    [cell setNeedsLayout];
+    [cell layoutIfNeeded];
+}
+
++ (CGFloat)getCellHeightWithModel:(MsgBoxHealthItemModel *)model
+{
+    CGFloat timeHeight = model.formatShowTime.length ? 15.0 + 15.0 + 10.0 : 15.0;
+    CGFloat headCellHeight = [self calculateHeadCellHeightWithArg1:model.title arg2:@"您购买的药品含有饮食禁忌"];
+    CGFloat itemCellHeightSum = 0.0;
+    for (NSDictionary *taboo in model.tags) {
+        itemCellHeightSum += [self calculateItemCellHeightWithArg1:taboo[@"proName"] arg2:taboo[@"taboo"]];
+    }
+    return timeHeight + headCellHeight + itemCellHeightSum;
+}
+
++ (NSMutableDictionary *)offscreenCells
+{
+    static NSMutableDictionary *offscreenCells = nil;
+    if (!offscreenCells) {
+        offscreenCells = [NSMutableDictionary dictionary];
+    }
+    return offscreenCells;
+}
+
++ (CGFloat)calculateHeadCellHeightWithArg1:(NSString *)arg1 arg2:(NSString *)arg2
+{
+    NSString *reuseIdentifier = @"MsgBoxHealthCell";
+    ;
+    MsgBoxHealthCell *cell = [self.offscreenCells objectForKey:reuseIdentifier];
+    if (!cell) {
+        cell = [MsgBoxHealthCell cell];
+        [self.offscreenCells setObject:cell forKey:reuseIdentifier];
+    }
+    cell.titleLabel.text = arg1;
+    cell.subTitleLabel.text = arg2;
+    [cell setNeedsUpdateConstraints];
+    [cell updateConstraintsIfNeeded];
+    // height?
+    cell.bounds = CGRectMake(0.0f, 0.0f, SCREEN_W - 2 * kMsgBoxHealthCellIndentX, CGRectGetHeight(cell.bounds));
+    [cell setNeedsLayout];
+    [cell layoutIfNeeded];
+    CGFloat height = [cell.contentView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize].height;
+    return height;
+}
+
++ (CGFloat)calculateItemCellHeightWithArg1:(NSString *)arg1 arg2:(NSString *)arg2
+{
+    NSString *reuseIdentifier = @"MsgBoxHealthCell2";
+    ;
+    MsgBoxHealthCell2 *cell = [self.offscreenCells objectForKey:reuseIdentifier];
+    if (!cell) {
+        cell = [MsgBoxHealthCell2 cell];
+        [self.offscreenCells setObject:cell forKey:reuseIdentifier];
+    }
+    cell.contentTitleLabel.text = arg1;
+    cell.contentLabel.text = arg2;
+    [cell setNeedsUpdateConstraints];
+    [cell updateConstraintsIfNeeded];
+    // height?
+    cell.bounds = CGRectMake(0.0f, 0.0f, SCREEN_W - 2 * kMsgBoxHealthCellIndentX, CGRectGetHeight(cell.bounds));
+    [cell setNeedsLayout];
+    [cell layoutIfNeeded];
+    cell.contentLabel.preferredMaxLayoutWidth = CGRectGetWidth(cell.contentLabel.bounds);
+    CGFloat height = [cell.contentView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize].height;
+    return height;
+}
+
+- (void)prepareForReuse
+{
+    [super prepareForReuse];
+    for (UIView *view in self.subviews) {
+        [view removeFromSuperview];
+    }
+}
+
+@end
+
+@interface MsgBoxHealthCell ()
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *separatorHeight;
+
+@end
+
+@implementation MsgBoxHealthCell
+
++ (instancetype)cell
+{
+    MsgBoxHealthCell *cell;
+    NSArray *cellArr = [[NSBundle mainBundle] loadNibNamed:@"MsgBoxHealthCell" owner:nil options:nil];
+    for (UITableViewCell *nibCell in cellArr) {
+        if ([nibCell isKindOfClass:[MsgBoxHealthCell class]]) {
+            cell = (MsgBoxHealthCell *)nibCell;
+            break;
+        }
+    }
+    return cell;
+}
+
+- (void)awakeFromNib {
+    // Initialization code
+//    self.timeLabel.textColor = RGBHex(qwColor8);
+//    self.timeLabel.font = fontSystem(kFontS5);
+    self.titleLabel.textColor = RGBHex(qwColor6);
+    self.titleLabel.font = fontSystem(kFontS3);
+    self.subTitleLabel.textColor = RGBHex(qwColor24);
+    self.subTitleLabel.font = fontSystem(kFontS5);
+    self.midSeperator.backgroundColor = RGBHex(0xc8c7cc);
+    self.separatorHeight.constant = 0.5;
+    self.selectionStyle = UITableViewCellSelectionStyleNone;
+}
+
+- (void)setCell:(id)model {
+    MsgBoxHealthItemModel *item = (MsgBoxHealthItemModel *)model;
+    switch (item.source.integerValue) {
+        case MsgBoxHealthItemSourceTypeBuyMedicine:
+            self.subTitleLabel.text = @"根据您的用药为您推送";
+            break;
+        case MsgBoxHealthItemSourceTypeMedicineUsage:
+            self.subTitleLabel.text = @"根据您的用药为您推送";
+            break;
+        case MsgBoxHealthItemSourceTypeDietTips:
+            self.subTitleLabel.text = @"根据您的用药为您推送";
+            break;
+        default:
+            break;
+    }
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+@end
+
+
+@interface MsgBoxHealthCell2 ()
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *separatorHeight;
+
+@end
+@implementation MsgBoxHealthCell2
+
+
++ (instancetype)cell
+{
+    MsgBoxHealthCell2 *cell;
+    NSArray *cellArr = [[NSBundle mainBundle] loadNibNamed:@"MsgBoxHealthCell" owner:nil options:nil];
+    for (UITableViewCell *nibCell in cellArr) {
+        if ([nibCell isKindOfClass:[MsgBoxHealthCell2 class]]) {
+            cell = (MsgBoxHealthCell2 *)nibCell;
+            break;
+        }
+    }
+    return cell;
+}
+
+
+- (void)awakeFromNib
+{
+    self.contentTitleLabel.textColor = RGBHex(qwColor6);
+    self.contentTitleLabel.font = fontSystem(kFontS4);
+    self.contentLabel.textColor = RGBHex(qwColor8);
+    self.contentLabel.font = fontSystem(kFontS4);
+    self.bottomSeperator.backgroundColor = RGBHex(0xc8c7cc);
+    self.separatorHeight.constant = 0.5;
+    self.selectionStyle = UITableViewCellSelectionStyleNone;
+}
+
+@end
+
+@interface MsgBoxHealthCell3 ()
+@property (weak, nonatomic) IBOutlet UIView *cellWrapper;
+@property (weak, nonatomic) IBOutlet UILabel *contentLabel;
+@property (weak, nonatomic) IBOutlet UIView *midSeperator;
+@property (weak, nonatomic) IBOutlet UIButton *actionBtn;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *timeLabelHeight;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *timeLabelTopMargin;
+@property (weak, nonatomic) IBOutlet UILabel *timeLabel;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *separatorHeight;
+
+@end
+@implementation MsgBoxHealthCell3
+
++ (instancetype)cell
+{
+    MsgBoxHealthCell3 *cell;
+    NSArray *cellArr = [[NSBundle mainBundle] loadNibNamed:@"MsgBoxHealthCell" owner:nil options:nil];
+    for (UITableViewCell *nibCell in cellArr) {
+        if ([nibCell isKindOfClass:[MsgBoxHealthCell3 class]]) {
+            cell = (MsgBoxHealthCell3 *)nibCell;
+            break;
+        }
+    }
+    return cell;
+}
+
+- (void)awakeFromNib
+{
+    self.backgroundColor = [UIColor clearColor];
+    self.contentView.backgroundColor = [UIColor clearColor];
+    self.backgroundView = nil;
+    self.selectedBackgroundView = nil;
+    self.timeLabel.textColor = RGBHex(qwColor8);
+    self.timeLabel.font = fontSystem(kFontS5);
+    self.contentLabel.textColor = RGBHex(qwColor8);
+    self.contentLabel.font = fontSystem(kFontS4);
+    self.actionBtn.titleLabel.font = fontSystem(kFontS4);
+    [self.actionBtn setTitleColor:RGBHex(qwColor5) forState:UIControlStateNormal];
+    self.midSeperator.backgroundColor = RGBHex(0xc8c7cc);
+    self.separatorHeight.constant = 0.5;
+    self.cellWrapper.layer.borderColor = RGBHex(0xc8c7cc).CGColor;
+    self.cellWrapper.layer.borderWidth = 0.5;
+    self.cellWrapper.layer.cornerRadius = 3.0f;
+    self.cellWrapper.clipsToBounds = YES;
+    self.selectionStyle = UITableViewCellSelectionStyleNone;
+}
+
+- (void)setCell:(id)obj
+{
+    MsgBoxHealthItemModel *model = obj;
+    BOOL hasTime = model.formatShowTime.length > 0;
+    if (!hasTime) {
+        self.timeLabelHeight.constant = 0;
+        self.timeLabelTopMargin.constant = 0;
+    } else {
+        self.timeLabelHeight.constant = 15.0;
+        self.timeLabelHeight.constant = 15.0;
+    }
+    self.timeLabel.text = model.formatShowTime;
+    self.contentLabel.text = model.title;
+    [self.actionBtn setTitle:@"立即查看" forState:UIControlStateNormal];
+}
+
+
++ (CGFloat)getCellHeightWithModel:(MsgBoxHealthItemModel *)model
+{
+    MsgBoxHealthCell3 *cell = [self cell];
+    [cell setCell:model];
+    [cell setNeedsUpdateConstraints];
+    [cell updateConstraintsIfNeeded];
+    // height?
+    cell.bounds = CGRectMake(0.0f, 0.0f, SCREEN_W - 2 * kMsgBoxHealthCellIndentX, CGRectGetHeight(cell.bounds));
+    [cell setNeedsLayout];
+    [cell layoutIfNeeded];
+    cell.contentLabel.preferredMaxLayoutWidth = CGRectGetWidth(cell.contentLabel.bounds);
+    CGFloat height = [cell.contentView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize].height;
+    return height;
+}
+
+@end
+
+@interface MsgBoxHealthCell4 ()
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *timeLabelTopMargin;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *timeLabelHeight;
+@property (weak, nonatomic) IBOutlet UILabel *timeLabel;
+@property (weak, nonatomic) IBOutlet UIView *cellTopWrapper;
+@property (weak, nonatomic) IBOutlet UILabel *titleLabel;
+@property (weak, nonatomic) IBOutlet UILabel *subTitleLabel;
+@property (weak, nonatomic) IBOutlet UIView *cellBottomWrapper;
+@property (weak, nonatomic) IBOutlet UILabel *contentLabel;
+@property (weak, nonatomic) IBOutlet UIView *bottomSeperator;
+@property (weak, nonatomic) IBOutlet UIView *midSeperator;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *separatorHeight;
+@property (weak, nonatomic) IBOutlet UIView *cellWrapper;
+
+@end
+@implementation MsgBoxHealthCell4
+
++ (instancetype)cell
+{
+    MsgBoxHealthCell4 *cell;
+    NSArray *cellArr = [[NSBundle mainBundle] loadNibNamed:@"MsgBoxHealthCell" owner:nil options:nil];
+    for (UITableViewCell *nibCell in cellArr) {
+        if ([nibCell isKindOfClass:[self class]]) {
+            cell = (MsgBoxHealthCell4 *)nibCell;
+            break;
+        }
+    }
+    return cell;
+}
+
+- (void)awakeFromNib
+{
+    self.backgroundColor = [UIColor clearColor];
+    self.contentView.backgroundColor = [UIColor clearColor];
+    self.backgroundView = nil;
+    self.selectedBackgroundView = nil;
+    self.timeLabel.textColor = RGBHex(qwColor8);
+    self.timeLabel.font = fontSystem(kFontS5);
+    self.titleLabel.textColor = RGBHex(qwColor6);
+    self.titleLabel.font = fontSystem(kFontS3);
+    self.subTitleLabel.textColor = RGBHex(qwColor24);
+    self.subTitleLabel.font = fontSystem(kFontS5);
+    self.contentLabel.textColor = RGBHex(qwColor7);
+    self.contentLabel.font = fontSystem(kFontS4);
+    self.midSeperator.backgroundColor = RGBHex(0xc8c7cc);
+    self.separatorHeight.constant = 0.5;
+    self.cellWrapper.layer.borderColor = RGBHex(0xc8c7cc).CGColor;
+    self.cellWrapper.layer.borderWidth = 0.5;
+    self.cellWrapper.layer.cornerRadius = 3.0f;
+    self.cellWrapper.clipsToBounds = YES;
+    self.bottomSeperator.hidden = YES;
+    self.selectionStyle = UITableViewCellSelectionStyleNone;
+}
+
+- (void)setCell:(id)obj
+{
+    MsgBoxHealthItemModel *model = obj;
+    BOOL hasTime = model.formatShowTime.length > 0;
+    if (!hasTime) {
+        self.timeLabelHeight.constant = 0;
+        self.timeLabelTopMargin.constant = 0;
+    } else {
+        self.timeLabelHeight.constant = 15.0;
+        self.timeLabelHeight.constant = 15.0;
+    }
+    self.timeLabel.text = model.formatShowTime;
+    self.titleLabel.text = model.title;
+    self.subTitleLabel.text = @"根据您的用药为您推送";
+    self.contentLabel.text = model.content;
+}
+
++ (CGFloat)getCellHeightWithModel:(MsgBoxHealthItemModel *)model
+{
+    MsgBoxHealthCell4 *cell = [self cell];
+    [cell setCell:model];
+    [cell setNeedsUpdateConstraints];
+    [cell updateConstraintsIfNeeded];
+    cell.bounds = CGRectMake(0.0f, 0.0f, SCREEN_W - 2 * kMsgBoxHealthCellIndentX, CGRectGetHeight(cell.bounds));
+    [cell setNeedsLayout];
+    [cell layoutIfNeeded];
+    cell.contentLabel.preferredMaxLayoutWidth = CGRectGetWidth(cell.contentLabel.bounds);
+    CGFloat height = [cell.contentView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize].height;
+    return height;
+}
+
+@end
+
+@interface MsgBoxHealthCell5 ()
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *timeLabelTopMargin;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *timeLabelHeight;
+@property (weak, nonatomic) IBOutlet UILabel *timeLabel;
+@property (weak, nonatomic) IBOutlet UIView *cellTopWrapper;
+@property (weak, nonatomic) IBOutlet UILabel *titleLabel;
+@property (weak, nonatomic) IBOutlet UILabel *subTitleLabel;
+@property (weak, nonatomic) IBOutlet UIView *cellBottomWrapper;
+@property (weak, nonatomic) IBOutlet UILabel *contentLabel;
+@property (weak, nonatomic) IBOutlet UIView *bottomSeperator;
+@property (weak, nonatomic) IBOutlet UIView *midSeperator;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *separatorHeight;
+@property (weak, nonatomic) IBOutlet UILabel *contentTitleLabel;
+@property (weak, nonatomic) IBOutlet UIView *cellWrapper;
+
+@end
+@implementation MsgBoxHealthCell5
+
++ (instancetype)cell
+{
+    MsgBoxHealthCell5 *cell;
+    NSArray *cellArr = [[NSBundle mainBundle] loadNibNamed:@"MsgBoxHealthCell" owner:nil options:nil];
+    for (UITableViewCell *nibCell in cellArr) {
+        if ([nibCell isKindOfClass:[self class]]) {
+            cell = (MsgBoxHealthCell5 *)nibCell;
+            break;
+        }
+    }
+    return cell;
+}
+
+- (void)awakeFromNib
+{
+    self.backgroundColor = [UIColor clearColor];
+    self.contentView.backgroundColor = [UIColor clearColor];
+    self.backgroundView = nil;
+    self.selectedBackgroundView = nil;
+    self.timeLabel.textColor = RGBHex(qwColor8);
+    self.timeLabel.font = fontSystem(kFontS5);
+    self.titleLabel.textColor = RGBHex(qwColor6);
+    self.titleLabel.font = fontSystem(kFontS3);
+    self.subTitleLabel.textColor = RGBHex(qwColor24);
+    self.subTitleLabel.font = fontSystem(kFontS5);
+    self.contentLabel.textColor = RGBHex(qwColor7);
+    self.contentLabel.font = fontSystem(kFontS4);
+    self.contentTitleLabel.textColor = RGBHex(qwColor6);
+    self.contentTitleLabel.font = fontSystem(kFontS4);
+    self.midSeperator.backgroundColor = RGBHex(0xc8c7cc);
+    self.separatorHeight.constant = 0.5;
+    self.cellWrapper.layer.borderColor = RGBHex(0xc8c7cc).CGColor;
+    self.cellWrapper.layer.borderWidth = 0.5;
+    self.cellWrapper.layer.cornerRadius = 3.0f;
+    self.cellWrapper.clipsToBounds = YES;
+    self.selectionStyle = UITableViewCellSelectionStyleNone;
+}
+
+- (void)setCell:(id)obj
+{
+    MsgBoxHealthItemModel *model = obj;
+    BOOL hasTime = model.formatShowTime.length > 0;
+    if (!hasTime) {
+        self.timeLabelHeight.constant = 0;
+        self.timeLabelTopMargin.constant = 0;
+    } else {
+        self.timeLabelHeight.constant = 15.0;
+        self.timeLabelHeight.constant = 15.0;
+    }
+    self.timeLabel.text = model.formatShowTime;
+    self.titleLabel.text = model.title;
+    self.subTitleLabel.text = @"根据您的用药为您推送";
+    NSDictionary *taboo = model.tags.firstObject;
+    self.contentTitleLabel.text = taboo[@"proName"];
+    self.contentLabel.text = taboo[@"taboo"];
+}
+
++ (CGFloat)getCellHeightWithModel:(MsgBoxHealthItemModel *)model
+{
+    MsgBoxHealthCell5 *cell = [self cell];
+    [cell setCell:model];
+    [cell setNeedsUpdateConstraints];
+    [cell updateConstraintsIfNeeded];
+    cell.bounds = CGRectMake(0.0f, 0.0f, SCREEN_W - 2 * kMsgBoxHealthCellIndentX, CGRectGetHeight(cell.bounds));
+    [cell setNeedsLayout];
+    [cell layoutIfNeeded];
+    cell.contentLabel.preferredMaxLayoutWidth = CGRectGetWidth(cell.contentLabel.bounds);
+    CGFloat height = [cell.contentView systemLayoutSizeFittingSize:UILayoutFittingCompressedSize].height;
+    return height;
+}
+
+@end
+

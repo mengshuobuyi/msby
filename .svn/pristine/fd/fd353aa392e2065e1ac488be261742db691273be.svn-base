@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="8191" systemVersion="14F1021" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="8154"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="ChangePhoneNumberViewController">
+            <connections>
+                <outlet property="getVerifyCodeBtn" destination="TkM-MO-pK1" id="fcV-GD-3lR"/>
+                <outlet property="mobileTF" destination="j4b-EF-Fib" id="ZbF-jV-r4g"/>
+                <outlet property="mobileTFContainerView" destination="nc7-py-mdO" id="e28-dX-E59"/>
+                <outlet property="submitBtn" destination="ltq-mL-aEn" id="N92-eb-8bo"/>
+                <outlet property="tip2Label" destination="SNG-Ng-9fI" id="hlM-RR-yQ2"/>
+                <outlet property="tipLabel" destination="erv-xO-5dw" id="x1B-9b-bz2"/>
+                <outlet property="unBindBtn" destination="EH6-Ni-Yic" id="gsc-er-JoK"/>
+                <outlet property="verifyTF" destination="zbY-40-fZN" id="PD9-bi-s3a"/>
+                <outlet property="verifyTFContainerView" destination="ljj-eW-8hM" id="oRl-Y6-Asn"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="64" width="320" height="504"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="温馨提示：修改手机号后，账号将于原手机号解绑" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="279" translatesAutoresizingMaskIntoConstraints="NO" id="erv-xO-5dw">
+                    <rect key="frame" x="15" y="123" width="290" height="15"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                    <color key="textColor" red="0.40000000000000002" green="0.40000000000000002" blue="0.40000000000000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="nc7-py-mdO">
+                    <rect key="frame" x="15" y="15" width="185" height="44"/>
+                    <subviews>
+                        <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="请输入手机号码" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="j4b-EF-Fib">
+                            <rect key="frame" x="10" y="0.0" width="165" height="44"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                            <textInputTraits key="textInputTraits" keyboardType="numberPad"/>
+                        </textField>
+                    </subviews>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstAttribute="bottom" secondItem="j4b-EF-Fib" secondAttribute="bottom" id="3KX-9w-6pb"/>
+                        <constraint firstItem="j4b-EF-Fib" firstAttribute="leading" secondItem="nc7-py-mdO" secondAttribute="leading" constant="10" id="FDm-R7-bwe"/>
+                        <constraint firstAttribute="height" constant="44" id="Thm-fq-jpG"/>
+                        <constraint firstAttribute="trailing" secondItem="j4b-EF-Fib" secondAttribute="trailing" constant="10" id="anq-ed-nO5"/>
+                        <constraint firstItem="j4b-EF-Fib" firstAttribute="top" secondItem="nc7-py-mdO" secondAttribute="top" id="st7-dy-fJH"/>
+                    </constraints>
+                </view>
+                <button opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="252" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="TkM-MO-pK1">
+                    <rect key="frame" x="210" y="15" width="95" height="44"/>
+                    <constraints>
+                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="95" id="OKr-9A-hUh"/>
+                    </constraints>
+                    <state key="normal" title="获取验证码"/>
+                    <connections>
+                        <action selector="getVerifyCodeBtnClick:" destination="-1" eventType="touchUpInside" id="Hka-X3-tko"/>
+                    </connections>
+                </button>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ljj-eW-8hM">
+                    <rect key="frame" x="15" y="69" width="290" height="44"/>
+                    <subviews>
+                        <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="请输入验证码" minimumFontSize="17" clearButtonMode="whileEditing" translatesAutoresizingMaskIntoConstraints="NO" id="zbY-40-fZN">
+                            <rect key="frame" x="10" y="0.0" width="270" height="44"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                            <textInputTraits key="textInputTraits" keyboardType="numberPad"/>
+                        </textField>
+                    </subviews>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstItem="zbY-40-fZN" firstAttribute="top" secondItem="ljj-eW-8hM" secondAttribute="top" id="1YE-tQ-5ui"/>
+                        <constraint firstAttribute="bottom" secondItem="zbY-40-fZN" secondAttribute="bottom" id="1vu-0R-zYp"/>
+                        <constraint firstAttribute="trailing" secondItem="zbY-40-fZN" secondAttribute="trailing" constant="10" id="sgB-hl-mxp"/>
+                        <constraint firstItem="zbY-40-fZN" firstAttribute="leading" secondItem="ljj-eW-8hM" secondAttribute="leading" constant="10" id="tX4-Bl-xSo"/>
+                    </constraints>
+                </view>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ltq-mL-aEn">
+                    <rect key="frame" x="15" y="167" width="290" height="40"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="40" id="e0R-HV-bOo"/>
+                    </constraints>
+                    <state key="normal" title="提交"/>
+                    <connections>
+                        <action selector="submitBtnClick:" destination="-1" eventType="touchUpInside" id="d03-Gu-DUP"/>
+                    </connections>
+                </button>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="EH6-Ni-Yic">
+                    <rect key="frame" x="238" y="243" width="67" height="27"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                    <state key="normal" title="暂不绑定 &gt;&gt;"/>
+                    <connections>
+                        <action selector="unBindBtnClick:" destination="-1" eventType="touchUpInside" id="QBN-h2-5S6"/>
+                    </connections>
+                </button>
+                <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="完成手机号绑定，可获得50积分" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="279" translatesAutoresizingMaskIntoConstraints="NO" id="SNG-Ng-9fI">
+                    <rect key="frame" x="15" y="219" width="171" height="15"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                    <color key="textColor" red="0.40000000000000002" green="0.40000000000000002" blue="0.40000000000000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="ljj-eW-8hM" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" constant="15" id="CYO-3d-z1U"/>
+                <constraint firstItem="nc7-py-mdO" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" constant="15" id="EMC-B3-QQN"/>
+                <constraint firstItem="TkM-MO-pK1" firstAttribute="centerY" secondItem="nc7-py-mdO" secondAttribute="centerY" id="FTD-Xe-X6s"/>
+                <constraint firstItem="erv-xO-5dw" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" constant="15" id="JXR-Gg-4Qh"/>
+                <constraint firstItem="SNG-Ng-9fI" firstAttribute="top" secondItem="ltq-mL-aEn" secondAttribute="bottom" constant="12" id="Oep-Yo-zmy"/>
+                <constraint firstAttribute="trailing" secondItem="erv-xO-5dw" secondAttribute="trailing" constant="15" id="PeP-sv-bOj"/>
+                <constraint firstAttribute="trailing" secondItem="ljj-eW-8hM" secondAttribute="trailing" constant="15" id="Pxx-eb-Pkv"/>
+                <constraint firstItem="nc7-py-mdO" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" constant="15" id="R3x-B2-dJK"/>
+                <constraint firstAttribute="trailing" secondItem="TkM-MO-pK1" secondAttribute="trailing" constant="15" id="SBW-xN-ZfI"/>
+                <constraint firstItem="EH6-Ni-Yic" firstAttribute="top" secondItem="ltq-mL-aEn" secondAttribute="bottom" constant="36" id="Tma-aa-AaB"/>
+                <constraint firstAttribute="trailing" secondItem="EH6-Ni-Yic" secondAttribute="trailing" constant="15" id="UW7-Lx-Ome"/>
+                <constraint firstItem="SNG-Ng-9fI" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" constant="15" id="WAn-If-Bzf"/>
+                <constraint firstItem="erv-xO-5dw" firstAttribute="top" secondItem="ljj-eW-8hM" secondAttribute="bottom" constant="10" id="dHE-ZE-oEY"/>
+                <constraint firstAttribute="trailing" secondItem="ltq-mL-aEn" secondAttribute="trailing" constant="15" id="hmE-Ll-VfE"/>
+                <constraint firstItem="TkM-MO-pK1" firstAttribute="leading" secondItem="nc7-py-mdO" secondAttribute="trailing" constant="10" id="hzl-W4-8Qg"/>
+                <constraint firstItem="ljj-eW-8hM" firstAttribute="height" secondItem="nc7-py-mdO" secondAttribute="height" id="lcj-0L-UtS"/>
+                <constraint firstItem="TkM-MO-pK1" firstAttribute="leading" secondItem="nc7-py-mdO" secondAttribute="trailing" constant="10" id="msD-K3-wHg"/>
+                <constraint firstItem="ltq-mL-aEn" firstAttribute="top" secondItem="erv-xO-5dw" secondAttribute="bottom" constant="30" id="ulU-b4-ZKw"/>
+                <constraint firstItem="ltq-mL-aEn" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" constant="15" id="v1s-Dx-3BU"/>
+                <constraint firstItem="ljj-eW-8hM" firstAttribute="top" secondItem="TkM-MO-pK1" secondAttribute="bottom" constant="10" id="wZx-ds-bJt"/>
+                <constraint firstItem="TkM-MO-pK1" firstAttribute="height" secondItem="nc7-py-mdO" secondAttribute="height" id="zmB-IC-1YI"/>
+            </constraints>
+            <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" translucent="NO" prompted="NO"/>
+        </view>
+    </objects>
+</document>

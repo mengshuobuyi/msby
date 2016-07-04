@@ -1,0 +1,177 @@
+//
+//  BrachPromotionListViewController.m
+//  APP
+//  药房详情-全部商品页面
+//  Created by 李坚 on 16/5/10.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "BrachPromotionListViewController.h"
+#import "Promotion.h"
+#import "MutableMorePromotionTableViewCell.h"
+#import "WebDirectViewController.h"
+#import "PromotionActivityDetailViewController.h"
+
+static NSString *const promotionCellIdentifier = @"MutableMorePromotionTableViewCell";
+
+@interface BrachPromotionListViewController ()<UITableViewDataSource,UITableViewDelegate>{
+    
+    int currPage;
+}
+
+@property (weak, nonatomic) IBOutlet UITableView *mainTableView;
+@property (nonatomic, strong) NSMutableArray *dataArray;
+
+@end
+
+@implementation BrachPromotionListViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    self.title = @"全部商品";
+    _mainTableView.tableFooterView = [[UIView alloc]init];
+    _mainTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    [_mainTableView registerNib:[UINib nibWithNibName:@"promotionCellIdentifier" bundle:nil] forCellReuseIdentifier:promotionCellIdentifier];
+    currPage = 1;
+    [self loadPromotions];
+    
+    __weak __typeof(self)weakSelf = self;
+    [_mainTableView addFooterWithCallback:^{
+        currPage ++;
+        [weakSelf loadPromotions];
+    }];
+}
+
+- (void)loadPromotions{
+    
+    BranchPromotionModelR *modelR = [BranchPromotionModelR new];
+    modelR.branchId = self.branchId;
+    modelR.currPage = [NSString stringWithFormat:@"%d",currPage];
+    modelR.pageSize = @"10";
+    
+    [Promotion queryBranchPromotions:modelR success:^(BranchPromotionProListVo *obj) {
+        if([obj.apiStatus intValue] == 0){
+            
+            if(currPage == 1){
+                [self.dataArray removeAllObjects];
+            }else{
+                [_mainTableView.footer endRefreshing];
+            }
+            if(obj.pros.count == 0){
+                [_mainTableView.footer setCanLoadMore:NO];
+            }else{
+                [self.dataArray addObjectsFromArray:obj.pros];
+                [_mainTableView reloadData];
+            }
+            
+        }else{
+            [self showInfoView:obj.apiMessage image:@"ic_img_fail"];
+        }
+        
+    } failure:^(HttpException *e) {
+        [_mainTableView.footer endRefreshing];
+        if(e.errorCode!=-999){
+            if(e.errorCode == -1001){
+                [self showInfoView:kWarning215N26 image:@"ic_img_fail"];
+            }else{
+                [self showInfoView:kWarning39 image:@"ic_img_fail"];
+            }
+        }
+    }];
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+#pragma mark - UITableViewDataSource
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    
+    return self.dataArray.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    MutableMorePromotionTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:promotionCellIdentifier];
+    
+    ChannelProductVo *vo = self.dataArray[indexPath.row];
+    [cell setupCell:vo];
+    
+    return cell;
+}
+
+#pragma mark - UITableViewDelegate
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    ChannelProductVo *vo = self.dataArray[indexPath.row];
+    return [MutableMorePromotionTableViewCell getCellHeight:vo];
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    ChannelProductVo *vo = self.dataArray[indexPath.row];
+    //进入详情
+    if(!vo.multiPromotion)
+    {
+        NSString *pid=@"";
+        if(vo.promotionList.count==1){
+            ActivityCategoryVo *ov = vo.promotionList[0];
+            pid=ov.pid;
+            //渠道统计
+            ChannerTypeModel *modelTwo=[ChannerTypeModel new];
+            modelTwo.objRemark=vo.proName;
+            modelTwo.objId=vo.proId;
+            modelTwo.cKey=@"e_yhsp_click";
+            [QWGLOBALMANAGER qwChannel:modelTwo];
+        }
+        
+        WebDirectViewController *vcWebMedicine = [[UIStoryboard storyboardWithName:@"WebDirect" bundle:nil] instantiateViewControllerWithIdentifier:@"WebDirectViewController"];
+        
+        [[QWGlobalManager sharedInstance] readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) {
+            
+            NSMutableDictionary *tdParams = [NSMutableDictionary dictionary];
+            tdParams[@"商品内容"]=vo.proName;
+            [QWGLOBALMANAGER statisticsEventId:@"x_yhsplb_dj" withLable:@"优惠商品详情" withParams:tdParams];
+            
+            WebDrugDetailModel *modelDrug = [WebDrugDetailModel new];
+            modelDrug.modelMap = mapInfoModel;
+            modelDrug.proDrugID = vo.proId;
+            modelDrug.promotionID = pid;
+            WebDirectLocalModel *modelLocal = [WebDirectLocalModel new];
+            modelLocal.modelDrug = modelDrug;
+            modelLocal.typeLocalWeb = WebPageToWebTypeMedicine;
+            [vcWebMedicine setWVWithLocalModel:modelLocal];
+            [self.navigationController pushViewController:vcWebMedicine animated:YES];
+            
+        }];
+    }
+    else
+    {
+        //跳转到新的活动列表
+        PromotionActivityDetailViewController *drugDetail = [[PromotionActivityDetailViewController alloc]init];
+        drugDetail.vo = vo;
+        drugDetail.sourceType=@"1";
+        //防止后来接口有改动
+//        if(![self.groupIdisEqualToString:@""]){
+//            drugDetail.groupId=self.groupId;
+//        }
+        [self.navigationController pushViewController:drugDetail animated:YES];
+        
+        
+    }
+}
+
+#pragma mark - MyMutableMorePromotionTableViewCellDelegate
+- (void)didSepllCellAtIndexPath:(NSIndexPath *)path{
+    
+    ChannelProductVo *vo = self.dataArray[path.row];
+    
+    vo.spellFlag = !vo.spellFlag;
+    
+    [self.mainTableView reloadRowsAtIndexPaths:@[path] withRowAnimation:UITableViewRowAnimationFade];
+}
+
+@end

@@ -1,0 +1,312 @@
+//
+//  PostTableCell.m
+//  APP
+//
+//  Created by Martin.Liu on 15/12/29.
+//  Copyright © 2015年 carret. All rights reserved.
+//
+
+#import "PostTableCell.h"
+#import "UILabel+MAAttributeString.h"
+#import "UIImageView+WebCache.h"
+#import "ConstraintsUtility.h"
+#import "MAUILabel.h"
+@interface PostTableCell()
+@property (strong, nonatomic) IBOutlet NSLayoutConstraint *constraint_hrLineHeight;
+@property (strong, nonatomic) IBOutlet NSLayoutConstraint *constraint_userPositionImgLeading;
+@property (strong, nonatomic) IBOutlet NSLayoutConstraint *constraint_userPositionImgTrailing;
+@property (strong, nonatomic) IBOutlet NSLayoutConstraint *constraint_postTitleLabelLeading;  // 0 in 320 or 35;
+
+@property (strong, nonatomic) IBOutlet UIImageView *userImageView;
+@property (strong, nonatomic) IBOutlet UILabel *userNameLabel;
+@property (strong, nonatomic) IBOutlet UILabel *userPositionLabel;
+
+
+@property (strong, nonatomic) IBOutlet UIImageView *userPositionImageView;
+@property (strong, nonatomic) IBOutlet UILabel *userLevelLabel;
+@property (strong, nonatomic) IBOutlet MAUILabel *userRemarkLabel;
+@property (strong, nonatomic) IBOutlet UILabel *postTitleLabel;
+@property (strong, nonatomic) IBOutlet UILabel *postContentLabel;
+@property (strong, nonatomic) IBOutlet UIView *imagesContianerView;
+@property (strong, nonatomic) IBOutlet UIImageView *firstImageView;
+@property (strong, nonatomic) IBOutlet UIImageView *secondImageView;
+@property (strong, nonatomic) IBOutlet UIImageView *thirdImageView;
+@property (strong, nonatomic) IBOutlet NSLayoutConstraint *constraint_imagesContainerViewTop;  // 15
+@property (strong, nonatomic) IBOutlet NSLayoutConstraint *constraint_imagesContainerViewHeight;
+@property (strong, nonatomic) IBOutlet UILabel *viewCountLabel;
+@property (strong, nonatomic) IBOutlet UILabel *commentCountLabel;
+@property (strong, nonatomic) IBOutlet UILabel *postTimeLabel;
+
+
+
+@property (strong, nonatomic) IBOutlet UILabel *postTypeLabel;
+@property (strong, nonatomic) NSDictionary *postContentAttribute;
+@end
+@implementation PostTableCell
+
+- (void) setup
+{
+    self.backgroundColor = RGBHex(qwColor11);
+    self.constraint_hrLineHeight.constant = 1.f/[[UIScreen mainScreen] scale];
+    self.constraint_imagesContainerViewHeight.constant = AutoValue(67);
+    
+    // 置顶 、 专栏 、 热议
+    self.postTypeLabel.layer.masksToBounds = YES;
+    self.postTypeLabel.layer.cornerRadius = 3;
+    self.postTypeLabel.layer.borderColor = RGBHex(qwColor8).CGColor;
+    self.postTypeLabel.layer.borderWidth = 1.0f/[UIScreen mainScreen].scale;
+    self.postTypeLabel.font = [UIFont systemFontOfSize:kFontS5];
+    self.postTypeLabel.textColor = RGBHex(qwColor7);
+    
+    //  用户头像
+    self.userImageView.layer.masksToBounds = YES;
+    self.userImageView.layer.cornerRadius = CGRectGetHeight(self.userImageView.frame)/2;
+    
+    // 用户昵称
+    self.userNameLabel.font = [UIFont systemFontOfSize:kFontS4];
+    self.userNameLabel.textColor = RGBHex(qwColor7);
+    
+    // 用户等级
+    self.userLevelLabel.layer.masksToBounds = YES;
+    self.userLevelLabel.layer.cornerRadius = 4;
+    self.userLevelLabel.font = [UIFont systemFontOfSize:kFontS5];
+    self.userLevelLabel.textColor = RGBHex(qwColor2);
+    self.userLevelLabel.hidden = YES;
+    
+    // 无用
+    self.userPositionImageView.hidden = YES;
+    
+    // 药师 、 营养师
+    self.userPositionLabel.hidden = YES;
+    self.userPositionLabel.text = nil;
+    self.userPositionLabel.font = [UIFont systemFontOfSize:kFontS4];
+    self.userPositionLabel.textColor = RGBHex(qwColor3);
+    
+    // 专家所属药房
+    self.userRemarkLabel.font = [UIFont systemFontOfSize:kFontS5];
+    self.userRemarkLabel.textColor = RGBHex(qwColor4);
+    self.userRemarkLabel.layer.masksToBounds = YES;
+    self.userRemarkLabel.layer.cornerRadius = 4;
+    self.userRemarkLabel.backgroundColor = RGBAHex(qwColor3, 0.6);
+    self.userRemarkLabel.edgeInsets = UIEdgeInsetsZero;
+    
+    // 浏览数量 评论数量 发帖时间
+    self.viewCountLabel.font = [UIFont systemFontOfSize:kFontS5];
+    self.viewCountLabel.textColor = RGBHex(qwColor7);
+    
+    self.commentCountLabel.font = [UIFont systemFontOfSize:kFontS5];
+    self.commentCountLabel.textColor = RGBHex(qwColor7);
+    
+    self.postTimeLabel.font = [UIFont systemFontOfSize:kFontS5];
+    self.postTimeLabel.textColor = RGBHex(qwColor7);
+    
+    // 针对6p标题不足一行，但是标题视图占了两行的折中方案
+    if (APP_W > 320) {
+        NSLayoutConstraint* centerConstriant = [self.postTypeLabel constraintNamed:@"posttypelabelcenter"];
+        if (centerConstriant == nil) {
+            centerConstriant = [NSLayoutConstraint constraintWithItem:self.postTypeLabel attribute: NSLayoutAttributeCenterY relatedBy:NSLayoutRelationEqual toItem:self.postTitleLabel attribute:NSLayoutAttributeCenterY multiplier: 1.0f constant:0];
+            centerConstriant.nametag = @"posttypelabelcenter";
+            [centerConstriant install];
+        }
+    }
+    
+    [self hiddenImages:YES];
+}
+
+- (NSDictionary *)postContentAttribute
+{
+    if (!_postContentAttribute) {
+        NSMutableParagraphStyle* style = [[NSMutableParagraphStyle alloc] init];
+        style.lineSpacing = 3;
+        style.lineBreakMode = NSLineBreakByTruncatingTail;
+        _postContentAttribute = @{NSForegroundColorAttributeName:RGBHex(qwColor7), NSFontAttributeName:[UIFont systemFontOfSize:kFontS4], NSParagraphStyleAttributeName:style};
+    }
+    return _postContentAttribute;
+}
+
+- (void)setCell:(id)obj
+{
+    if ([obj isKindOfClass:[QWPostModel class]]) {
+        QWPostModel* postModel = obj;
+        [self.userImageView setImageWithURL:[NSURL URLWithString:postModel.headUrl] placeholderImage:ForumDefaultImage];
+        self.userNameLabel.text = postModel.nickname;
+        [self.postTitleLabel ma_setAttributeText:postModel.postTitle];
+//        [self.postContentLabel ma_setAttributeText:postModel.postContent];
+        [self.postContentLabel ma_setAttributeText:postModel.postContent attributes:self.postContentAttribute];
+        self.viewCountLabel.text = [NSString stringWithFormat:@"%ld", (long)postModel.readCount];
+        self.commentCountLabel.text = [NSString stringWithFormat:@"%ld", (long)postModel.replyCount];
+        self.postTimeLabel.text = postModel.postStrDate;
+        
+        self.userPositionImageView.hidden = YES;
+        self.userPositionLabel.hidden = YES;
+        self.userPositionLabel.text = nil;
+        self.constraint_userPositionImgLeading.constant = self.constraint_userPositionImgTrailing.constant = 10;
+        self.userLevelLabel.hidden = YES;
+        [self setuserRemarkLabelText:nil];
+        switch (postModel.posterType) {
+            case PosterType_Nomal: // 普通用户
+            case PosterType_MaJia:
+                self.userLevelLabel.hidden = NO;
+                self.userLevelLabel.text = [NSString stringWithFormat:@"V%ld", postModel.mbrLvl];
+                [self setuserRemarkLabelText:nil];
+//                self.userRemarkLabel.text = nil;
+                break;
+            case PosterType_YaoShi:  // 药师
+                self.userPositionImageView.hidden = NO;
+                self.userPositionLabel.hidden = NO;
+                self.constraint_userPositionImgLeading.constant = 4;
+                self.constraint_userPositionImgTrailing.constant = 11;
+                self.userPositionImageView.image = [UIImage imageNamed:@"pharmacist"];
+                self.userPositionLabel.text = @"药师";
+                [self setuserRemarkLabelText:postModel.brandName];
+//                self.userRemarkLabel.text = postModel.brandName;
+                break;
+            case PosterType_YingYangShi:  // 营养师
+                self.userPositionImageView.hidden = NO;
+                self.userPositionLabel.hidden = NO;
+                self.constraint_userPositionImgLeading.constant = 4;
+                self.constraint_userPositionImgTrailing.constant = 11;
+                self.userPositionImageView.image = [UIImage imageNamed:@"ic_expert"];
+                self.userPositionLabel.text = @"营养师";
+                [self setuserRemarkLabelText:nil];
+//                self.userRemarkLabel.text = postModel.brandName;
+                break;
+            default:
+                break;
+        }
+        
+        // 优先级  置顶 > 专栏 > 热门
+        // 有置顶的页面  ： 热议 、 专栏（发帖），圈子详情的看帖
+        // 3.1.1 只保留置顶
+        NSString* whiteSpaceString = @"       ";
+        if (postModel.flagTopHot && (self.postCellType == PostCellType_HotDiscuss || self.postCellType == PostCellType_SpecailColumn || self.postCellType == PostCellType_LookPost)) {
+            self.postTypeLabel.hidden = NO;
+//            self.postTypeLabel.backgroundColor = RGBHex(qwColor2);
+            self.postTypeLabel.text = @"置顶";
+            if (APP_W == 320) {
+                self.constraint_postTitleLabelLeading.constant = 0;
+                [self.postTitleLabel ma_setAttributeText:[whiteSpaceString stringByAppendingString:postModel.postTitle]];
+            }
+            else
+            {
+                self.constraint_postTitleLabelLeading.constant = 35;
+                [self.postTitleLabel ma_setAttributeText:postModel.postTitle];
+            }
+        }
+//        // 有专栏的页面  :  热议 、 圈子详情的看帖 、 收藏的帖子
+//        else if ((postModel.posterType == 3 || postModel.posterType == 4) && (self.postCellType == PostCellType_HotDiscuss || self.postCellType == PostCellType_LookPost || self.postCellType == PostCellType_CollectionPost))
+//        {
+//            self.postTypeLabel.hidden = NO;
+////            self.postTypeLabel.backgroundColor = RGBHex(qwColor13);
+//            self.postTypeLabel.text = @"专栏";
+//            if (APP_W == 320) {
+//                self.constraint_postTitleLabelLeading.constant = 0;
+//                [self.postTitleLabel ma_setAttributeText:[whiteSpaceString stringByAppendingString:postModel.postTitle]];
+//            }
+//            else
+//            {
+//                self.constraint_postTitleLabelLeading.constant = 35;
+//                [self.postTitleLabel ma_setAttributeText:postModel.postTitle];
+//            }
+//        }
+//        // 有热门的页面 ： 专栏（发帖） 、 圈子详情的看帖 、 圈子详情的专家 、 Ta的发帖 、 我的发帖 、 收藏的帖子
+//        else if (postModel.isHot && (self.postCellType == PostCellType_SpecailColumn || self.postCellType == PostCellType_LookPost || self.postCellType == PostCellType_Expert || self.postCellType == PostCellType_HisSendPost || self.postCellType == PostCellType_MineSendPost || self.postCellType == PostCellType_CollectionPost))
+//        {
+//            self.postTypeLabel.hidden = NO;
+////            self.postTypeLabel.backgroundColor = RGBHex(qwColor3);
+//            self.postTypeLabel.text = @"热门";
+//            if (APP_W == 320) {
+//                self.constraint_postTitleLabelLeading.constant = 0;
+//                [self.postTitleLabel ma_setAttributeText:[whiteSpaceString stringByAppendingString:postModel.postTitle]];
+//            }
+//            else
+//            {
+//                self.constraint_postTitleLabelLeading.constant = 35;
+//                [self.postTitleLabel ma_setAttributeText:postModel.postTitle];
+//            }
+//        }
+        else
+        {
+            self.postTypeLabel.hidden = YES;
+            self.constraint_postTitleLabelLeading.constant = 0;
+            [self.postTitleLabel ma_setAttributeText:postModel.postTitle];
+        }
+        
+        if ([postModel.postImgList isKindOfClass:[NSArray class]] && postModel.postImgList.count > 0) {
+            [self hiddenImages:NO];
+            switch (MIN(postModel.postImgList.count, 3)) {
+                case 1:
+                    self.firstImageView.hidden = NO;
+                    self.secondImageView.hidden = YES;
+                    self.thirdImageView.hidden = YES;
+                    [self.firstImageView setImageWithURL:[NSURL URLWithString:postModel.postImgList[0]] placeholderImage:ForumDefaultImage];
+                    break;
+                case 2:
+                    self.firstImageView.hidden = NO;
+                    self.secondImageView.hidden = NO;
+                    self.thirdImageView.hidden = YES;
+                    [self.firstImageView setImageWithURL:[NSURL URLWithString:postModel.postImgList[0]] placeholderImage:ForumDefaultImage];
+                    [self.secondImageView setImageWithURL:[NSURL URLWithString:postModel.postImgList[1]] placeholderImage:ForumDefaultImage];
+                    break;
+                case 3:
+                    self.firstImageView.hidden = NO;
+                    self.secondImageView.hidden = NO;
+                    self.thirdImageView.hidden = NO;
+                    [self.firstImageView setImageWithURL:[NSURL URLWithString:postModel.postImgList[0]] placeholderImage:ForumDefaultImage];
+                    [self.secondImageView setImageWithURL:[NSURL URLWithString:postModel.postImgList[1]] placeholderImage:ForumDefaultImage];
+                    [self.thirdImageView setImageWithURL:[NSURL URLWithString:postModel.postImgList[2]] placeholderImage:ForumDefaultImage];
+                    break;
+            }
+        }
+        else
+        {
+            [self hiddenImages:YES];
+        }
+    }
+}
+
+- (void) hiddenImages:(BOOL)hidden
+{
+    if (hidden) {
+        self.constraint_imagesContainerViewTop.constant = 0;
+        self.constraint_imagesContainerViewHeight.constant = 0;
+    }
+    else
+    {
+        self.constraint_imagesContainerViewTop.constant = 15;
+        self.constraint_imagesContainerViewHeight.constant = AutoValue(67);
+    }
+}
+
+- (void)awakeFromNib {
+    [self setup];
+    // Initialization code
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+- (CGSize)sizeThatFits:(CGSize)size
+{
+    CGFloat cellHeight = 0;
+    CGFloat cellWidth = size.width;
+    
+    cellHeight += 48; // 头像，昵称上面一行高度
+    cellHeight = cellHeight + MIN([self.postTitleLabel.attributedText boundingRectWithSize:CGSizeMake(cellWidth - 30, FLT_MAX) options:NSStringDrawingUsesLineFragmentOrigin context:nil].size.height, 50) - 4;
+    cellHeight = cellHeight + MIN([self.postContentLabel.attributedText boundingRectWithSize:CGSizeMake(cellWidth - 30, FLT_MAX) options:NSStringDrawingUsesLineFragmentOrigin context:nil].size.height, 42) + 7;
+    
+    cellHeight = cellHeight + self.constraint_imagesContainerViewTop.constant + self.constraint_imagesContainerViewHeight.constant + 15;
+    cellHeight += 40;
+    return CGSizeMake(cellWidth, cellHeight);
+}
+
+- (void)setuserRemarkLabelText:(NSString*)userRemarkText
+{
+    self.userRemarkLabel.text = userRemarkText;
+    self.userRemarkLabel.edgeInsets = StrIsEmpty(userRemarkText) ? UIEdgeInsetsZero : UIEdgeInsetsMake(3, 3, 3, 3);
+}
+
+@end

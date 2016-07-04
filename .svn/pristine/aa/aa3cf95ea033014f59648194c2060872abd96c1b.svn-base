@@ -1,0 +1,17 @@
+//
+//  BasePrivateModel.h
+//  APP
+//
+//  Created by qw on 15/3/11.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "BaseAPIModel.h"
+#import "LKDBHelper.h"
+
+@interface BasePrivateModel : BaseAPIModel
+
++(LKDBHelper*)getUsingLKDBHelperEx:(NSString*)dbName;
++ (void)syncDBWithObjArray:(NSArray *)modelList;
++ (instancetype)modelCopyFromModel:(id)model;
+@end

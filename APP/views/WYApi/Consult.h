@@ -1,0 +1,167 @@
+//
+//  Consult.h
+//  APP
+//
+//  Created by chenzhipeng on 5/5/15.
+//  Copyright (c) 2015 carret. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import "HttpClient.h"
+#import "ConsultModelR.h"
+#import "ConsultModel.h"
+#import "ConsultDoctorModel.h"
+#import "ConsultDoctorModelR.h"
+#import "QWMessage.h"
+
+
+@interface Consult : NSObject
+
+#pragma mark - 消息盒子
+/**
+ *  @brief 获取消息盒子列表
+ *
+ */
++ (void)getConsultCustomerListWithParam:(ConsultCustomerModelR *)param
+                     success:(void (^)(ConsultCustomerListModel *responModel))succsee
+                     failure:(void (^)(HttpException *e))failure;
+
+/**
+ *  @brief 轮询获取消息盒子列表
+ *
+ */
++ (void)getNewConsultCustomerListWithParam:(ConsultCustomerNewModelR *)param
+                                success:(void (^)(ConsultCustomerListModel *responModel))succsee
+                                failure:(void (^)(HttpException *e))failure;
+/**
+ *  @brief 全量获取消息盒子通知列表
+ *
+ */
++ (void)getNoticeListByCustomerWithParam:(ConsultCustomerModelR *)param
+                                success:(void (^)(ConsultCustomerListModel *responModel))succsee
+                                 failure:(void (^)(HttpException *e))failure;
+
+/**
+ *  @brief 全部的消息盒子设置已读
+ *
+ */
++ (void)setAllReadMsgBoxListWithParam:(ConsultModelR *)param
+                                 success:(void (^)(ConsultModel *responModel))succsee
+                                 failure:(void (^)(HttpException *e))failure;
+
+/*
+ *  @brief 按类型设置已读
+ *  @note: 消息类型：1.消息中心 2.订单通知 104.圈子消息
+ */
++ (void)setReadMsgBoxListByTypeWithParam:(MsgBoxListSetReadTypeModelR *)param
+                                 success:(void (^)(BaseAPIModel *responModel))succsee
+                                 failure:(void (^)(HttpException *e))failure;
+
+/*
+ *  @brief 按类型删除
+ *  @note: 1，2，101，104 .删除店长咨询，专家私聊消息时，消息id 必传
+ */
++ (void)removeMsgBoxListByTypeWithParam:(MsgBoxListRemoveByTypeModelR *)param
+                                success:(void (^)(BaseAPIModel *responModel))succsee
+                                failure:(void (^)(HttpException *e))failure;
+
+/**
+ *  @brief 增量获取消息盒子通知列表
+ *
+ */
++ (void)pollNoticeListByCustomerWithParam:(ConsultCustomerModelR *)param
+                                 success:(void (^)(ConsultCustomerListModel *responModel))succsee
+                                 failure:(void (^)(HttpException *e))failure;
+
++ (void)getMsgBoxIndexListWithParam:(MsgBoxListModelR *)param
+                            success:(void (^)(MsgBoxListModel *responModel))success
+                            failure:(void (^)(HttpException *e))failure;
+
++ (void)getMsgBoxNoticeListWithParam:(MsgBoxNoticeListModelR *)param
+                             success:(void (^)(MsgBoxNoticeListModel *responModel))success
+                             failure:(void (^)(HttpException *e))failure;
+
++ (void)getMsgBoxHealthListWithParam:(MsgBoxHealthListModelR *)param
+                             success:(void (^)(MsgBoxHealthListModel *responModel))success
+                             failure:(void (^)(HttpException *e))failure;
+
+
+#pragma mark - 咨询
++ (void)postConsultDoctorWithParam:(ConsultDocModelR *)param
+                                success:(void (^)(ConsultDocModel *responModel))success
+                                failure:(void (^)(HttpException *e))failure;
+
++ (void)consultDetailCreateWithParams:(ConsultDetailCreateModelR *)param
+                              success:(void(^)(ConsultDetailCreateModel *obj))success
+                              failure:(void(^)(HttpException * e))failure;
+
++ (void)postConsultSPDoctorWithParam:(ConsultDocModelR *)param
+                           success:(void (^)(ConsultDocModel *responModel))success
+                           failure:(void (^)(HttpException *e))failure;
+
++ (void)consultDetailRemoveWithParams:(ConsultDetailRemoveModelR *)param
+                              success:(void(^)(id obj))success
+                              failure:(void(^)(HttpException * e))failure;
+
++ (void)consultSpreadWithParam:(ConsultSpreadModelR *)param
+                       success:(void(^)(BaseAPIModel *model))success
+                       failure:(void (^)(HttpException *e))failure;
+
++ (void)consultRemoveExpiredWithParam:(ConsultExpiredModelR *)param
+                              success:(void(^)(BaseAPIModel *model))success
+                              failure:(void (^)(HttpException *e))failure;
+
++ (void)consultExpiredWithParam:(ConsultExpiredModelR *)param
+                        success:(void(^)(ConsultCustomerListModel *model))success
+                        failure:(void (^)(HttpException *e))failure;
+
++ (void)consultRemoveAllExpiredWithParam:(ConsultExpiredModelR *)param
+                                 success:(void(^)(BaseAPIModel *model))success
+                                 failure:(void (^)(HttpException *e))failure;
+/**
+ *  @brief 更新所有资讯
+ *
+ */
++ (void)updateConsultAllReaded:(ConsultModelR *)param
+                       success:(void (^)(ConsultModel *responModel))success
+                       failure:(void (^)(HttpException *e))failure;
+
+/**
+ *  @brief 更新某条资讯中所有详情为已读
+ *
+ */
++ (void)updateConsultItemRead:(ConsultItemReadModelR *)param
+                      success:(void (^)(ConsultModel *responModel))success
+                      failure:(void (^)(HttpException *e))failure;
+
+/**
+ *  @brief 客户：查看咨询问题详情
+ *
+ */
++ (void)consultDetailCustomerWithParam:(ConsultDetailCustomerModelR *)param
+                               success:(void(^)(id DFModel))success
+                               failure:(void (^)(HttpException *e))failure;
+
+/**
+ *  @brief 客户：轮询获取最新咨询问题详情
+ */
+
++ (void)consultDetailCustomerPollWithParam:(ConsultDetailCustomerModelR *)param
+                               success:(void(^)(id DFModel))success
+                               failure:(void (^)(HttpException *e))failure;
+
+
+/**
+ *  @brief 客户：更新服务器角标
+ */
+
++ (void)updateNotiNumberWithParam:(ConsultSetUnreadNumModelR *)param
+                                   success:(void(^)(id ResModel))success
+                                   failure:(void (^)(HttpException *e))failure;
+
+// /api/consult/notice/removeByCustomer 客户：删除单条咨询通知
++ (void)removeByCustomer:(RemoveByCustomerR *)param
+                          success:(void(^)(id ResModel))success
+                          failure:(void (^)(HttpException *e))failure;
+@end
+

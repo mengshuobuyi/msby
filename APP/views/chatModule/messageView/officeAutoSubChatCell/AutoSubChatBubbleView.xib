@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="8191" systemVersion="14F1021" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="8154"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="AutoSubChatBubbleView">
+            <rect key="frame" x="0.0" y="0.0" width="300" height="110"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Tr4-Ni-yfn">
+                    <rect key="frame" x="10" y="10" width="280" height="94"/>
+                    <subviews>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="fklsjfksdjkfsjdkfjskdljjk就看见看见接口设计方开始大姐夫就开始大姐夫就看得见" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xba-cg-l1D" userLabel="messageLable" customClass="MLEmojiLabel">
+                            <rect key="frame" x="0.0" y="0.0" width="280" height="61"/>
+                            <constraints>
+                                <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="15" id="1QS-ow-z11"/>
+                            </constraints>
+                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                            <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="HeF-Kr-hvU" userLabel="checkButton">
+                            <rect key="frame" x="186" y="64" width="84" height="30"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="30" id="50m-Ik-V3H"/>
+                                <constraint firstAttribute="width" constant="84" id="lGD-LC-X5e"/>
+                            </constraints>
+                            <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                            <state key="normal" title="立即去查看">
+                                <color key="titleColor" red="0.050980392156862744" green="0.4823529411764706" blue="0.92156862745098034" alpha="1" colorSpace="calibratedRGB"/>
+                                <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                            </state>
+                            <connections>
+                                <action selector="checkQuick:" destination="iN0-l3-epB" eventType="touchUpInside" id="p4n-Z4-YLU"/>
+                            </connections>
+                        </button>
+                    </subviews>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstItem="xba-cg-l1D" firstAttribute="leading" secondItem="Tr4-Ni-yfn" secondAttribute="leading" id="4PG-Qf-px6"/>
+                        <constraint firstAttribute="bottom" secondItem="HeF-Kr-hvU" secondAttribute="bottom" id="81q-9g-Bks"/>
+                        <constraint firstAttribute="trailing" secondItem="HeF-Kr-hvU" secondAttribute="trailing" constant="10" id="8Ny-Gx-RLE"/>
+                        <constraint firstItem="xba-cg-l1D" firstAttribute="top" secondItem="Tr4-Ni-yfn" secondAttribute="top" id="EpK-nd-ucQ"/>
+                        <constraint firstItem="HeF-Kr-hvU" firstAttribute="top" secondItem="xba-cg-l1D" secondAttribute="bottom" constant="3" id="OmY-8s-dee"/>
+                        <constraint firstAttribute="trailing" secondItem="xba-cg-l1D" secondAttribute="trailing" id="fc4-K1-l9r"/>
+                    </constraints>
+                </view>
+            </subviews>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstAttribute="bottom" secondItem="Tr4-Ni-yfn" secondAttribute="bottom" constant="6" id="HI0-4p-TCt"/>
+                <constraint firstAttribute="trailing" secondItem="Tr4-Ni-yfn" secondAttribute="trailing" constant="10" id="Mk2-Za-wCk"/>
+                <constraint firstItem="Tr4-Ni-yfn" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="10" id="gpU-NW-Veq"/>
+                <constraint firstItem="Tr4-Ni-yfn" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="10" id="xcI-tw-FOC"/>
+            </constraints>
+            <nil key="simulatedStatusBarMetrics"/>
+            <nil key="simulatedTopBarMetrics"/>
+            <nil key="simulatedBottomBarMetrics"/>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="autoMessage" destination="xba-cg-l1D" id="VLN-Sm-g1I"/>
+                <outlet property="checkButton" destination="HeF-Kr-hvU" id="joq-8f-cV3"/>
+            </connections>
+            <point key="canvasLocation" x="322" y="246.5"/>
+        </view>
+    </objects>
+</document>

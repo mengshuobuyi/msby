@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15F34" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="PharmacyGoodsListViewController">
+            <connections>
+                <outlet property="NoticeViewHeightConstant" destination="QeB-9O-jtB" id="ja3-P4-Heh"/>
+                <outlet property="goodCarBtn" destination="lWx-b6-0vx" id="kdF-V5-Q10"/>
+                <outlet property="goodCountLabel" destination="fvK-ev-K9z" id="M3A-yO-DSE"/>
+                <outlet property="leftTableView" destination="d2s-iq-yiL" id="cTM-jg-CR4"/>
+                <outlet property="noticeBtn" destination="0gp-b9-2Eq" id="iwJ-u5-LAN"/>
+                <outlet property="noticeLabel" destination="DWh-YN-ZmM" id="dT5-SM-lrN"/>
+                <outlet property="noticeView" destination="N8g-WD-VD0" id="guz-9H-Yf6"/>
+                <outlet property="rightTableView" destination="h4L-Vi-8y7" id="nBK-Xq-GOF"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="d2s-iq-yiL">
+                    <rect key="frame" x="0.0" y="31" width="76" height="537"/>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="76" id="bgf-0V-fcu"/>
+                    </constraints>
+                    <connections>
+                        <outlet property="dataSource" destination="-1" id="A7I-HT-MI5"/>
+                        <outlet property="delegate" destination="-1" id="m7u-wt-3UT"/>
+                    </connections>
+                </tableView>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="h4L-Vi-8y7">
+                    <rect key="frame" x="76" y="31" width="244" height="537"/>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <connections>
+                        <outlet property="dataSource" destination="-1" id="idl-bv-LxI"/>
+                        <outlet property="delegate" destination="-1" id="5pZ-c8-bXm"/>
+                    </connections>
+                </tableView>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="N8g-WD-VD0">
+                    <rect key="frame" x="0.0" y="0.0" width="320" height="31"/>
+                    <subviews>
+                        <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="icon_bulletin_pharmacy" translatesAutoresizingMaskIntoConstraints="NO" id="NLc-un-LsV">
+                            <rect key="frame" x="15" y="9" width="14" height="13"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="13" id="XDP-A0-go5"/>
+                                <constraint firstAttribute="width" constant="14" id="bvB-c6-s2q"/>
+                            </constraints>
+                        </imageView>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="订单满XX元，在购物车中加XX元可以换购原本药房巴拉巴拉" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="DWh-YN-ZmM">
+                            <rect key="frame" x="39" y="0.0" width="246" height="31"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                            <color key="textColor" red="0.61960784310000006" green="0.50196078430000002" blue="0.32156862749999998" alpha="1" colorSpace="calibratedRGB"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="arrow_bulletin_pharmacy" translatesAutoresizingMaskIntoConstraints="NO" id="yA0-eb-XVR">
+                            <rect key="frame" x="300" y="11" width="5" height="10"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="5" id="1HZ-9h-Wk4"/>
+                                <constraint firstAttribute="height" constant="10" id="fFI-eR-3Zv"/>
+                            </constraints>
+                        </imageView>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0gp-b9-2Eq">
+                            <rect key="frame" x="0.0" y="0.0" width="320" height="31"/>
+                        </button>
+                    </subviews>
+                    <color key="backgroundColor" red="1" green="0.96862745098039216" blue="0.86274509803921573" alpha="1" colorSpace="calibratedRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="trailing" secondItem="0gp-b9-2Eq" secondAttribute="trailing" id="GaB-2g-Yqy"/>
+                        <constraint firstAttribute="bottom" secondItem="DWh-YN-ZmM" secondAttribute="bottom" id="HOF-eR-0il"/>
+                        <constraint firstAttribute="bottom" secondItem="0gp-b9-2Eq" secondAttribute="bottom" id="K6b-8U-FWS"/>
+                        <constraint firstAttribute="height" constant="31" id="QeB-9O-jtB"/>
+                        <constraint firstItem="0gp-b9-2Eq" firstAttribute="top" secondItem="N8g-WD-VD0" secondAttribute="top" id="RC2-Df-O1n"/>
+                        <constraint firstItem="DWh-YN-ZmM" firstAttribute="leading" secondItem="NLc-un-LsV" secondAttribute="trailing" constant="10" id="S9s-WY-WAw"/>
+                        <constraint firstItem="DWh-YN-ZmM" firstAttribute="top" secondItem="N8g-WD-VD0" secondAttribute="top" id="Xpm-Vc-rBu"/>
+                        <constraint firstItem="yA0-eb-XVR" firstAttribute="centerY" secondItem="N8g-WD-VD0" secondAttribute="centerY" id="daO-PC-qNk"/>
+                        <constraint firstAttribute="trailing" secondItem="0gp-b9-2Eq" secondAttribute="trailing" id="gVP-ya-aFU"/>
+                        <constraint firstItem="NLc-un-LsV" firstAttribute="centerY" secondItem="N8g-WD-VD0" secondAttribute="centerY" id="lhw-yF-LbH"/>
+                        <constraint firstItem="yA0-eb-XVR" firstAttribute="leading" secondItem="DWh-YN-ZmM" secondAttribute="trailing" constant="15" id="oGi-Qm-tur"/>
+                        <constraint firstAttribute="trailing" secondItem="yA0-eb-XVR" secondAttribute="trailing" constant="15" id="tdW-L3-Oy6"/>
+                        <constraint firstItem="NLc-un-LsV" firstAttribute="leading" secondItem="N8g-WD-VD0" secondAttribute="leading" constant="15" id="vOd-RP-cvJ"/>
+                        <constraint firstItem="0gp-b9-2Eq" firstAttribute="leading" secondItem="N8g-WD-VD0" secondAttribute="leading" id="zOm-g6-wnx"/>
+                    </constraints>
+                    <variation key="default">
+                        <mask key="constraints">
+                            <exclude reference="GaB-2g-Yqy"/>
+                        </mask>
+                    </variation>
+                    <variation key="heightClass=regular-widthClass=compact">
+                        <mask key="constraints">
+                            <include reference="GaB-2g-Yqy"/>
+                        </mask>
+                    </variation>
+                </view>
+                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="btn_discount" translatesAutoresizingMaskIntoConstraints="NO" id="isL-PF-ZNE">
+                    <rect key="frame" x="11" y="500" width="55" height="55"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="55" id="R43-Hf-51A"/>
+                        <constraint firstAttribute="height" constant="55" id="fnK-za-2uF"/>
+                    </constraints>
+                </imageView>
+                <button opaque="NO" contentMode="scaleAspectFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="lWx-b6-0vx">
+                    <rect key="frame" x="11" y="500" width="55" height="55"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="55" id="RQl-5E-gdK"/>
+                        <constraint firstAttribute="height" constant="55" id="Yt5-Id-2qZ"/>
+                    </constraints>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="99" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fvK-ev-K9z">
+                    <rect key="frame" x="48" y="500" width="25" height="25"/>
+                    <color key="backgroundColor" red="1" green="0.31372549019607843" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="25" id="85L-Bf-V1u"/>
+                        <constraint firstAttribute="height" constant="25" id="SGi-zH-yuv"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                    <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <nil key="highlightedColor"/>
+                </label>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstAttribute="trailing" secondItem="h4L-Vi-8y7" secondAttribute="trailing" id="3cl-BT-9tG"/>
+                <constraint firstItem="lWx-b6-0vx" firstAttribute="top" secondItem="fvK-ev-K9z" secondAttribute="bottom" constant="-25" id="9Mb-hf-E7K"/>
+                <constraint firstAttribute="bottom" secondItem="h4L-Vi-8y7" secondAttribute="bottom" id="BJc-6O-QZU"/>
+                <constraint firstAttribute="bottom" secondItem="lWx-b6-0vx" secondAttribute="bottom" constant="13" id="C9P-qj-4Dn"/>
+                <constraint firstItem="isL-PF-ZNE" firstAttribute="centerX" secondItem="lWx-b6-0vx" secondAttribute="centerX" id="KYn-ba-Q23"/>
+                <constraint firstItem="fvK-ev-K9z" firstAttribute="leading" secondItem="lWx-b6-0vx" secondAttribute="trailing" constant="-18" id="Ngb-oh-IVe"/>
+                <constraint firstItem="h4L-Vi-8y7" firstAttribute="top" secondItem="N8g-WD-VD0" secondAttribute="bottom" id="Pk7-IU-r9D"/>
+                <constraint firstItem="N8g-WD-VD0" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="RX9-WS-oEE"/>
+                <constraint firstItem="d2s-iq-yiL" firstAttribute="top" secondItem="N8g-WD-VD0" secondAttribute="bottom" id="SGy-9c-7JM"/>
+                <constraint firstItem="isL-PF-ZNE" firstAttribute="centerY" secondItem="lWx-b6-0vx" secondAttribute="centerY" id="Upx-dQ-WGq"/>
+                <constraint firstItem="d2s-iq-yiL" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="f6B-Ca-Fg9"/>
+                <constraint firstItem="N8g-WD-VD0" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="guu-uc-aE6"/>
+                <constraint firstAttribute="bottom" secondItem="d2s-iq-yiL" secondAttribute="bottom" id="m8V-xc-cBI"/>
+                <constraint firstItem="h4L-Vi-8y7" firstAttribute="leading" secondItem="d2s-iq-yiL" secondAttribute="trailing" id="mEv-LX-bh7"/>
+                <constraint firstAttribute="trailing" secondItem="N8g-WD-VD0" secondAttribute="trailing" id="p7C-7c-RmW"/>
+                <constraint firstItem="lWx-b6-0vx" firstAttribute="centerX" secondItem="d2s-iq-yiL" secondAttribute="centerX" id="sT8-JH-DH1"/>
+            </constraints>
+            <nil key="simulatedStatusBarMetrics"/>
+            <point key="canvasLocation" x="371" y="259"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="arrow_bulletin_pharmacy" width="5" height="10"/>
+        <image name="btn_discount" width="52" height="52"/>
+        <image name="icon_bulletin_pharmacy" width="14" height="13"/>
+    </resources>
+</document>

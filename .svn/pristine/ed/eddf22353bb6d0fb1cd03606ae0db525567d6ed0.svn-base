@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="8191" systemVersion="14F27" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="8154"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="CommonDiseaseViewController">
+            <connections>
+                <outlet property="bgView" destination="73x-85-m1Q" id="RJO-me-Ept"/>
+                <outlet property="netButton" destination="CuS-c8-ZfS" id="CNJ-FS-RfL"/>
+                <outlet property="netImageView" destination="bRO-5M-cjn" id="3Jj-YJ-3p1"/>
+                <outlet property="netLabel" destination="kML-tA-uyv" id="PNW-Xu-I9h"/>
+                <outlet property="rootTableView" destination="Yri-Em-aVN" id="4wy-GS-veq"/>
+                <outlet property="subTableView" destination="c2i-37-FBE" id="uZG-G4-EGY"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="64" width="320" height="416"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="Yri-Em-aVN" userLabel="rootTableView">
+                    <rect key="frame" x="-8" y="0.0" width="116" height="416"/>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="116" id="asW-oP-dYf"/>
+                    </constraints>
+                    <connections>
+                        <outlet property="dataSource" destination="-1" id="NXy-HH-uMq"/>
+                        <outlet property="delegate" destination="-1" id="HID-wZ-8A9"/>
+                    </connections>
+                </tableView>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="c2i-37-FBE" userLabel="subTable View">
+                    <rect key="frame" x="108" y="0.0" width="212" height="416"/>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <connections>
+                        <outlet property="dataSource" destination="-1" id="9nx-Jl-IHf"/>
+                        <outlet property="delegate" destination="-1" id="d5Q-av-wCZ"/>
+                    </connections>
+                </tableView>
+                <view hidden="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="73x-85-m1Q">
+                    <rect key="frame" x="0.0" y="0.0" width="320" height="416"/>
+                    <subviews>
+                        <imageView hidden="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="网络信号icon" translatesAutoresizingMaskIntoConstraints="NO" id="bRO-5M-cjn">
+                            <rect key="frame" x="109" y="90" width="101" height="101"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="101" id="5JK-nI-oKm"/>
+                                <constraint firstAttribute="width" constant="101" id="6Ot-Mx-JbV"/>
+                            </constraints>
+                        </imageView>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="网络未连接，请重试" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="kML-tA-uyv">
+                            <rect key="frame" x="0.0" y="224" width="320" height="18"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                            <color key="textColor" red="0.41568627450000001" green="0.47450980390000003" blue="0.52156862749999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="CuS-c8-ZfS">
+                            <rect key="frame" x="0.0" y="0.0" width="320" height="416"/>
+                            <state key="normal">
+                                <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                            </state>
+                        </button>
+                    </subviews>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstItem="CuS-c8-ZfS" firstAttribute="leading" secondItem="73x-85-m1Q" secondAttribute="leading" id="6Wl-va-CIJ"/>
+                        <constraint firstItem="bRO-5M-cjn" firstAttribute="top" secondItem="73x-85-m1Q" secondAttribute="top" constant="90" id="WfT-EH-i1D"/>
+                        <constraint firstItem="bRO-5M-cjn" firstAttribute="centerX" secondItem="kML-tA-uyv" secondAttribute="centerX" id="a9I-yg-GUe"/>
+                        <constraint firstAttribute="trailing" secondItem="CuS-c8-ZfS" secondAttribute="trailing" id="dIK-p4-hQH"/>
+                        <constraint firstItem="CuS-c8-ZfS" firstAttribute="top" secondItem="73x-85-m1Q" secondAttribute="top" id="dPW-RZ-jg0"/>
+                        <constraint firstAttribute="centerX" secondItem="bRO-5M-cjn" secondAttribute="centerX" constant="0.5" id="fBN-n4-ngh"/>
+                        <constraint firstItem="kML-tA-uyv" firstAttribute="top" secondItem="bRO-5M-cjn" secondAttribute="bottom" constant="33" id="j2d-VY-mWQ"/>
+                        <constraint firstItem="kML-tA-uyv" firstAttribute="leading" secondItem="73x-85-m1Q" secondAttribute="leading" id="sth-Du-3Yd"/>
+                        <constraint firstAttribute="bottom" secondItem="CuS-c8-ZfS" secondAttribute="bottom" id="ttw-6X-PQg"/>
+                    </constraints>
+                </view>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstAttribute="bottom" secondItem="Yri-Em-aVN" secondAttribute="bottom" id="5u6-dn-RuS"/>
+                <constraint firstItem="Yri-Em-aVN" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="75Y-Ow-TyE"/>
+                <constraint firstItem="73x-85-m1Q" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="FgY-bM-hi4"/>
+                <constraint firstItem="c2i-37-FBE" firstAttribute="leading" secondItem="Yri-Em-aVN" secondAttribute="trailing" id="Gxo-7N-37q"/>
+                <constraint firstAttribute="trailing" secondItem="c2i-37-FBE" secondAttribute="trailing" id="KfY-Oo-3X3"/>
+                <constraint firstAttribute="bottom" secondItem="73x-85-m1Q" secondAttribute="bottom" id="NXQ-NJ-uDR"/>
+                <constraint firstItem="c2i-37-FBE" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="RXn-S4-xF7"/>
+                <constraint firstItem="Yri-Em-aVN" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" constant="-8" id="VV6-Qp-qEc"/>
+                <constraint firstAttribute="trailing" secondItem="73x-85-m1Q" secondAttribute="trailing" id="bNm-En-HmU"/>
+                <constraint firstItem="73x-85-m1Q" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="clq-Kj-SAO"/>
+                <constraint firstAttribute="bottom" secondItem="c2i-37-FBE" secondAttribute="bottom" id="peZ-W1-D2D"/>
+            </constraints>
+            <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" translucent="NO" prompted="NO"/>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <point key="canvasLocation" x="438" y="343"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="网络信号icon" width="101" height="101"/>
+    </resources>
+</document>

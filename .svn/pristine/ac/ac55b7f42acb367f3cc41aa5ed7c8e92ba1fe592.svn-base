@@ -1,0 +1,311 @@
+//
+//  StoreSocietyDetailViewController.m
+//  APP
+//  社会药房详情(开通微商城市社会药房、未开通微商城市社会药房)
+//  h5/branch/openSociety   开通微商城市
+//  h5/branch/unopenSociety 未通微商城市
+
+//  Created by 李坚 on 16/5/5.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "StoreSocietyDetailViewController.h"
+#import "ConsultStore.h"
+#import "WeiStoreTableViewCell.h"
+#import "StorePharmacyDetailViewController.h"
+#import "PharmacyStoreMapViewController.h"
+#import "ReportConsultViewController.h"
+
+static NSString *const storeCellIdentifier = @"WeiStoreTableViewCell";
+
+@interface StoreSocietyDetailViewController ()<UITableViewDataSource,UITableViewDelegate>{
+    
+    PharmacyDetailHeaderView *headerView;
+    BranchDetailVO *branchDetail;
+}
+
+@property (weak, nonatomic) IBOutlet UITableView *mainTableView;
+
+@end
+
+@implementation StoreSocietyDetailViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    [self naviRightBotton:@"举报" action:@selector(reportSotre:)];
+    [_mainTableView registerNib:[UINib nibWithNibName:storeCellIdentifier bundle:nil] forCellReuseIdentifier:storeCellIdentifier];
+    _mainTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    _mainTableView.backgroundColor = RGBHex(qwColor11);
+    _mainTableView.tableFooterView = [[UIView alloc]init];
+    if(StrIsEmpty(_branchId)){
+        [self showInfoView:@"branchId为空" image:@"ic_img_fail"];
+    }else{
+        [self loadSocietyDetail];
+    }
+}
+
+- (void)reportSotre:(id)sender{
+    
+    ReportConsultViewController *VC = [[ReportConsultViewController alloc]initWithNibName:@"ReportConsultViewController" bundle:nil];
+    VC.branchId = self.branchId;
+    VC.branchName = self.title;
+    VC.objType = 2;
+    [self.navigationController pushViewController:VC animated:YES];
+}
+
+- (void)loadSocietyDetail{
+    
+    MallProductSearchModelR *modelR = [[MallProductSearchModelR alloc]init];
+    modelR.branchId = self.branchId;
+    HttpClientMgr.progressEnabled = YES;
+    
+    if([_type intValue] == 2){
+        [QWGLOBALMANAGER readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) {
+            modelR.city = mapInfoModel.city;
+            modelR.longitude = @(mapInfoModel.location.coordinate.longitude);
+            modelR.latitude = @(mapInfoModel.location.coordinate.latitude);
+            [self opensocietyMallBranch:modelR];
+        }];
+    }else{
+        [QWGLOBALMANAGER readLocationWhetherReLocation:NO block:^(MapInfoModel *mapInfoModel) {
+            modelR.city = mapInfoModel.city;
+            modelR.longitude = @(mapInfoModel.location.coordinate.longitude);
+            modelR.latitude = @(mapInfoModel.location.coordinate.latitude);
+            [self unopensocietyMallBranch:modelR];
+        }];
+    }
+}
+
+#pragma mark - 开城市，社会药房
+- (void)opensocietyMallBranch:(MallProductSearchModelR *)modelR{
+    
+    [ConsultStore OpenSocietyBranchDetail:modelR success:^(BranchDetailVO *model) {
+        
+        if([model.apiStatus intValue] == 0){
+            branchDetail = model;
+            
+            if(StrIsEmpty(model.shortName)){
+                self.title = model.name;
+            }else{
+                self.title = model.shortName;
+            }
+            [self setupHeaderView];
+            [_mainTableView reloadData];
+        }else{
+            [self showInfoView:model.apiMessage image:@"ic_img_fail"];
+        }
+        
+    } failure:^(HttpException *e) {
+        if(e.errorCode!=-999){
+            if(e.errorCode == -1001){
+                [self showInfoView:kWarning215N26 image:@"ic_img_fail"];
+            }else{
+                [self showInfoView:kWarning39 image:@"ic_img_fail"];
+            }
+        }
+    }];
+}
+#pragma mark - 关城市，社会药房
+- (void)unopensocietyMallBranch:(MallProductSearchModelR *)modelR{
+    
+    [ConsultStore UnopenSocietyBranchDetail:modelR success:^(BranchDetailVO *model) {
+        
+        if([model.apiStatus intValue] == 0){
+            branchDetail = model;
+            
+            if(StrIsEmpty(model.shortName)){
+                self.title = model.name;
+            }else{
+                self.title = model.shortName;
+            }
+            [self setupHeaderView];
+            [_mainTableView reloadData];
+
+        }else{
+            [self showInfoView:model.apiMessage image:@"ic_img_fail"];
+        }
+        
+    } failure:^(HttpException *e) {
+        if(e.errorCode!=-999){
+            if(e.errorCode == -1001){
+                [self showInfoView:kWarning215N26 image:@"ic_img_fail"];
+            }else{
+                [self showInfoView:kWarning39 image:@"ic_img_fail"];
+            }
+        }
+    }];
+}
+
+#pragma mark - TableHeadView UI
+- (void)setupHeaderView{
+    
+    [QWGLOBALMANAGER postNotif:NotifBranchDetailRequestSuccess data:branchDetail object:nil];
+    if(headerView == nil){
+        headerView = [PharmacyDetailHeaderView getView];
+        headerView.frame = CGRectMake(0, 0, APP_W, 227.0f);
+        
+        [headerView.phoneBtn addTarget:self action:@selector(PhoneAction:) forControlEvents:UIControlEventTouchUpInside];
+        [headerView.addressBtn addTarget:self action:@selector(AddressAction:) forControlEvents:UIControlEventTouchUpInside];
+
+        CGRect rect = headerView.frame;
+        rect.size.height = rect.size.height - 39.0f;
+        headerView.frame = rect;
+        
+        [headerView.topLineView removeFromSuperview];
+        [headerView.chatArrowImage removeFromSuperview];
+        [headerView.chatBtn removeFromSuperview];
+        [headerView.chatLabel removeFromSuperview];
+        [headerView.chatImageView removeFromSuperview];
+        
+        headerView.starImage.hidden = YES;
+        headerView.collectBtn.hidden = YES;
+        headerView.ratView.hidden = YES;
+        [headerView.imgUrl setImage:[UIImage imageNamed:@"img_bg_pharmacy"]];
+        _mainTableView.tableHeaderView = headerView;
+    }
+    headerView.branchName.text = branchDetail.name;
+    if([branchDetail.star boolValue]){
+        headerView.starImage.hidden = NO;
+    }else{
+        headerView.starImage.hidden = YES;
+    }
+    if(StrIsEmpty(branchDetail.address)){
+        headerView.addressLabel.text = @"暂无地址";
+    }else{
+        headerView.addressLabel.text = branchDetail.address;
+    }
+    if(branchDetail.links.count > 0 && ![branchDetail.links[0] isEqualToString:@""]){
+        headerView.phoneLabel.text = [NSString stringWithFormat:@"药房电话：%@",branchDetail.links[0]];
+    }else{
+        [headerView.phoneArrowImage removeFromSuperview];
+        [headerView.phoneBtn removeFromSuperview];
+        [headerView.phoneLabel removeFromSuperview];
+        [headerView.phoneImage removeFromSuperview];
+        [headerView.sepatorLineView removeFromSuperview];
+        CGRect rect = headerView.frame;
+        rect.size.height -= 39.0f;
+        headerView.frame = rect;
+    }
+    [headerView.imgUrl setImageWithURL:[NSURL URLWithString:branchDetail.logo] placeholderImage:[UIImage imageNamed:@"img_bg_pharmacy"]];
+    if(branchDetail.stars){
+        [headerView.ratView displayRating:[branchDetail.stars floatValue]/2.0f];
+    }else{
+        [headerView.ratView displayRating:5.0f];
+    }
+    
+    if([_type intValue] == 2 || [_type intValue] == 4){
+        headerView.starImage.hidden = YES;
+        headerView.collectBtn.hidden = YES;
+        headerView.ratView.hidden = YES;
+        [headerView.imgUrl setImage:[UIImage imageNamed:@"img_bg_pharmacy"]];
+    }else{
+        headerView.collectBtn.hidden = NO;
+        headerView.ratView.hidden = NO;
+    }
+    _mainTableView.tableHeaderView = headerView;
+}
+
+#pragma mark - UITableViewDelegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{
+    
+    return 1;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section{
+    
+    return 36.0f;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section{
+    UIView *view = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, 36.0f)];
+    view.backgroundColor = RGBHex(qwColor4);
+    UILabel *label = [[UILabel alloc]initWithFrame:CGRectMake(15, 0, 100, 36.0f)];
+    label.textColor = RGBHex(qwColor8);
+    label.font = fontSystem(kFontS4);
+    label.text = @"推荐药房";
+    [view addSubview:label];
+    UIView *line = [[UIView alloc]initWithFrame:CGRectMake(0, 35.5, APP_W, 0.51)];
+    line.backgroundColor = RGBHex(qwColor10);
+    [view addSubview:line];
+    
+    return view;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    return branchDetail.branchs.count;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    return [WeiStoreTableViewCell getCellHeight:branchDetail.branchs[indexPath.row]];
+}
+
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    WeiStoreTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:storeCellIdentifier];
+    
+    cell.path = indexPath;
+    MicroMallBranchVo *VO = branchDetail.branchs[indexPath.row];
+    
+    __weak StoreSocietyDetailViewController *weakSelf =self;
+    [cell setCell:VO withSpell:^(NSIndexPath *path) {
+        
+        MicroMallBranchVo *model = branchDetail.branchs[path.row];
+        model.spelled = !model.spelled;
+        [weakSelf.mainTableView reloadRowsAtIndexPaths:@[path] withRowAnimation:UITableViewRowAnimationFade];
+    }];
+    
+    cell.proName.text = VO.name;
+    
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+
+    MicroMallBranchVo *VO = branchDetail.branchs[indexPath.row];
+    //type:1.未开通微商药房 2.社会药房 3.开通微商药房
+  
+    [QWGLOBALMANAGER pushBranchDetail:VO.id withType:VO.type navigation:self.navigationController];
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+
+#pragma mark - 拨打电话方法
+- (void)PhoneAction:(id)sender{
+    
+    if(branchDetail.links.count > 0 && ![branchDetail.links[0] isEqualToString:@""]){
+        UIActionSheet *actionSheet = [[UIActionSheet alloc]initWithTitle:nil delegate:self cancelButtonTitle:@"取消" destructiveButtonTitle:nil otherButtonTitles:nil];
+        for(NSString *str in branchDetail.links){
+            [actionSheet addButtonWithTitle:str];
+        }
+        
+        [actionSheet showInView:self.view];
+    }else{
+        
+    }
+    
+}
+#pragma mark - 点击地址方法
+- (void)AddressAction:(id)sender{
+    
+    if (!StrIsEmpty(branchDetail.lat) && !StrIsEmpty(branchDetail.lng)) {
+        [QWGLOBALMANAGER statisticsEventId:@"x_yfxq_dw" withLable:@"药房详情" withParams:[NSMutableDictionary dictionaryWithDictionary:@{@"药房名":branchDetail.name,@"地址":branchDetail.address}]];
+        
+        StoreNearByModel *mapStoreModel = [StoreNearByModel new];
+        mapStoreModel.latitude = branchDetail.lat;
+        mapStoreModel.longitude = branchDetail.lng;
+        mapStoreModel.province = @"";
+        mapStoreModel.city = @"";
+        mapStoreModel.addr = branchDetail.address;
+        
+        PharmacyStoreMapViewController *pharmacyMapViewController = [[PharmacyStoreMapViewController alloc] init];
+        pharmacyMapViewController.mapStoreModel = mapStoreModel;
+        [self.navigationController pushViewController:pharmacyMapViewController animated:YES];
+    }
+}
+@end

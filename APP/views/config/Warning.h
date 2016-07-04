@@ -1,0 +1,106 @@
+/*!
+ @header Warning.h
+ @abstract 记录所有的提示常量
+ @author .
+ @version 1.00 2015/03/06  (1.00)
+ */
+
+#ifndef APP_Warning_h
+#define APP_Warning_h
+
+
+
+#define kWarning2    @"尚未登录"
+#define kWarning3    @"无法查询到该药品的详情!"
+#define kWarning4    @"搜索药品"
+#define kWarning5    @"取消"
+#define kWarning6    @"上拉可以加载更多数据了"
+#define kWarning7    @"松开加载更多数据了"
+#define kWarning8    @"正在帮你加载中"
+#define kWarning9    @"加载更多..."
+
+
+#define kWarning12   @"网络未连接，请重试"
+
+
+#define kWarning16   @"上拉可以刷新"
+#define kWarning17   @"松开刷新了"
+
+#define kWarning19   @"您还没有添加订阅哦!"
+#define kWarning20   @"取消关注成功"
+
+
+
+
+
+
+
+
+#define kWarning30   @"暂无数据!"
+
+
+
+
+#define kWarning35   @"暂无相关症状!"
+
+#define kWarning38   @"投诉成功"
+#define kWarning39   @"服务器吃药去啦！请稍候重试"
+#define kWarning40   @"定位失败，看看苏州的内容吧"
+#define kWarning41   @"请在iPhone的“设置-隐私-相机”中允许访问相机"
+#define kWarning42   @"当前程序未开启相机使用权限"
+#define kWarning43   @"当前定位城市暂未开通免费问药服务，敬请期待！"
+#define kWarning44   @"已显示全部内容"
+#define kWarning45   @"您的该咨询已关闭，请重新咨询药师"
+#define kWarning46   @"您的该咨询已过期，请重新咨询药师"
+#define kWarning47   @"评价成功!"
+#define kWarning48   @"对不起，该优惠已下架"
+#define kWarning49   @"您所在城市暂时没有优惠"
+#define kWarning50   @"对不起，您所在城市没有优惠药房！"
+#define kWarning51   @"药房暂无可售商品~"
+#define kWarning52   @"该药房暂无评价"
+
+#define kWarningN1      @"您暂未添加用药提醒，点击右上角‘+’添加"
+#define kWarningN2      @"网络未连接，请重试"
+#define kWarningN3      @"是否要删除该用药提醒"
+#define kWarningN4      @"您已有很多用药提醒，请及时清理哦。"
+#define kWarningN5      @"请添加药品"
+#define kWarningN6      @"请添加服药者"
+#define kWarningN7      @"您还没有添加用药哦"
+
+#define kWarningN9      @"重发该消息？"
+#define kWarningN10     @"当前城市暂未开通免费问药服务，敬请期待"
+#define kWarningN11     @"定位失败"
+#define kWarningN12     @"您所在的城市XX暂未开通免费问药服务"
+#define kWarningN13     @"定位显示您当前所在城市B未开通免费问药服务，是否为您从A切换到B"
+#define kWarningN14     @"同一设备不可多次添加同一推荐人"
+#define kWarningN15     @"定位显示您当前所在城市B,是否为您从A切换到B"
+#define kWarningN16     @"请选择用药"
+#define kWarningN17     @"时间点重复"
+
+
+#define kWarning215N10  @"当前城市暂未开通服务，敬请期待"
+#define kWarning215N18  @"至少输入5个字"
+#define kWarning215N19  @"是否放弃此次咨询"
+
+#define kWarning215N23  @"确定要删除该记录"
+#define kWarning215N25  @"输入内容过长，最多不超过1000字"
+
+#define kWarning215N26  @"请求超时"
+
+
+#define kWarning220N61  @"药品最多40字"
+#define kWarning220N62  @"服用者最多10个字"
+#define kWarning22301   @"此手机号已有绑定账号，点击确认将与原账号解绑。"
+#define kWarning22302   @"此设备不支持打电话"
+
+#define kWarning30001   @"密码过于简单，请重新设置"
+#define kWarning30002   @"密码过于简单，请修改"
+
+#define kAlert1         @"%@的用药：%@"
+#define kAlert2         @"知道了"
+#define kAlert3         @"我的用药不全，速去添加"
+
+#define kWarningAlbum  @"最多可选择4张照片"
+#define kWarningAlbumParam  @"最多可选择%ld张照片"
+
+#endif

@@ -1,0 +1,39 @@
+//
+//  PharmacyMainViewController.h
+//  APP
+//  微商药房详情-首页Tab
+//  Created by 李坚 on 16/5/5.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "QWBaseVC.h"
+#import "XLCycleScrollView.h"
+
+typedef void (^allPromotionCallBack) (NSString *branchId);
+
+@interface PharmacyMainViewController : QWBaseVC
+
+@property (copy,nonatomic) allPromotionCallBack selectedBlock;
+
+@property (nonatomic, strong) NSString *branchId;//药房Id，传值
+
+@property (nonatomic, strong) UINavigationController *navigation;
+
+@property (nonatomic, strong) XLCycleScrollView *cycleScrollView;//Banner控件
+
+@property (nonatomic, strong) NSMutableArray *bannerArray;      //Banner数组
+@property (nonatomic, strong) NSMutableArray *couponQuanList;   //优惠券数组
+@property (nonatomic, strong) NSMutableArray *promotionArray;   //优惠商品数组
+@property (nonatomic, strong) NSMutableArray *otherProuctArray; //其他分类二维数组
+
+@end
+
+
+@interface CustomHeaderView : UIView
+
+@property (weak, nonatomic) IBOutlet UILabel *mainLabel;
+
++ (CustomHeaderView *)getViewWithTitle:(NSString *)title;
+
+@end

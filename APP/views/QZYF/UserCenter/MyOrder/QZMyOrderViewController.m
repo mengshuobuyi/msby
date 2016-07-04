@@ -1,0 +1,321 @@
+//
+//  QZMyOrderViewController.m
+//  wenyao
+//
+//  Created by Meng on 15/1/16.
+//  Copyright (c) 2015年 xiezhenghong. All rights reserved.
+//
+
+#import "QZMyOrderViewController.h"
+#import "ProductOrderCell.h"
+#import "AppDelegate.h"
+#import "OrderDetailViewController.h"
+#import "MJRefresh.h"
+#import "ReturnIndexView.h"
+#import "PromotionOrder.h"
+#import "MessageBoxListViewController.h"
+#import "LoginViewController.h"
+
+@interface QZMyOrderViewController()<ReturnIndexViewDelegate>
+{
+    UIView *_nodataView;
+    int currentPage;
+}
+
+@property (strong, nonatomic) ReturnIndexView *indexView;
+@property (strong, nonatomic) NSMutableArray *dataSource;
+@property (nonatomic, strong) UILabel *numLabel;   //数字角标
+@property (nonatomic, strong) UILabel *redLabel;   //小红点
+@property (assign, nonatomic) int passNumber;
+
+
+@end
+
+@implementation QZMyOrderViewController
+
+- (instancetype)init
+{
+    if (self = [super init]) {
+        
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    self.title = @"我的优惠订单";
+    self.tableView = [[UITableView alloc]initWithFrame:CGRectMake(0, 0, APP_W, APP_H-NAV_H)];
+    UIView *tableFooterView = [[UIView alloc]init];
+    tableFooterView.backgroundColor = RGBHex(qwColor11);
+    self.tableView.tableFooterView = tableFooterView;
+    self.tableView.separatorInset = UIEdgeInsetsZero;
+    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    [self.tableView addFooterWithTarget:self action:@selector(footerRereshing)];
+    self.tableView.footerPullToRefreshText = @"上拉加载更多数据";
+    self.tableView.footerReleaseToRefreshText = @"松开加载更多数据";
+    self.tableView.footerRefreshingText = @"正在加载中";
+    self.tableView.dataSource = self;
+    self.tableView.delegate = self;
+    [self.view addSubview:self.tableView];
+    
+    currentPage = 1;
+    self.dataSource = [NSMutableArray array];
+    [self loadData];
+   
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    self.passNumber = [QWGLOBALMANAGER updateRedPoint];
+//     [self setUpRightItem];
+}
+
+- (void)footerRereshing
+{
+    HttpClientMgr.progressEnabled = NO;
+    currentPage ++;
+    [self loadData];
+}
+
+- (void)viewInfoClickAction:(id)sender{
+    
+    if(QWGLOBALMANAGER.currentNetWork != kNotReachable){
+        [self removeInfoView];
+        [self loadData];
+    }
+}
+
+#pragma mark---------------------------------------------跳转到首页-----------------------------------------------
+
+- (void)setUpRightItem
+{
+    UIBarButtonItem *fixed = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
+    fixed.width = -15;
+    
+    UIView *rightView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 60, 40)];
+    
+    //三个点button
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    button.frame = CGRectMake(5, -2, 50, 40);
+    [button setImage:[UIImage imageNamed:@"icon-unfold.PNG"] forState:UIControlStateNormal];
+    [button addTarget:self action:@selector(returnIndex) forControlEvents:UIControlEventTouchUpInside];
+    [rightView addSubview:button];
+    
+    //数字角标
+    self.numLabel = [[UILabel alloc] initWithFrame:CGRectMake(38, 1, 18, 18)];
+    self.numLabel.backgroundColor = RGBHex(qwColor3);
+    self.numLabel.layer.cornerRadius = 9.0;
+    self.numLabel.textColor = [UIColor whiteColor];
+    self.numLabel.font = [UIFont systemFontOfSize:11];
+    self.numLabel.textAlignment = NSTextAlignmentCenter;
+    self.numLabel.layer.masksToBounds = YES;
+    self.numLabel.text = @"10";
+    self.numLabel.hidden = YES;
+    [rightView addSubview:self.numLabel];
+    
+    //小红点
+    self.redLabel = [[UILabel alloc] initWithFrame:CGRectMake(43, 10, 8, 8)];
+    self.redLabel.backgroundColor = RGBHex(qwColor3);
+    self.redLabel.layer.cornerRadius = 4.0;
+    self.redLabel.layer.masksToBounds = YES;
+    self.redLabel.hidden = YES;
+    [rightView addSubview:self.redLabel];
+    
+    UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithCustomView:rightView];
+    self.navigationItem.rightBarButtonItems = @[fixed,rightItem];
+    
+    if (self.passNumber > 0)
+    {
+        //显示数字
+        self.numLabel.hidden = NO;
+        self.redLabel.hidden = YES;
+        if (self.passNumber > 99) {
+            self.passNumber = 99;
+        }
+        self.numLabel.text = [NSString stringWithFormat:@"%d",self.passNumber];
+        
+    }else if (self.passNumber == 0)
+    {
+        //显示小红点
+        self.numLabel.hidden = YES;
+        self.redLabel.hidden = NO;
+        
+    }else if (self.passNumber < 0)
+    {
+        //全部隐藏
+        self.numLabel.hidden = YES;
+        self.redLabel.hidden = YES;
+    }
+
+}
+- (void)returnIndex
+{
+    self.indexView = [ReturnIndexView sharedManagerWithImage:@[@"ic_img_notice",@"icon home.PNG"] title:@[@"消息",@"首页"] passValue:self.passNumber];
+    self.indexView.delegate = self;
+    [self.indexView show];
+}
+- (void)RetunIndexView:(ReturnIndexView *)ReturnIndexView didSelectedIndex:(NSIndexPath *)indexPath
+{
+    [self.indexView hide];
+    
+    if (indexPath.row == 0)
+    {
+        if(!QWGLOBALMANAGER.loginStatus) {
+            LoginViewController *loginViewController = [[LoginViewController alloc] initWithNibName:@"LoginViewController" bundle:nil];
+            UINavigationController *navgationController = [[QWBaseNavigationController alloc] initWithRootViewController:loginViewController];
+            loginViewController.isPresentType = YES;
+            [self presentViewController:navgationController animated:YES completion:NULL];
+            return;
+        }
+        
+        MessageBoxListViewController *vcMsgBoxList = [[UIStoryboard storyboardWithName:@"MessageBoxListViewController" bundle:[NSBundle mainBundle]] instantiateViewControllerWithIdentifier:@"MessageBoxListViewController"];
+        
+        vcMsgBoxList.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:vcMsgBoxList animated:YES];
+        
+    }else if (indexPath.row == 1)
+    {
+        [self.navigationController popToRootViewControllerAnimated:YES];
+        [self performSelector:@selector(delayPopToHome) withObject:nil afterDelay:0.01];
+    }
+
+}
+- (void)delayPopToHome
+{
+    [QWGLOBALMANAGER.tabBar setSelectedIndex:0];
+}
+#pragma mark---------------------------------------------跳转到首页-----------------------------------------------
+
+
+- (void)loadData{
+    
+    if (QWGLOBALMANAGER.currentNetWork != kNotReachable) {
+        
+        PromotionOrderModelR *modelR = [PromotionOrderModelR new];
+        modelR.token = QWGLOBALMANAGER.configure.userToken;
+        modelR.page = [NSString stringWithFormat:@"%d",currentPage];
+        modelR.pageSize = @"10";
+        
+        
+    }else
+    {
+        [self.dataSource removeAllObjects];
+        [self.dataSource addObjectsFromArray:[QWUserDefault getObjectBy:[NSString stringWithFormat:@"myCouponOrder+%@",QWGLOBALMANAGER.configure.passPort]]];
+        if (self.dataSource.count > 0) {
+            [self.tableView reloadData];
+        }else{
+            [self showNoDataViewWithString:kWarning12 image:@"网络信号icon"];
+//            [self showNoDataViewWithString:kWarning12];
+        }
+        [self.tableView footerEndRefreshing];
+    }
+    
+}
+
+
+#pragma mark - UITableVieDelegate
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return self.dataSource.count;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return [ProductOrderCell getCellHeight:nil];//110.0f;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *cellIdentifier = @"cellIdentifier";
+    
+    ProductOrderCell *cell = (ProductOrderCell *)[tableView dequeueReusableHeaderFooterViewWithIdentifier:cellIdentifier];
+    if (cell == nil) {
+        cell = [[NSBundle mainBundle] loadNibNamed:@"ProductOrderCell" owner:self options:nil][0];
+    }
+   
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    PromotionOrderModel *order = self.dataSource[indexPath.row];
+    
+    [cell setCell:order];
+    
+    if(indexPath.row != self.dataSource.count){
+        
+        cell.seperatorView.layer.masksToBounds = YES;
+        cell.seperatorView.layer.borderWidth = 0.5f;
+        cell.seperatorView.layer.borderColor = RGBHex(qwColor10).CGColor;
+    }
+
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    OrderDetailViewController *orderDetail = [[OrderDetailViewController alloc] initWithNibName:@"OrderDetailViewController" bundle:nil];
+    orderDetail.order = self.dataSource[indexPath.row];
+    [self.navigationController pushViewController:orderDetail animated:YES];
+}
+
+-(void)showNoDataViewWithString:(NSString *)nodataPrompt image:(NSString *)image
+{
+    if (_nodataView) {
+        [_nodataView removeFromSuperview];
+        _nodataView = nil;
+    }
+    _nodataView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, APP_W, APP_H-NAV_H)];
+    _nodataView.backgroundColor = [UIColor colorWithRed:245/255.0 green:245/255.0 blue:245/255.0 alpha:1.0];
+    
+    UIImage * searchImage = [UIImage imageNamed:image];
+    UIImageView *dataEmpty = [[UIImageView alloc]initWithFrame:RECT(0, 0, searchImage.size.width, searchImage.size.height)];
+    dataEmpty.center = CGPointMake(APP_W/2,91+searchImage.size.height/2);
+    dataEmpty.image = searchImage;
+    [_nodataView addSubview:dataEmpty];
+    UILabel* lable_ = [[UILabel alloc]initWithFrame:RECT(0,dataEmpty.frame.origin.y + dataEmpty.frame.size.height + 24, nodataPrompt.length*20,15)];
+    lable_.font = fontSystem(kFontS1);
+    lable_.textColor = RGB(106, 121, 133);//6a7985
+    lable_.textAlignment = NSTextAlignmentCenter;
+    lable_.center = CGPointMake(APP_W/2, lable_.center.y);
+    lable_.text = nodataPrompt;
+    
+    [_nodataView addSubview:lable_];
+    [self.view insertSubview:_nodataView atIndex:self.view.subviews.count];
+}
+
+- (void)getNotifType:(Enum_Notification_Type)type data:(id)data target:(id)obj{
+    if (NotiWhetherHaveNewMessage == type) {
+        
+        NSString *str = data;
+        self.passNumber = [str integerValue];
+        self.indexView.passValue = self.passNumber;
+        [self.indexView.tableView reloadData];
+        if (self.passNumber > 0)
+        {
+            //显示数字
+            self.numLabel.hidden = NO;
+            self.redLabel.hidden = YES;
+            if (self.passNumber > 99) {
+                self.passNumber = 99;
+            }
+            self.numLabel.text = [NSString stringWithFormat:@"%d",self.passNumber];
+            
+        }else if (self.passNumber == 0)
+        {
+            //显示小红点
+            self.numLabel.hidden = YES;
+            self.redLabel.hidden = NO;
+            
+        }else if (self.passNumber < 0)
+        {
+            //全部隐藏
+            self.numLabel.hidden = YES;
+            self.redLabel.hidden = YES;
+        }
+    }
+}
+
+@end

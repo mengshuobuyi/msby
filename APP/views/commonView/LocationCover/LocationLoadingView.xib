@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9060" systemVersion="14F1021" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9051"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="LocationLoadingView">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="QcP-5b-qzu">
+                    <rect key="frame" x="80" y="264" width="160" height="160"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="160" id="B1t-YO-T8B"/>
+                    </constraints>
+                    <connections>
+                        <action selector="dismiss:" destination="iN0-l3-epB" eventType="touchUpInside" id="Iip-Ll-HoU"/>
+                    </connections>
+                </button>
+                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="bg_locatiton_loading" translatesAutoresizingMaskIntoConstraints="NO" id="oAC-fa-BBI">
+                    <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                </imageView>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="QcP-5b-qzu" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" constant="60" id="9JB-EC-b1s"/>
+                <constraint firstAttribute="trailing" secondItem="QcP-5b-qzu" secondAttribute="trailing" constant="80" id="NY1-Lg-x8f"/>
+                <constraint firstAttribute="trailing" secondItem="oAC-fa-BBI" secondAttribute="trailing" id="QVn-z4-mac"/>
+                <constraint firstItem="oAC-fa-BBI" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="SsR-0I-Vlo"/>
+                <constraint firstAttribute="bottom" secondItem="oAC-fa-BBI" secondAttribute="bottom" id="bpg-iD-aqQ"/>
+                <constraint firstItem="QcP-5b-qzu" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="80" id="oNC-w7-4Xb"/>
+                <constraint firstItem="oAC-fa-BBI" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="uBI-OF-EiH"/>
+            </constraints>
+            <point key="canvasLocation" x="233" y="177"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="bg_locatiton_loading" width="320" height="568"/>
+    </resources>
+</document>

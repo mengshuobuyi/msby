@@ -1,0 +1,43 @@
+//
+//  MbrModelR.m
+//  APP
+//
+//  Created by carret on 15/3/6.
+//  Copyright (c) 2015年 carret. All rights reserved.
+//
+
+#import "MbrModelR.h"
+
+@implementation MbrModelR
+
+@end
+
+@implementation MbrInviterCheckR
+@synthesize token;
+@end
+
+@implementation MbrInviterR
+@synthesize token;
+@synthesize inviter;
+@end
+
+@implementation MbrRegisterR
+@end
+
+@implementation MbrInviterInfoModelR
+
+@end
+
+@implementation ChannerModelR
+
+
+@end
+
+@implementation BindModelR
+
+
+@end
+
+@implementation PresentGiftR
+
+@end

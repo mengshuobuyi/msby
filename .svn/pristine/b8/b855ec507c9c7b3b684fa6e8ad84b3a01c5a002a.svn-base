@@ -1,0 +1,770 @@
+//
+//  QZNewSettingViewController.m
+//  APP
+//
+//  Created by Martin.Liu on 15/12/2.
+//  Copyright © 2015年 carret. All rights reserved.
+//
+
+#import "QZNewSettingViewController.h"
+#import "QWGlobalManager.h"
+#import "NewSettingTableCell.h"
+#import "NewSetting2TableCell.h"
+#import "SVProgressHUD.h"
+#import "ReturnIndexView.h"
+
+#import "MessageSettingViewController.h" // 消息设置
+#import "ChangePasswdViewController.h" // 更改密码
+#import "SetPasswordViewController.h" // 设置密码
+#import "FeedbackViewController.h"  // 意见反馈
+#import "AboutWenYaoViewController.h"  // 关于问药
+#import "LoginViewController.h"
+#import "MessageBoxListViewController.h"
+#import "CommendSuccessViewController.h"
+
+// 第三方登录
+#import <TencentOpenAPI/QQApiInterface.h>
+#import "WXApi.h"
+
+#import "Mbr.h"
+#import "MbrModelR.h"
+#import "AddRecommenderViewController.h"
+#import "MyRecommenderViewController.h"
+
+#define NEWSetting_BIND
+
+NSString *const SettingTitle_BindPhone = @"绑定手机号";
+NSString *const SettingTitle_MyRecommendPeople = @"我的推荐人";
+NSString *const SettingTitle_SetLoginPassword = @"设置登录密码";
+NSString *const SettingTitle_ChangeLoginPassword = @"修改密码";
+NSString *const SettingTitle_MessageReminding = @"消息提醒";
+NSString *const SettingTitle_FeedBack = @"意见反馈";
+NSString *const SettingTitle_ClearCache = @"清理缓存";
+NSString *const SettingTitle_About = @"关于问药";
+
+@interface QZNewSettingViewController ()<UITableViewDataSource, UITableViewDelegate,UIActionSheetDelegate,ReturnIndexViewDelegate>
+@property (strong, nonatomic) IBOutlet UITableView *tableView;
+@property (strong, nonatomic) IBOutlet UIView *tableFooterView;
+@property (strong, nonatomic) IBOutlet UIButton *logoutBtn;
+
+- (IBAction)logoutBtnAction:(id)sender;
+
+
+@property (nonatomic, strong) ReturnIndexView *indexView;
+@property (nonatomic, strong) UILabel *numLabel;   //数字角标
+@property (nonatomic, strong) UILabel *redLabel;   //小红点
+@property (assign, nonatomic) int passNumber;
+
+// 缓存显示字符串
+@property (nonatomic, strong) NSString * cacheBulk;
+@end
+
+@implementation QZNewSettingViewController
+{
+    NSArray* titleArray;
+#ifdef NEWSetting_BIND
+    NSArray* bindArray;
+#endif
+}
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    [self naviLeftBottonImage:[UIImage imageNamed:@"nav_btn_back"] highlighted:[UIImage imageNamed:@"nav_btn_back_sel"] action:@selector(popVCAction:)];
+    
+    long long cacheSize = [SDImageCache sharedImageCache].getSize;
+    float tempSize = 0 ;
+    if (cacheSize>1024*1024) {
+        tempSize = cacheSize/1024/1024;
+        self.cacheBulk = [NSString stringWithFormat:@"%.fMB",tempSize];
+    }else
+    {
+        tempSize = cacheSize/1024;
+        self.cacheBulk = [NSString stringWithFormat:@"%.fKB",tempSize];
+    }
+}
+
+- (void)popVCAction:(id)sender
+{
+    [super popVCAction:sender];
+}
+
+#pragma mark---------------------------------------------跳转到首页-----------------------------------------------
+
+- (void)setUpRightItem
+{
+    UIBarButtonItem *fixed = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
+    fixed.width = -15;
+    
+    UIView *rightView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 60, 40)];
+    
+    //三个点button
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    button.frame = CGRectMake(5, -2, 50, 40);
+    [button setImage:[UIImage imageNamed:@"icon-unfold.PNG"] forState:UIControlStateNormal];
+    [button addTarget:self action:@selector(returnIndex) forControlEvents:UIControlEventTouchUpInside];
+    [rightView addSubview:button];
+    
+    //数字角标
+    self.numLabel = [[UILabel alloc] initWithFrame:CGRectMake(38, 1, 18, 18)];
+    self.numLabel.backgroundColor = RGBHex(qwColor3);
+    self.numLabel.layer.cornerRadius = 9.0;
+    self.numLabel.textColor = [UIColor whiteColor];
+    self.numLabel.font = [UIFont systemFontOfSize:11];
+    self.numLabel.textAlignment = NSTextAlignmentCenter;
+    self.numLabel.layer.masksToBounds = YES;
+    self.numLabel.text = @"10";
+    self.numLabel.hidden = YES;
+    [rightView addSubview:self.numLabel];
+    
+    //小红点
+    self.redLabel = [[UILabel alloc] initWithFrame:CGRectMake(43, 10, 8, 8)];
+    self.redLabel.backgroundColor = RGBHex(qwColor3);
+    self.redLabel.layer.cornerRadius = 4.0;
+    self.redLabel.layer.masksToBounds = YES;
+    self.redLabel.hidden = YES;
+    [rightView addSubview:self.redLabel];
+    
+    UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithCustomView:rightView];
+    self.navigationItem.rightBarButtonItems = @[fixed,rightItem];
+    
+    if (self.passNumber > 0)
+    {
+        //显示数字
+        self.numLabel.hidden = NO;
+        self.redLabel.hidden = YES;
+        if (self.passNumber > 99) {
+            self.passNumber = 99;
+        }
+        self.numLabel.text = [NSString stringWithFormat:@"%d",self.passNumber];
+        
+    }else if (self.passNumber == 0)
+    {
+        //显示小红点
+        self.numLabel.hidden = YES;
+        self.redLabel.hidden = NO;
+        
+    }else if (self.passNumber < 0)
+    {
+        //全部隐藏
+        self.numLabel.hidden = YES;
+        self.redLabel.hidden = YES;
+    }
+    
+}
+- (void)returnIndex
+{
+    self.indexView = [ReturnIndexView sharedManagerWithImage:@[@"ic_img_notice",@"icon home.PNG"] title:@[@"消息",@"首页"] passValue:self.passNumber];
+    self.indexView.delegate = self;
+    [self.indexView show];
+}
+- (void)RetunIndexView:(ReturnIndexView *)ReturnIndexView didSelectedIndex:(NSIndexPath *)indexPath
+{
+    [self.indexView hide];
+    
+    if (indexPath.row == 0)
+    {
+        if(!QWGLOBALMANAGER.loginStatus) {
+            LoginViewController *loginViewController = [[LoginViewController alloc] initWithNibName:@"LoginViewController" bundle:nil];
+            UINavigationController *navgationController = [[QWBaseNavigationController alloc] initWithRootViewController:loginViewController];
+            loginViewController.isPresentType = YES;
+            [self presentViewController:navgationController animated:YES completion:NULL];
+            return;
+        }
+        
+        MessageBoxListViewController *vcMsgBoxList = [[UIStoryboard storyboardWithName:@"MessageBoxListViewController" bundle:[NSBundle mainBundle]] instantiateViewControllerWithIdentifier:@"MessageBoxListViewController"];
+        
+        vcMsgBoxList.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:vcMsgBoxList animated:YES];
+        
+    }else if (indexPath.row == 1)
+    {
+        [self.navigationController popToRootViewControllerAnimated:YES];
+        [self performSelector:@selector(delayPopToHome) withObject:nil afterDelay:0.01];
+    }
+    
+    
+}
+- (void)delayPopToHome
+{
+    [QWGLOBALMANAGER.tabBar setSelectedIndex:0];
+}
+#pragma mark---------------------------------------------跳转到首页-----------------------------------------------
+
+
+- (void)UIGlobal
+{
+    self.title = @"设置";
+    self.view.backgroundColor = RGBHex(qwColor11);
+    self.tableFooterView.backgroundColor = RGBHex(qwColor11);
+    self.logoutBtn.titleLabel.font = [UIFont systemFontOfSize:kFontS3];
+    [self.logoutBtn setTitleColor:RGBHex(qwColor4) forState:UIControlStateNormal];
+    self.logoutBtn.backgroundColor = RGBHex(qwColor2);
+    self.logoutBtn.layer.masksToBounds = YES;
+    self.logoutBtn.layer.cornerRadius = 4;
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    
+    self.logoutBtn.hidden = !QWGLOBALMANAGER.loginStatus;
+    self.passNumber = [QWGLOBALMANAGER updateRedPoint];
+//    [self setUpRightItem];
+    
+    if (QWGLOBALMANAGER.loginStatus) {
+#ifdef NEWSetting_BIND
+        bindArray = @[@"setting_icon_weixin", @"setting_icon_qq"];
+#endif
+        if (!QWGLOBALMANAGER.configure.setPwd) {
+//            titleArray = @[@"绑定手机号",@"设置登录密码",@"消息提醒",@"意见反馈",@"清理缓存",@"关于问药"];
+            titleArray = @[SettingTitle_BindPhone, SettingTitle_SetLoginPassword, SettingTitle_MessageReminding, SettingTitle_FeedBack, SettingTitle_ClearCache, SettingTitle_About];
+        }
+        else
+//            titleArray = @[@"绑定手机号",@"修改密码",@"消息提醒",@"意见反馈",@"清理缓存",@"关于问药"];
+            titleArray = @[SettingTitle_BindPhone, SettingTitle_ChangeLoginPassword, SettingTitle_MessageReminding, SettingTitle_FeedBack, SettingTitle_ClearCache, SettingTitle_About];
+        [self.tableView reloadData];
+    }else{
+//        titleArray = @[@"消息提醒",@"意见反馈",@"清理缓存",@"关于问药"];
+        titleArray = @[SettingTitle_MessageReminding, SettingTitle_FeedBack, SettingTitle_ClearCache, SettingTitle_About];
+    }
+    
+}
+
+#pragma mark - UITableView Delegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+#ifdef NEWSetting_BIND
+    if (QWGLOBALMANAGER.loginStatus) {
+        // 3.2.0 增加我的推荐人
+        return 3;
+    }
+#endif
+    return 1;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+#ifdef NEWSetting_BIND
+    if (QWGLOBALMANAGER.loginStatus)
+    {
+        if (section == 0)
+        {
+            return bindArray.count + 1;
+        }
+        // 3.2.0 增加我的推荐人
+        else if (section == 1)
+        {
+            return 1;
+        }
+        else if (section == 2)
+        {
+            return titleArray.count - 1;
+        }
+    }
+#endif
+    return titleArray.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+#ifdef NEWSetting_BIND
+    if (QWGLOBALMANAGER.loginStatus)
+    {
+        NSInteger section = indexPath.section;
+        NSInteger row = indexPath.row;
+        NewSettingTableCell* cell;
+        switch (section) {
+//            case 0:
+//            {
+//                cell = [tableView dequeueReusableCellWithIdentifier:@"NewSettingTableCell" forIndexPath:indexPath];
+//                cell.titleTextLabel.text = titleArray[row];
+//                cell.hiddenRightArrow = NO;
+//                cell.contentDetailLabel.text = nil;
+//                
+//                if (!StrIsEmpty(QWGLOBALMANAGER.configure.mobile)) {
+//                    cell.contentDetailLabel.text = QWGLOBALMANAGER.configure.mobile;
+//                }
+//                return cell;
+//            }
+//                break;
+            case 0:{
+                if (row == 0) {
+                    cell = [tableView dequeueReusableCellWithIdentifier:@"NewSettingTableCell" forIndexPath:indexPath];
+                    cell.titleTextLabel.text = @"绑定账号";
+                    cell.hiddenRightArrow = YES;
+                    cell.contentDetailLabel.text = nil;
+                    return cell;
+                }
+                
+                NewSetting2TableCell* cell2 = [tableView dequeueReusableCellWithIdentifier:@"NewSetting2TableCell" forIndexPath:indexPath];
+                if (row < bindArray.count + 1) {
+                    cell2.settingImageView.image = [UIImage imageNamed:bindArray[row - 1]];
+//                    cell2.hiddenRightArrow = NO;
+                    if (row == 1) {
+                        cell2.hiddenRightArrow = QWGLOBALMANAGER.configure.weChat;
+                    }
+                    else if (row == 2)
+                    {
+                        cell2.hiddenRightArrow = QWGLOBALMANAGER.configure.qq;
+                    }
+                    __weak __typeof(self) weakself = self;
+                    cell2.actionBtn.touchUpInsideBlock = ^{
+                        if (row == 1) {
+                            NSMutableDictionary *tdParams = [NSMutableDictionary dictionary];
+                            tdParams[@"是否绑定"]=QWGLOBALMANAGER.configure.weChat ? @"已绑定" : @"未绑定";
+                            [QWGLOBALMANAGER statisticsEventId:@"x_sz_bdwxh" withLable:@"设置" withParams:tdParams];
+                        }
+                        else if (row == 2)
+                        {
+                            NSMutableDictionary *tdParams = [NSMutableDictionary dictionary];
+                            tdParams[@"是否绑定"]=QWGLOBALMANAGER.configure.qq ? @"已绑定" : @"未绑定";
+                            [QWGLOBALMANAGER statisticsEventId:@"x_sz_bdqqh" withLable:@"设置" withParams:tdParams];
+                        }
+                        if (indexPath.row == 1) {
+                            [weakself bindWeixin];
+                        }
+                        else
+                        {
+                            [weakself bindQQ];
+                        }
+                    };
+                }
+                return cell2;
+            }
+                break;
+            case 1:
+            {
+                cell = [tableView dequeueReusableCellWithIdentifier:@"NewSettingTableCell" forIndexPath:indexPath];
+                NSString* titleString = SettingTitle_MyRecommendPeople;
+                cell.titleTextLabel.text = titleString;
+                cell.hiddenRightArrow = NO;
+                cell.contentDetailLabel.text = nil;
+                return cell;
+            }
+                break;
+            case 2:
+            {
+                cell = [tableView dequeueReusableCellWithIdentifier:@"NewSettingTableCell" forIndexPath:indexPath];
+                NSString* titleString = titleArray[row + 1];
+                cell.titleTextLabel.text = titleString;
+                cell.hiddenRightArrow = NO;
+                cell.contentDetailLabel.text = nil;
+                
+                if ([SettingTitle_ClearCache isEqualToString:titleString]) {
+                    // 缓存cell
+                    cell.contentDetailLabel.text = self.cacheBulk;
+                    cell.hiddenRightArrow = YES;
+                }
+
+                return cell;
+            }
+                break;
+            default:
+                break;
+        }
+    }
+#endif
+    NewSettingTableCell* cell = [tableView dequeueReusableCellWithIdentifier:@"NewSettingTableCell" forIndexPath:indexPath];
+    NSInteger row = indexPath.row;
+    NSString* titleString = titleArray[row];
+    cell.titleTextLabel.text = titleString;
+    cell.hiddenRightArrow = NO;
+    cell.contentDetailLabel.text = nil;
+    // 清理缓存没有右箭头
+    
+    if ([SettingTitle_BindPhone isEqualToString:titleString] && !StrIsEmpty(QWGLOBALMANAGER.configure.mobile)) {
+        cell.contentDetailLabel.text = QWGLOBALMANAGER.configure.mobile;
+    }
+    else if ([SettingTitle_ClearCache isEqualToString:titleString])
+    {
+        // 缓存
+        cell.contentDetailLabel.text = self.cacheBulk;
+        cell.hiddenRightArrow = YES;
+    }
+
+    return cell;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 47;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section
+{
+#ifdef NEWSetting_BIND
+    if (section < 3) {
+        return 8;
+    }
+#endif
+    return 0;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section
+{
+#ifdef NEWSetting_BIND
+    UIView* view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, APP_W, 8)];
+    view.backgroundColor = RGBHex(qwColor11);
+    return view;
+#endif
+    return nil;
+}
+
+- (NSString *)cacheBulk
+{
+    if ([_cacheBulk isEqualToString:@"Zero KB"]) {
+        _cacheBulk = @"0KB";
+    }
+    return _cacheBulk;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+#ifdef NEWSetting_BIND
+    NSInteger section = indexPath.section;
+    if (section == 0) {
+        return;
+    }
+#endif
+    NewSettingTableCell* cell = (NewSettingTableCell*)[self tableView:self.tableView cellForRowAtIndexPath:indexPath];
+    NSString* titleString = cell.titleTextLabel.text;
+    DebugLog(@"click the %@", cell.titleTextLabel.text);
+    
+    // 根据每个cell的标题来进行行为
+    if ([SettingTitle_BindPhone isEqualToString:titleString]) {
+        // 绑定手机号
+//        
+//        NSMutableDictionary *tdParams = [NSMutableDictionary dictionary];
+//        tdParams[@"是否绑定"]=!StrIsEmpty(QWGLOBALMANAGER.configure.mobile) ? @"已绑定" : @"未绑定";
+//        [QWGLOBALMANAGER statisticsEventId:@"x_sz_bdsjh" withLable:@"绑定手机号" withParams:tdParams];
+//        [self gotoBindOrChangePhone];
+    }
+    else if ([SettingTitle_SetLoginPassword isEqualToString:titleString] || [SettingTitle_ChangeLoginPassword isEqualToString:titleString])
+    {
+        // 设置或者修改密码
+        [self gotoPasswordSetting];
+    }
+    else if ([SettingTitle_MessageReminding isEqualToString:titleString])
+    {
+        // 消息提醒
+        [self gotoMessageSetting];
+    }
+    else if ([SettingTitle_FeedBack isEqualToString:titleString])
+    {
+        // 意见反馈
+        [self gotoFeedBack];
+    }
+    else if ([SettingTitle_ClearCache isEqualToString:titleString])
+    {
+        // 清理缓存
+        [self clearMemoryWithIndexPath:indexPath];
+    }
+    else if ([SettingTitle_About isEqualToString:titleString])
+    {
+        // 关于问药
+        [self gotoAboutWenYao];
+    }
+    // 3.2.0 增加我的推荐人
+    else if ([SettingTitle_MyRecommendPeople isEqualToString:titleString])
+    {
+        if (QWGLOBALMANAGER.currentNetWork == kNotReachable) {
+            [SVProgressHUD showErrorWithStatus:@"网络异常，请重试" duration:0.8];
+            return;
+        }else
+        {
+            [self MyRecommender];
+        }
+    }
+}
+
+
+- (void)MyRecommender{
+    
+    if (QWGLOBALMANAGER.loginStatus) {
+        
+        MbrInviterCheckR *model = [MbrInviterCheckR new];
+        model.token = QWGLOBALMANAGER.configure.userToken;
+        
+        [Mbr InviterCheckWithParams:model success:^(id obj) {
+            
+            if (![obj[@"mobile"] isEqualToString:@""]){
+                //提交成功
+                CommendSuccessViewController *successVC = [[UIStoryboard storyboardWithName:@"CommendPerson" bundle:nil] instantiateViewControllerWithIdentifier:@"CommendSuccessViewController"];
+                successVC.phoneStr = obj[@"mobile"];
+                successVC.hidesBottomBarWhenPushed = YES;
+                [self.navigationController pushViewController:successVC animated:YES];
+                
+            }else{
+                //尚未提交
+                //fixed at V3.2.0 by lijian
+                
+                //CommendPersonViewController *commenVC = [[UIStoryboard storyboardWithName:@"CommendPerson" bundle:nil] instantiateViewControllerWithIdentifier:@"CommendPersonViewController"];
+                //                        commenVC.hidesBottomBarWhenPushed = YES;
+                //                        [self.navigationController pushViewController:commenVC animated:YES];
+                
+                AddRecommenderViewController *addVC = [[AddRecommenderViewController alloc]initWithNibName:@"AddRecommenderViewController" bundle:nil];
+                addVC.hidesBottomBarWhenPushed = YES;
+                [self.navigationController pushViewController:addVC animated:YES];
+            }
+            
+        } failure:^(HttpException *e) {
+            
+        }];
+        
+    }else{
+        [self loginButtonClick];
+    }
+
+}
+
+- (void)loginButtonClick
+{
+    LoginViewController *loginViewController = [[LoginViewController alloc] initWithNibName:@"LoginViewController" bundle:nil];
+    loginViewController.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:loginViewController animated:YES];
+}
+
+//#pragma mark 绑定或者修改手机号码
+//- (void) gotoBindOrChangePhone
+//{
+//    if (StrIsEmpty(QWGLOBALMANAGER.configure.mobile)) {
+//        // 绑定手机号
+//        ChangePhoneNumberViewController * changeNumber = [[ChangePhoneNumberViewController alloc] initWithNibName:@"ChangePhoneNumberViewController" bundle:nil];
+//        changeNumber.changePhoneType = ChangePhoneType_BindPhoneNumber;
+//        changeNumber.hidesBottomBarWhenPushed = YES;
+//        changeNumber.isFromeSetting = YES;
+//        [self.navigationController pushViewController:changeNumber animated:YES];
+//    }
+//    else
+//    {
+//        // 修改手机号
+//        ChangePhoneNumberViewController * changeNumber = [[ChangePhoneNumberViewController alloc] initWithNibName:@"ChangePhoneNumberViewController" bundle:nil];
+//        changeNumber.hidesBottomBarWhenPushed = YES;
+//        changeNumber.changePhoneType = ChangePhoneType_ChangePhoneNumber;
+//        changeNumber.isFromeSetting = YES;
+//        [self.navigationController pushViewController:changeNumber animated:YES];
+//        // 修改手机号 提示actionsheet
+////        UIActionSheet * actionSheet = [[UIActionSheet alloc]initWithTitle:nil delegate:self cancelButtonTitle:@"取消" destructiveButtonTitle:nil otherButtonTitles:@"修改手机号?", nil];
+////        [actionSheet showInView:self.view];
+//    }
+//}
+#pragma mark 消息设置
+- (void) gotoMessageSetting
+{
+    [QWGLOBALMANAGER statisticsEventId:@"x_sz_xxtx" withLable:@"设置" withParams:nil];
+    MessageSettingViewController *setting = [[MessageSettingViewController alloc] init];
+    [self.navigationController pushViewController:setting animated:YES];
+}
+#pragma mark 设置密码
+- (void) gotoPasswordSetting
+{
+    if (!QWGLOBALMANAGER.configure.setPwd) {
+        SetPasswordViewController* setPasswordVC = [[SetPasswordViewController alloc] initWithNibName:@"SetPasswordViewController" bundle:nil];
+        [self.navigationController pushViewController:setPasswordVC animated:YES];
+    }
+    else
+    {
+        [QWGLOBALMANAGER statisticsEventId:@"x_sz_xgmm" withLable:@"设置" withParams:nil];
+        ChangePasswdViewController *changePasswd = [[ChangePasswdViewController alloc] initWithNibName:@"ChangePasswdViewController" bundle:nil];
+        [self.navigationController pushViewController:changePasswd animated:YES];
+    }
+
+}
+
+#pragma mark 意见反馈
+- (void) gotoFeedBack
+{
+    [QWGLOBALMANAGER statisticsEventId:@"x_sz_yjfk" withLable:@"设置" withParams:nil];
+    FeedbackViewController * feedback = [[FeedbackViewController alloc] initWithNibName:@"FeedbackViewController" bundle:nil];
+    feedback.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:feedback animated:YES];
+}
+
+#pragma mark 清除缓存
+- (void)clearMemoryWithIndexPath:(NSIndexPath *)indexPath{
+ 
+    [QWGLOBALMANAGER statisticsEventId:@"x_sz_qlhc" withLable:@"设置" withParams:nil];
+
+    if (([self.cacheBulk isEqualToString:@"0kb"])||([self.cacheBulk isEqualToString:@"0KB"])) {
+        [SVProgressHUD dismiss];
+        [SVProgressHUD showSuccessWithStatus:@"已经没有缓存啦!"];
+        return;
+    }
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [[SDImageCache sharedImageCache] clearDisk];
+        [[SDImageCache sharedImageCache] clearMemory];
+        
+        [self performSelectorOnMainThread:@selector(clearCachesSuccess:) withObject:indexPath waitUntilDone:YES];
+    });
+    
+}
+
+- (void)clearCachesSuccess:(NSIndexPath *)indexPath{
+    [SVProgressHUD dismiss];
+    [SVProgressHUD showSuccessWithStatus:@"缓存清理完成"];
+    self.cacheBulk = @"0KB";
+    [self.tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+}
+
+#pragma mark 关于问药
+- (void)gotoAboutWenYao
+{
+    [QWGLOBALMANAGER statisticsEventId:@"x_sz_gywy" withLable:@"设置" withParams:nil];
+    AboutWenYaoViewController *aboutWenyaoViewController = [[AboutWenYaoViewController alloc] init];
+    aboutWenyaoViewController.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:aboutWenyaoViewController animated:YES];
+
+}
+
+//#pragma mark UIActionSheet Delegate
+//- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+//{
+//    if (buttonIndex == 0) {
+//        ChangePhoneNumberViewController * changeNumber = [[ChangePhoneNumberViewController alloc] initWithNibName:@"ChangePhoneNumberViewController" bundle:nil];
+//        changeNumber.hidesBottomBarWhenPushed = YES;
+//        changeNumber.isFromeSetting = YES;
+//        [self.navigationController pushViewController:changeNumber animated:YES];
+//    }
+//
+//}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+- (void)bindWeixin
+{
+    if (![WXApi isWXAppInstalled]) {
+        [SVProgressHUD showErrorWithStatus:@"您未安装微信"];
+        return;
+    }
+    __weak __typeof(self) weakSelf = self;
+    UMSocialSnsPlatform *snsPlatform = [UMSocialSnsPlatformManager getSocialPlatformWithName:UMShareToWechatSession];
+    snsPlatform.loginClickHandler(self,[UMSocialControllerService defaultControllerService],YES,^(UMSocialResponseEntity *response){
+        
+        if (response.responseCode == UMSResponseCodeSuccess) {
+            
+            UMSocialAccountEntity *snsAccount = [[UMSocialAccountManager socialAccountDictionary]valueForKey:UMShareToWechatSession];
+            
+            // 获取微信unionid
+            __block NSString* unionid;
+            NSString* url = [NSString stringWithFormat:@"https://api.weixin.qq.com/sns/userinfo?access_token=%@&openid=%@", snsAccount.accessToken, snsAccount.openId];
+            NSURL* URL = [NSURL URLWithString:url];
+            
+            NSURLRequest* request = [NSURLRequest requestWithURL:URL];
+            [[QWLoading instance] showLoading];
+            [NSURLConnection sendAsynchronousRequest:request queue:[NSOperationQueue mainQueue] completionHandler:^(NSURLResponse * _Nullable response, NSData * _Nullable data, NSError * _Nullable connectionError) {
+                if (connectionError) {
+                    [[QWLoading instance] removeLoading];
+                    DebugLog(@"get unionid weixin error: %@", connectionError);
+                }
+                else
+                {
+                    id obj = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:nil];
+                    if ([obj isKindOfClass:[NSDictionary class]]) {
+                        unionid = obj[@"unionid"];
+                    }
+                }
+                
+                if (StrIsEmpty(unionid)) {
+                    [[QWLoading instance] removeLoading];
+                    [SVProgressHUD showErrorWithStatus:@"授权出现错误，请重新登录"];
+                    return;
+                }
+                // 配置参数model
+                BindModelR* bindWeixinModelR = [[BindModelR alloc] init];
+                bindWeixinModelR.token = QWGLOBALMANAGER.configure.userToken;
+                bindWeixinModelR.openId = unionid;
+                // 发送绑定请求
+                [Mbr bindWeiXin:bindWeixinModelR success:^(BaseAPIModel *obj) {
+                    NSString *hasbind;
+                    if ([obj.apiStatus integerValue] == 0) {
+                        QWGLOBALMANAGER.configure.weChat = YES;
+                        [SVProgressHUD showSuccessWithStatus:@"微信绑定成功!" duration:DURATION_LONG];
+                        [weakSelf.tableView reloadData];
+                        hasbind = @"已绑定";
+                    }
+                    else
+                    {   hasbind = @"未绑定";
+                        NSString* errorMessage = !StrIsEmpty(obj.apiMessage) ? obj.apiMessage : @"微信绑定失败!";
+                        [SVProgressHUD showErrorWithStatus:errorMessage duration:DURATION_LONG];
+                    }
+//                    NSMutableDictionary *tdParams = [NSMutableDictionary dictionary];
+//                    tdParams[@"是否绑定"]=hasbind;
+//                    [QWGLOBALMANAGER statisticsEventId:@"x_sz_bdwxh" withLable:@"设置" withParams:tdParams];
+                } failure:^(HttpException *e) {
+                    
+                }];
+                
+            }];
+        }
+    });
+}
+
+- (void)bindQQ
+{
+    if (![QQApiInterface isQQInstalled]) {
+        [SVProgressHUD showErrorWithStatus:@"您未安装QQ"];
+        return;
+    }
+    
+    __weak __typeof(self) weakSelf = self;
+    UMSocialSnsPlatform *snsPlatform = [UMSocialSnsPlatformManager getSocialPlatformWithName:UMShareToQQ];
+    snsPlatform.loginClickHandler(self,[UMSocialControllerService defaultControllerService],YES,^(UMSocialResponseEntity *response){
+        if (response.responseCode == UMSResponseCodeSuccess) {
+            
+            UMSocialAccountEntity *snsAccount = [[UMSocialAccountManager socialAccountDictionary] valueForKey:UMShareToQQ];
+            
+            // 配置参数model
+            BindModelR* bindWeixinModelR = [[BindModelR alloc] init];
+            bindWeixinModelR.token = QWGLOBALMANAGER.configure.userToken;
+            bindWeixinModelR.openId = snsAccount.usid;
+            // 发送绑定请求
+            [Mbr bindQQ:bindWeixinModelR success:^(BaseAPIModel *obj) {
+                  NSString *hasbind;
+                if ([obj.apiStatus integerValue] == 0) {
+                    hasbind = @"已绑定";
+                    QWGLOBALMANAGER.configure.qq = YES;
+                    [SVProgressHUD showSuccessWithStatus:@"QQ绑定成功!" duration:DURATION_LONG];
+                    [weakSelf.tableView reloadData];
+                }
+                else
+                {
+                    hasbind = @"未绑定";
+                    NSString* errorMessage = !StrIsEmpty(obj.apiMessage) ? obj.apiMessage : @"QQ绑定失败!";
+                    [SVProgressHUD showErrorWithStatus:errorMessage duration:DURATION_LONG];
+                }
+            } failure:^(HttpException *e) {
+                
+            }];
+        }});
+}
+
+- (IBAction)logoutBtnAction:(id)sender {
+    [QWGLOBALMANAGER statisticsEventId:@"x_sz_tcdqzh" withLable:@"设置" withParams:nil];
+    [QWUserDefault setBool:NO key:APP_LOGIN_STATUS];
+    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithBool:NO] forKey:@"apploginloginstatus"];
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"apppasswordkey"];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+    [QWGLOBALMANAGER clearAccountInformation];
+    self.logoutBtn.hidden = !QWGLOBALMANAGER.loginStatus;
+    QWGLOBALMANAGER.loginStatus = NO;
+    [QWGLOBALMANAGER unOauth];
+    titleArray = @[@"消息提醒",@"清理缓存"];
+    CGRect rect = self.tableView.frame;
+    rect.size.height -= 45.0f;
+    self.tableView.frame = rect;
+    [self.tableView reloadData];
+    [self.navigationController popViewControllerAnimated:YES];
+}
+@end

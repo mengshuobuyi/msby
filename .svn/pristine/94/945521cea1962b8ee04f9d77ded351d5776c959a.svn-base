@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9532" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9530"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="RobPromotionTableViewCell" rowHeight="100" id="KGk-i7-Jjw" customClass="RobPromotionTableViewCell">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="110"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="109"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="活动期间，每人只可享有一件抢购价" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Cdi-JX-CD3">
+                        <rect key="frame" x="15" y="15" width="290" height="15"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="15" id="fxA-lg-28V"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                        <color key="textColor" red="0.99215686274509807" green="0.62745098039215685" blue="0.027450980392156862" alpha="1" colorSpace="calibratedRGB"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="2015.12.15 - 2015.12.31" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="QEY-7A-xaS">
+                        <rect key="frame" x="15" y="79" width="290" height="11"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="11" id="7xo-ys-67S"/>
+                            <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="11" id="jva-CK-JpJ"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="11"/>
+                        <color key="textColor" red="0.59999999999999998" green="0.59999999999999998" blue="0.59999999999999998" alpha="1" colorSpace="calibratedRGB"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="本活动由多个药房联合发起。若在其中一个药房中已享有此优惠，则剩余药房不再享有" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="jcg-UP-bit">
+                        <rect key="frame" x="15" y="40" width="290" height="29"/>
+                        <constraints>
+                            <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="21" id="XTQ-na-c3I"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                        <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="jcg-UP-bit" firstAttribute="top" secondItem="Cdi-JX-CD3" secondAttribute="bottom" constant="10" id="4Ii-R7-QIi"/>
+                    <constraint firstItem="QEY-7A-xaS" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="15" id="OOJ-BX-1mb"/>
+                    <constraint firstAttribute="trailing" secondItem="QEY-7A-xaS" secondAttribute="trailing" constant="15" id="Y7H-Et-T9q"/>
+                    <constraint firstAttribute="trailing" secondItem="jcg-UP-bit" secondAttribute="trailing" constant="15" id="YnI-yS-aMU"/>
+                    <constraint firstItem="jcg-UP-bit" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="15" id="gCQ-bm-5EC"/>
+                    <constraint firstAttribute="trailing" secondItem="Cdi-JX-CD3" secondAttribute="trailing" constant="15" id="mhj-tR-iLj"/>
+                    <constraint firstItem="Cdi-JX-CD3" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="15" id="oSn-ax-5NA"/>
+                    <constraint firstItem="Cdi-JX-CD3" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="15" id="tXX-gu-3wx"/>
+                    <constraint firstItem="QEY-7A-xaS" firstAttribute="top" secondItem="jcg-UP-bit" secondAttribute="bottom" constant="10" id="uqc-M2-CFf"/>
+                </constraints>
+            </tableViewCellContentView>
+            <connections>
+                <outlet property="dateLabel" destination="QEY-7A-xaS" id="gb6-Xx-efc"/>
+                <outlet property="mainLabel" destination="Cdi-JX-CD3" id="oHp-Gp-Kr4"/>
+                <outlet property="titleLabel" destination="jcg-UP-bit" id="v7l-Pk-lDU"/>
+            </connections>
+            <point key="canvasLocation" x="246" y="345"/>
+        </tableViewCell>
+    </objects>
+</document>

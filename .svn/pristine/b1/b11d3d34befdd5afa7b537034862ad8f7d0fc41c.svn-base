@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Item1</key>
+	<string>c_qwys</string>
+	<key>Item2</key>
+	<string>c_qwys_remark</string>
+	<key>New item</key>
+	<string>c_zicha_zhengzhuang</string>
+	<key>New item - 2</key>
+	<string>c_zicha_zhengzhuang_list</string>
+	<key>New item - 3</key>
+	<string>c_my_set</string>
+	<key>New item - 4</key>
+	<string>c_my_tuijianren</string>
+	<key>New item - 5</key>
+	<string>c_my_login</string>
+	<key>New item - 6</key>
+	<string>c_my_reg</string>
+	<key>New item - 7</key>
+	<string>c_my_yaoqinghaoyou</string>
+	<key>New item - 8</key>
+	<string>c_my_shangjia</string>
+	<key>MessageBoxListViewController</key>
+	<string>c_my_xiaoxihezi</string>
+	<key>New item - 10</key>
+	<string>c_im_p2p_info</string>
+	<key>New item - 11</key>
+	<string>c_im_ques_info</string>
+	<key>New item - 12</key>
+	<string>c_im_mianfeizixun</string>
+	<key>New item - 13</key>
+	<string>c_branch_fujinyaofang</string>
+</dict>
+</plist>

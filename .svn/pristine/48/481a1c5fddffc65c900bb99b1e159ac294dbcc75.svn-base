@@ -1,0 +1,196 @@
+//
+//  API_Switch.m
+//  APP
+//
+//  Created by  ChenTaiyu on 16/6/29.
+//  Copyright © 2016年 carret. All rights reserved.
+//
+
+#import "API_Switch.h"
+
+
+/**************************************************************************************
+ *                             打包前注意切换环境和端口                                   *
+ *************************************************************************************/
+
+/*
+ SIT外网 IM地址  im.sit.qwysfw.cn 端口5222
+ SIT外网 WEBAPI地址    http://m.api.sit.qwysfw.cn
+ */
+
+
+//WEBAPI：http://api-m.myquanwei.com
+//IM：    im.myquanwei.com   端口：5222（注意）
+
+//动态的生产环境
+#define O_DE_BASE_URL                     @"http://api-m.myquanwei.com"
+#define O_DE_H5_DOMAIN_URL                @"http://h5-api.myquanwei.com"
+#define O_DE_ONCE_URL                     @"http://222.92.113.236:9300"
+#define O_DE_TWICE_URL                    @"http://112.80.47.67:9300"
+#define O_SHOW_NATIONWIDE                 @NO
+#define O_SHOW_HTML                       @NO
+#define O_DE_SHARE_URL                    @"http://m.myquanwei.com"
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+
+//动态的UAT环境
+#define U_DE_BASE_URL                     @"http://api-m.qwysfw.cn"
+#define U_DE_H5_DOMAIN_URL                @"http://h5-api.qwysfw.cn"
+#define U_DE_ONCE_URL                     @"http://58.210.18.35:9300"
+#define U_DE_TWICE_URL                    @"http://58.210.18.35:9300"
+#define U_SHOW_NATIONWIDE                 @NO
+#define U_SHOW_HTML                       @YES
+#define U_DE_SHARE_URL                    @"http://m.qwysfw.cn"
+
+
+
+//动态的SIT内网环境
+#define SN_DE_BASE_URL                     @"http://m.api.qw.com"
+#define SN_DE_H5_DOMAIN_URL                @"http://h5-api.qw.com"
+#define SN_DE_ONCE_URL                     @"http://58.210.18.35:9400"
+#define SN_DE_TWICE_URL                    @"http://58.210.18.35:9400"
+#define SN_SHOW_NATIONWIDE                 @NO
+#define SN_SHOW_HTML                       @YES
+#define SN_DE_SHARE_URL                    @"http://m.sit.qwysfw.cn"
+
+//动态的sit外网环境
+#define S_DE_BASE_URL                     @"http://m.api.sit.qwysfw.cn"
+#define S_DE_H5_DOMAIN_URL                @"http://h5-api.sit.qwysfw.cn"
+#define S_DE_ONCE_URL                     @"http://58.210.18.35:9400"
+#define S_DE_TWICE_URL                    @"http://58.210.18.35:9400"
+#define S_SHOW_NATIONWIDE                 @NO
+#define S_SHOW_HTML                       @YES
+#define S_DE_SHARE_URL                    @"http://m.sit.qwysfw.cn"
+
+
+//动态的PRE环境
+#define P_DE_BASE_URL                       @"http://api-m.pre.qw.com"
+#define P_DE_H5_DOMAIN_URL                  @"http://h5-api.pre.qw.com"
+#define P_DE_ONCE_URL                       @"http://192.168.0.44:9300"
+#define P_DE_TWICE_URL                      @"http://192.168.0.44:9300"
+#define P_SHOW_NATIONWIDE                   @NO
+#define P_SHOW_HTML                         @YES
+#define P_DE_SHARE_URL                      @"http://m.pre.qw.com"
+#define P_DEBUG                             1
+
+
+typedef NS_ENUM(NSUInteger, QWDevEnvironmentType) {
+    QWDEVEnvironmentTypePRE = 1000,
+    QWDEVEnvironmentTypeSITExtra,
+    QWDEVEnvironmentTypeSITLan,
+    QWDEVEnvironmentTypeUAT,
+    QWDEVEnvironmentTypeOnline
+};
+
+@implementation API_Switch
++ (QWDevEnvironmentType)evrnmtType
+{
+    return QWDEVEnvironmentTypePRE;
+}
++(NSString *)get_DE_BASE_URL
+{
+    switch ([self evrnmtType]) {
+        case QWDEVEnvironmentTypePRE:
+            return P_DE_BASE_URL;
+        case QWDEVEnvironmentTypeSITExtra:
+            return S_DE_BASE_URL;
+        case QWDEVEnvironmentTypeSITLan:
+            return SN_DE_BASE_URL;
+        case QWDEVEnvironmentTypeUAT:
+            return U_DE_BASE_URL;
+        case QWDEVEnvironmentTypeOnline:
+            return O_DE_BASE_URL;
+    }
+}
++(NSString *)get_DE_H5_DOMAIN_URL
+{
+    switch ([self evrnmtType]) {
+        case QWDEVEnvironmentTypePRE:
+            return P_DE_H5_DOMAIN_URL;
+        case QWDEVEnvironmentTypeSITExtra:
+            return S_DE_H5_DOMAIN_URL;
+        case QWDEVEnvironmentTypeSITLan:
+            return SN_DE_H5_DOMAIN_URL;
+        case QWDEVEnvironmentTypeUAT:
+            return U_DE_H5_DOMAIN_URL;
+        case QWDEVEnvironmentTypeOnline:
+            return O_DE_H5_DOMAIN_URL;
+    }
+}
++(NSString *)get_DE_ONCE_URL
+{
+    switch ([self evrnmtType]) {
+        case QWDEVEnvironmentTypePRE:
+            return P_DE_ONCE_URL;
+        case QWDEVEnvironmentTypeSITExtra:
+            return S_DE_ONCE_URL;
+        case QWDEVEnvironmentTypeSITLan:
+            return SN_DE_ONCE_URL;
+        case QWDEVEnvironmentTypeUAT:
+            return U_DE_ONCE_URL;
+        case QWDEVEnvironmentTypeOnline:
+            return O_DE_ONCE_URL;
+    }
+}
++(NSString *)get_DE_TWICE_URL
+{
+    switch ([self evrnmtType]) {
+        case QWDEVEnvironmentTypePRE:
+            return P_DE_TWICE_URL;
+        case QWDEVEnvironmentTypeSITExtra:
+            return S_DE_TWICE_URL;
+        case QWDEVEnvironmentTypeSITLan:
+            return SN_DE_TWICE_URL;
+        case QWDEVEnvironmentTypeUAT:
+            return U_DE_TWICE_URL;
+        case QWDEVEnvironmentTypeOnline:
+            return O_DE_TWICE_URL;
+    }
+}
++(NSNumber *)get_SHOW_NATIONWIDE
+{
+    switch ([self evrnmtType]) {
+        case QWDEVEnvironmentTypePRE:
+            return P_SHOW_NATIONWIDE;
+        case QWDEVEnvironmentTypeSITExtra:
+            return S_SHOW_NATIONWIDE;
+        case QWDEVEnvironmentTypeSITLan:
+            return SN_SHOW_NATIONWIDE;
+        case QWDEVEnvironmentTypeUAT:
+            return U_SHOW_NATIONWIDE;
+        case QWDEVEnvironmentTypeOnline:
+            return O_SHOW_NATIONWIDE;
+    }
+}
+
++(NSNumber *)get_SHOW_HTML
+{
+    switch ([self evrnmtType]) {
+        case QWDEVEnvironmentTypePRE:
+            return P_SHOW_HTML;
+        case QWDEVEnvironmentTypeSITExtra:
+            return S_SHOW_HTML;
+        case QWDEVEnvironmentTypeSITLan:
+            return SN_SHOW_HTML;
+        case QWDEVEnvironmentTypeUAT:
+            return U_SHOW_HTML;
+        case QWDEVEnvironmentTypeOnline:
+            return O_SHOW_HTML;
+    }
+}
++(NSString *)get_DE_SHARE_URL
+{
+    switch ([self evrnmtType]) {
+        case QWDEVEnvironmentTypePRE:
+            return P_DE_SHARE_URL;
+        case QWDEVEnvironmentTypeSITExtra:
+            return S_DE_SHARE_URL;
+        case QWDEVEnvironmentTypeSITLan:
+            return SN_DE_SHARE_URL;
+        case QWDEVEnvironmentTypeUAT:
+            return U_DE_SHARE_URL;
+        case QWDEVEnvironmentTypeOnline:
+            return O_DE_SHARE_URL;
+    }
+}
+@end
